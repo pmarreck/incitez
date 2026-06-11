@@ -74,6 +74,14 @@ fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.e
             if (!std.mem.eql(u8, s, actual.correctedReporter())) return false;
         }
     }
+    // year (validated integer; null when absent or out of range)
+    if (expected.get("year")) |y| {
+        const exp_year: ?u16 = switch (y) {
+            .integer => |n| @intCast(n),
+            else => null,
+        };
+        if (exp_year != actual.year) return false;
+    }
     return true;
 }
 

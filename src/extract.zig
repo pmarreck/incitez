@@ -26,12 +26,26 @@ pub const Citation = struct {
     /// Index into reporters.editions — the resolved (corrected) edition.
     edition: u32,
     is_variant: bool,
+    /// Year as found in the court/date paren, and the validated integer
+    /// (eyecite get_year: [1600, max_valid_year]; out-of-range keeps the
+    /// text but nulls the number).
+    year_text: ?[]const u8 = null,
+    year: ?u16 = null,
+    /// Raw court string from the paren — resolution to a courts-db id is a
+    /// separate pass.
+    court_paren: ?[]const u8 = null,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
         return reporters.editions[self.edition].abbrev;
     }
 };
+
+/// eyecite computes `date.today().year + 1` at import time; the core is
+/// clockless, so the ceiling is a constant matched to the pinned oracle's
+/// extraction date (2026). Bump alongside corpus re-extraction, or inject
+/// via ExtractOptions when callers need a live clock.
+pub const default_max_valid_year: u16 = 2027;
 
 /// Extracts legal citations from plain text, eyecite-compatible.
 ///
@@ -54,13 +68,202 @@ pub fn extract(allocator: std.mem.Allocator, text: []const u8) ![]Citation {
             continue;
         }
         if (bestMatchAt(text, i)) |cite| {
-            try cites.append(allocator, cite);
-            i = cite.span_end;
+            var c = cite;
+            const post = parsePostCitation(text, c.span_end);
+            c.year_text = post.year_text;
+            c.year = post.year;
+            c.court_paren = post.court;
+            if (c.year == null) {
+                if (preCiteYear(text, c.span_start)) |yt| {
+                    c.year_text = yt;
+                    const y = std.fmt.parseInt(u16, yt, 10) catch unreachable;
+                    c.year = y;
+                }
+            }
+            try cites.append(allocator, c);
+            i = c.span_end;
             continue :scan;
         }
         i += 1;
     }
     return cites.toOwnedSlice(allocator);
+}
+
+// ── Post-citation metadata (eyecite POST_FULL_CITATION_REGEX) ────────
+
+const PostCitation = struct {
+    year_text: ?[]const u8 = null,
+    year: ?u16 = null,
+    court: ?[]const u8 = null,
+};
+
+const MONTHS = [_][]const u8{
+    "January",   "Jan.", "February", "Feb.",  "March",    "Mar.",
+    "April",     "Apr.", "May",      "June",  "Jun.",     "July",
+    "Jul.",      "August", "Aug.",   "September", "Sept.", "Sep.",
+    "October",   "Oct.", "November", "Nov.",  "December", "Dec.",
+};
+
+/// Scans forward from the end of a citation for the court/date paren:
+/// `[pin cite,]? extra [\(\[] court? month? day? YEAR [\)\]]`. The court is
+/// everything in the paren before the whitespace that precedes a month or
+/// the year (Python's lazy `.*?` + lookahead). The paren must close right
+/// after the year or the whole branch fails (no year, no court).
+fn parsePostCitation(text: []const u8, start: usize) PostCitation {
+    // `extra` window: [^(;]* (newline = paragraph token boundary upstream)
+    var i = start;
+    while (i < text.len) : (i += 1) {
+        const c = text[i];
+        if (c == '(' or c == '[') break;
+        if (c == ';' or c == '\n') return .{};
+    }
+    if (i >= text.len) return .{};
+    const open = i;
+    const close = blk: {
+        var j = open + 1;
+        while (j < text.len) : (j += 1) {
+            const c = text[j];
+            if (c == ')' or c == ']') break :blk j;
+            if (c == '\n') return .{};
+        }
+        return .{};
+    };
+    const inner = text[open + 1 .. close];
+
+    // candidate positions: paren start, or after each whitespace run
+    var p: usize = 0;
+    while (p <= inner.len) {
+        const at_start = p == 0;
+        const after_ws = p > 0 and inner[p - 1] == ' ';
+        if (at_start or after_ws) {
+            if (tryDateAt(inner, p)) |date| {
+                var court_end = p;
+                while (court_end > 0 and inner[court_end - 1] == ' ') court_end -= 1;
+                const court = inner[0..court_end];
+                return .{
+                    .year_text = date.year_text,
+                    .year = date.year,
+                    .court = if (court.len == 0) null else court,
+                };
+            }
+        }
+        p += 1;
+    }
+    return .{};
+}
+
+/// eyecite's median case-name backward-seek window, in words.
+const BACKWARD_SEEK = 28;
+
+/// California-style pre-citation year: scanning backward word-by-word from
+/// the citation (eyecite _scan_for_case_boundaries), a word matching
+/// `\(\d{4}\)...` records the year; terminal punctuation (; ” ") or an
+/// opening paren after the 4th word stops the scan. The farthest-back match
+/// within the window wins, mirroring eyecite's repeated assignment.
+/// (Divergence note: eyecite applies this only when a candidate case name
+/// is also found; we apply it whenever found — the differential gate will
+/// quantify whether that ever matters in the wild.)
+fn preCiteYear(text: []const u8, span_start: usize) ?[]const u8 {
+    var year: ?[]const u8 = null;
+    var end = span_start;
+    var count: usize = 0;
+    while (count < BACKWARD_SEEK) {
+        while (end > 0 and (text[end - 1] == ' ' or text[end - 1] == '\t')) end -= 1;
+        if (end == 0) break;
+        if (text[end - 1] == '\n') break; // paragraph boundary
+        var start = end;
+        while (start > 0 and !std.ascii.isWhitespace(text[start - 1])) start -= 1;
+        const word = text[start..end];
+        if (std.mem.eql(u8, word, ",")) {
+            end = start;
+            continue;
+        }
+        count += 1;
+        if (word.len >= 6 and word[0] == '(' and word[5] == ')' and
+            allDigits(word[1..5]))
+        {
+            year = word[1..5];
+        } else if (std.mem.endsWith(u8, word, ";") or
+            std.mem.endsWith(u8, word, "\"") or
+            std.mem.endsWith(u8, word, "\xe2\x80\x9d")) // ”
+        {
+            break;
+        } else if (word[0] == '(' and count > 3) {
+            break;
+        }
+        end = start;
+    }
+    return year;
+}
+
+fn allDigits(s: []const u8) bool {
+    for (s) |c| {
+        if (!isDigit(c)) return false;
+    }
+    return true;
+}
+
+const ParsedDate = struct {
+    year_text: []const u8,
+    year: ?u16,
+};
+
+/// Matches `month? \ ? day? ,? \ ? year(-yy)?` ending exactly at the paren
+/// close (i.e. at inner.len), with Python-style day backtracking (2, 1, 0
+/// digits).
+fn tryDateAt(inner: []const u8, start: usize) ?ParsedDate {
+    var q = start;
+    for (MONTHS) |m| {
+        if (std.mem.startsWith(u8, inner[q..], m)) {
+            q += m.len;
+            if (q < inner.len and inner[q] == ' ') q += 1;
+            break;
+        }
+    }
+    var day_len: usize = 2;
+    while (true) : (day_len -= 1) {
+        var r = q;
+        var ok = true;
+        var k: usize = 0;
+        while (k < day_len) : (k += 1) {
+            if (r >= inner.len or !isDigit(inner[r])) {
+                ok = false;
+                break;
+            }
+            r += 1;
+        }
+        if (ok) {
+            if (r < inner.len and inner[r] == ',') r += 1;
+            if (r < inner.len and inner[r] == ' ') r += 1;
+            if (tryYearAt(inner, r)) |date| return date;
+        }
+        if (day_len == 0) return null;
+    }
+}
+
+fn tryYearAt(inner: []const u8, start: usize) ?ParsedDate {
+    if (start + 4 > inner.len) return null;
+    for (inner[start .. start + 4]) |c| {
+        if (!isDigit(c)) return null;
+    }
+    var end = start + 4;
+    // optional range suffix "-94"
+    if (end + 3 <= inner.len and inner[end] == '-' and
+        isDigit(inner[end + 1]) and isDigit(inner[end + 2]))
+    {
+        end += 3;
+    }
+    if (end != inner.len) return null; // paren must close right after
+    const year_text = inner[start .. start + 4];
+    const y = std.fmt.parseInt(u16, year_text, 10) catch return null;
+    return .{
+        .year_text = year_text,
+        .year = if (y >= 1600 and y <= default_max_valid_year) y else null,
+    };
+}
+
+fn isDigit(c: u8) bool {
+    return c >= '0' and c <= '9';
 }
 
 fn firstByteCandidate(c: u8) bool {
@@ -388,6 +591,60 @@ test "custom-shape editions do not match the standard shape: 1 T.C. Memo. 5" {
     const cites = try extract(testing.allocator, "1 T.C. Memo. 5");
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
+}
+
+test "year from simple paren: (1982)" {
+    const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, 1982), cites[0].year);
+    try testing.expectEqualStrings("1982", cites[0].year_text.?);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].court_paren);
+}
+
+test "year and court from paren: (4th Cir. 1982)" {
+    const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, 1982), cites[0].year);
+    try testing.expectEqualStrings("4th Cir.", cites[0].court_paren.?);
+}
+
+test "year and court without space: (Pa.Super. 1982)" {
+    const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (Pa.Super. 1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, 1982), cites[0].year);
+    try testing.expectEqualStrings("Pa.Super.", cites[0].court_paren.?);
+}
+
+test "misformatted year yields no year: (198⁴)" {
+    const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (198⁴)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, null), cites[0].year);
+}
+
+test "no paren yields no year" {
+    const cites = try extract(testing.allocator, "1 U.S. 1");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, null), cites[0].year);
+}
+
+test "out-of-range year: text kept, numeric year null (eyecite get_year parity)" {
+    const cites = try extract(testing.allocator, "1 U.S. 1 (1500)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, null), cites[0].year);
+    try testing.expectEqualStrings("1500", cites[0].year_text.?);
+}
+
+test "year not at paren end is rejected: (1982 Pa.)" {
+    const cites = try extract(testing.allocator, "1 U.S. 1 (1982 Pa.)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, null), cites[0].year);
 }
 
 test "two citations in one string" {
