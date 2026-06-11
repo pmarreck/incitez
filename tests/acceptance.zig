@@ -11,7 +11,7 @@ const incitez = @import("incitez");
 const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
-const RATCHET_EXPECTED_PASSES: usize = 55;
+const RATCHET_EXPECTED_PASSES: usize = 64;
 
 const CaseResult = struct {
     passed: usize = 0,

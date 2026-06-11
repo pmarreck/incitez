@@ -1,5 +1,6 @@
 const std = @import("std");
 const reporters = @import("reporters.zig");
+const tables = @import("reporters_tables");
 
 pub const Kind = enum {
     full_case,
@@ -17,7 +18,8 @@ pub const Citation = struct {
     /// [start, end) byte offsets of the core citation in the input text.
     span_start: u32,
     span_end: u32,
-    /// Slices into the input text, as found.
+    /// Slices into the input text, as found. Null when the pattern has no
+    /// such group or it did not participate in the match.
     volume: ?[]const u8,
     reporter: []const u8,
     page: ?[]const u8,
@@ -31,11 +33,14 @@ pub const Citation = struct {
     }
 };
 
-/// Extracts legal citations from plain text. eyecite-compatible matching:
-/// this slice implements the standard full-citation shape
-/// `$volume $reporter,? $page` (volume = [1-9]\d*, one space, reporter from
-/// the reporters-db match table longest-first, optional comma, one space,
-/// page = \d+ | roman numeral | _+ placeholder).
+/// Extracts legal citations from plain text, eyecite-compatible.
+///
+/// Engine: scan for reporter-abbreviation anchors (sorted match table from
+/// reporters-db), then run each candidate edition's compiled citation
+/// pattern programs (build-time codegen from eyecite's regex templates)
+/// around the anchor — PRE must end exactly at the anchor, POST continues
+/// after it. Backtracking is bounded (counted classes + optionals only;
+/// no general regex engine).
 /// Returned slice is owned by the caller (free with `allocator.free`);
 /// all string fields are zero-copy slices into `text`.
 pub fn extract(allocator: std.mem.Allocator, text: []const u8) ![]Citation {
@@ -43,136 +48,199 @@ pub fn extract(allocator: std.mem.Allocator, text: []const u8) ![]Citation {
     errdefer cites.deinit(allocator);
 
     var i: usize = 0;
-    while (i < text.len) {
-        if (isVolumeStart(text, i)) {
-            if (try matchFullCitation(text, i)) |cite| {
-                try cites.append(allocator, cite);
-                i = cite.span_end;
-                continue;
-            }
+    scan: while (i < text.len) {
+        if (!firstByteCandidate(text[i])) {
+            i += 1;
+            continue;
+        }
+        if (bestMatchAt(text, i)) |cite| {
+            try cites.append(allocator, cite);
+            i = cite.span_end;
+            continue :scan;
         }
         i += 1;
     }
     return cites.toOwnedSlice(allocator);
 }
 
-fn isDigit(c: u8) bool {
-    return c >= '0' and c <= '9';
+fn firstByteCandidate(c: u8) bool {
+    return tables.key_first_bytes[c >> 6] & (@as(u64, 1) << @intCast(c & 63)) != 0;
 }
 
-/// eyecite's boundary class: every citation extractor is wrapped in
-/// `(?:^|[^a-zA-Z0-9])(...)(?:[^a-zA-Z0-9]|$)` — note underscore counts as
-/// a boundary there, unlike regex `\w`.
-fn isBoundaryAlnum(c: u8) bool {
-    return std.ascii.isAlphanumeric(c);
-}
-
-/// Volume anchor: nonzero digit at a non-alphanumeric boundary
-/// (eyecite nonalphanum_boundaries_re semantics).
-fn isVolumeStart(text: []const u8, i: usize) bool {
-    if (text[i] < '1' or text[i] > '9') return false;
-    return i == 0 or !isBoundaryAlnum(text[i - 1]);
-}
-
-fn matchFullCitation(text: []const u8, vol_start: usize) !?Citation {
-    // volume digits
-    var p = vol_start;
-    while (p < text.len and isDigit(text[p])) p += 1;
-    const vol_end = p;
-    // exactly one space
-    if (p >= text.len or text[p] != ' ') return null;
-    p += 1;
-    // reporter: longest match from the sorted table
-    const rep_start = p;
-    const rep = reporters.longestMatch(text[rep_start..]) orelse return null;
-    p += rep.key_len;
-    // optional comma, then exactly one space
-    if (p < text.len and text[p] == ',') p += 1;
-    if (p >= text.len or text[p] != ' ') return null;
-    p += 1;
-    // page
-    const page_start = p;
-    const page_end = matchPage(text, p) orelse return null;
-    // trailing boundary: the citation must end at a non-alphanumeric
-    if (page_end < text.len and isBoundaryAlnum(text[page_end])) return null;
-
-    // all-underscore page is a "known missing" placeholder: spanned, but null
-    const page_text = text[page_start..page_end];
-    const page: ?[]const u8 = if (text[page_start] == '_') null else page_text;
-
-    return .{
-        .kind = .full_case,
-        .span_start = @intCast(vol_start),
-        .span_end = @intCast(page_end),
-        .volume = text[vol_start..vol_end],
-        .reporter = text[rep_start .. rep_start + rep.key_len],
-        .page = page,
-        .edition = rep.entry.edition,
-        .is_variant = rep.entry.is_variant,
-    };
-}
-
-/// Page: `\d+` | roman numeral (eyecite's restricted set, lowercase) | `_+`.
-/// Returns end offset of the page token, or null.
-fn matchPage(text: []const u8, start: usize) ?usize {
-    if (start >= text.len) return null;
-    if (isDigit(text[start])) {
-        var p = start;
-        while (p < text.len and isDigit(text[p])) p += 1;
-        return p;
-    }
-    if (text[start] == '_') {
-        var p = start;
-        while (p < text.len and text[p] == '_') p += 1;
-        return p;
-    }
-    return matchRomanPage(text, start);
-}
-
-/// Roman numerals 1–199 excluding 5, 50, 100 (eyecite ROMAN_NUMERAL_REGEX),
-/// lowercase only.
-fn matchRomanPage(text: []const u8, start: usize) ?usize {
-    var p = start;
-    // optional leading c (but bare "c" alone is excluded below)
-    if (p < text.len and text[p] == 'c') p += 1;
-    // tens part: xc | xl | l?x{1,3}
-    var has_tens = false;
-    if (p + 1 < text.len and text[p] == 'x' and (text[p + 1] == 'c' or text[p + 1] == 'l')) {
-        p += 2;
-        has_tens = true;
-    } else {
-        if (p < text.len and text[p] == 'l') p += 1;
-        var xs: usize = 0;
-        while (p < text.len and text[p] == 'x' and xs < 3) : (xs += 1) p += 1;
-        has_tens = xs > 0;
-        if (!has_tens and p > start and text[p - 1] == 'l') {
-            // "l" or "cl" prefix without x: keep for ones check ("lv","cl","clv")
+/// All candidate citations anchored at reporter hits starting at `i`;
+/// returns the one with the earliest start, then the longest end.
+fn bestMatchAt(text: []const u8, i: usize) ?Citation {
+    var best: ?Citation = null;
+    const max_len = @min(text.len - i, tables.max_key_len);
+    var key_len: usize = max_len;
+    while (key_len > 0) : (key_len -= 1) {
+        const entries = reporters.lookup(text[i .. i + key_len]);
+        for (entries) |*entry| {
+            const edition = tables.editions[entry.edition];
+            for (edition.programs) |pid| {
+                const prog = tables.programs[pid];
+                if (prog.pre_min > prog.pre_max) continue; // unanchored placeholder
+                if (tryProgram(text, i, key_len, prog)) |cand| {
+                    if (best == null or
+                        cand.span_start < best.?.span_start or
+                        (cand.span_start == best.?.span_start and cand.span_end > best.?.span_end))
+                    {
+                        var c = cand;
+                        c.edition = entry.edition;
+                        c.is_variant = entry.is_variant;
+                        best = c;
+                    }
+                }
+            }
         }
     }
-    // ones part: ix | iv | v?i{0,3}
-    var ones_len: usize = 0;
-    if (p + 1 < text.len and text[p] == 'i' and (text[p + 1] == 'x' or text[p + 1] == 'v')) {
-        p += 2;
-        ones_len = 2;
-    } else {
-        const v_at = p;
-        if (p < text.len and text[p] == 'v') p += 1;
-        var is: usize = 0;
-        while (p < text.len and text[p] == 'i' and is < 3) : (is += 1) p += 1;
-        ones_len = p - v_at;
+    return best;
+}
+
+const Captures = struct {
+    start: [tables.group_count]?u32 = @splat(null),
+    end: [tables.group_count]?u32 = @splat(null),
+
+    fn slice(self: *const Captures, text: []const u8, g: tables.Group) ?[]const u8 {
+        const gi = @intFromEnum(g);
+        const s = self.start[gi] orelse return null;
+        const e = self.end[gi] orelse return null;
+        return text[s..e];
     }
-    if (p == start) return null;
-    const len = p - start;
-    const s = text[start..p];
-    // exclusions: bare v/l/c and 5/50/100 multiples not in the allowed set
-    if (len == 1 and (s[0] == 'v' or s[0] == 'l' or s[0] == 'c')) return null;
-    // "lv","cv","cl","clv" are allowed; bare "v" handled above.
-    // (trailing token boundary is enforced centrally by matchFullCitation)
-    if (ones_len == 0 and !has_tens) {
-        // only c/l prefixes consumed — allowed combos checked: cl
-        if (!(len == 2 and s[0] == 'c' and s[1] == 'l')) return null;
+};
+
+fn tryProgram(text: []const u8, anchor: usize, key_len: usize, prog: tables.Program) ?Citation {
+    const lo = anchor -| @as(usize, prog.pre_max);
+    const hi = anchor -| @as(usize, prog.pre_min);
+    var s = lo;
+    while (s <= hi) : (s += 1) {
+        // leading boundary (eyecite nonalphanum_boundaries_re)
+        if (s > 0 and std.ascii.isAlphanumeric(text[s - 1])) continue;
+        var caps: Captures = .{};
+        // PRE must consume exactly [s, anchor)
+        if (matchSeq(prog.pre, text, s, anchor, &caps) == null) continue;
+        // POST continues after the anchored reporter key
+        const post_end = matchSeq(prog.post, text, anchor + key_len, null, &caps) orelse continue;
+        // trailing boundary
+        if (post_end < text.len and std.ascii.isAlphanumeric(text[post_end])) continue;
+
+        const page_raw = caps.slice(text, .page);
+        const page: ?[]const u8 = if (page_raw) |pg|
+            (if (pg.len > 0 and pg[0] == '_') null else pg)
+        else
+            null;
+
+        return .{
+            .kind = .full_case,
+            .span_start = @intCast(s),
+            .span_end = @intCast(post_end),
+            .volume = caps.slice(text, .volume),
+            .reporter = text[anchor .. anchor + key_len],
+            .page = page,
+            .edition = 0, // filled by caller
+            .is_variant = false,
+        };
     }
-    return p;
+    return null;
+}
+
+// ── Pattern VM: bounded-backtracking interpreter ─────────────────────
+
+const MAX_FRAMES = 24;
+
+const Frame = struct {
+    seq: []const tables.Insn,
+    idx: usize,
+};
+
+/// Matches `seq` forward from `pos`. When `require_end` is set, the match
+/// must consume exactly up to that offset (used to pin PRE to the anchor).
+/// Returns the end offset on success.
+fn matchSeq(
+    seq: []const tables.Insn,
+    text: []const u8,
+    pos: usize,
+    require_end: ?usize,
+    caps: *Captures,
+) ?usize {
+    var frames: [MAX_FRAMES]Frame = undefined;
+    frames[0] = .{ .seq = seq, .idx = 0 };
+    return run(&frames, 1, text, pos, require_end, caps);
+}
+
+fn run(
+    frames: *[MAX_FRAMES]Frame,
+    depth: usize,
+    text: []const u8,
+    pos: usize,
+    require_end: ?usize,
+    caps: *Captures,
+) ?usize {
+    // find the next instruction across the frame stack
+    var d = depth;
+    while (d > 0 and frames[d - 1].idx == frames[d - 1].seq.len) d -= 1;
+    if (d == 0) {
+        if (require_end) |e| return if (pos == e) pos else null;
+        return pos;
+    }
+    const frame = frames[d - 1];
+    const insn = frame.seq[frame.idx];
+    frames[d - 1].idx += 1;
+    defer frames[d - 1] = frame; // restore on unwind for sibling retries
+
+    switch (insn) {
+        .lit => |l| {
+            if (pos + l.len <= text.len and std.mem.eql(u8, text[pos .. pos + l.len], l)) {
+                return run(frames, d, text, pos + l.len, require_end, caps);
+            }
+            return null;
+        },
+        .class => |c| {
+            var avail: usize = 0;
+            while (avail < c.max and pos + avail < text.len and
+                classHas(c, text[pos + avail])) avail += 1;
+            if (avail < c.min) return null;
+            // greedy with backtrack
+            var k = avail;
+            while (true) {
+                if (run(frames, d, text, pos + k, require_end, caps)) |end| return end;
+                if (k == c.min) return null;
+                k -= 1;
+            }
+        },
+        .open => |g| {
+            const saved = caps.start[g];
+            caps.start[g] = @intCast(pos);
+            if (run(frames, d, text, pos, require_end, caps)) |end| return end;
+            caps.start[g] = saved;
+            return null;
+        },
+        .close => |g| {
+            const saved = caps.end[g];
+            caps.end[g] = @intCast(pos);
+            if (run(frames, d, text, pos, require_end, caps)) |end| return end;
+            caps.end[g] = saved;
+            return null;
+        },
+        .alt => |branches| {
+            if (d >= MAX_FRAMES) return null; // depth guard (generated data is shallow)
+            for (branches) |b| {
+                frames[d] = .{ .seq = b, .idx = 0 };
+                if (run(frames, d + 1, text, pos, require_end, caps)) |end| return end;
+            }
+            return null;
+        },
+        .opt => |body| {
+            if (d >= MAX_FRAMES) return null;
+            frames[d] = .{ .seq = body, .idx = 0 };
+            if (run(frames, d + 1, text, pos, require_end, caps)) |end| return end;
+            return run(frames, d, text, pos, require_end, caps);
+        },
+    }
+}
+
+fn classHas(c: tables.Class, ch: u8) bool {
+    return c.bits[ch >> 6] & (@as(u64, 1) << @intCast(ch & 63)) != 0;
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
@@ -225,6 +293,10 @@ test "multi-word reporter: F. Supp. 2d" {
     try expectSingleFullCite("12 F. Supp. 2d 100", 0, 18, "12", "F. Supp. 2d", "100", "F. Supp. 2d");
 }
 
+test "roman numeral page" {
+    try expectSingleFullCite("1 U.S. xv", 0, 9, "1", "U.S.", "xv", "U.S.");
+}
+
 test "placeholder page spans the underscores but yields null page (eyecite parity)" {
     const cites = try extract(testing.allocator, "Carpenter v. United States, 585 U.S. ___");
     defer testing.allocator.free(cites);
@@ -236,7 +308,6 @@ test "placeholder page spans the underscores but yields null page (eyecite parit
 }
 
 test "citation requires non-alphanumeric boundaries (eyecite parity)" {
-    // volume glued to a word, and page glued to a word: both rejected
     const cites = try extract(testing.allocator, "foo1 U.S. 1, 1. U.S. 1foo");
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
@@ -251,10 +322,6 @@ test "street addresses are not citations: page must end at a token boundary" {
     try testing.expectEqual(@as(usize, 0), b.len);
 }
 
-test "roman numeral page" {
-    try expectSingleFullCite("1 U.S. xv", 0, 9, "1", "U.S.", "xv", "U.S.");
-}
-
 test "no citation in plain prose" {
     const cites = try extract(testing.allocator, "the 3 musketeers met 4 friends in 1982");
     defer testing.allocator.free(cites);
@@ -263,6 +330,62 @@ test "no citation in plain prose" {
 
 test "volume must not be zero-led and reporter must be known" {
     const cites = try extract(testing.allocator, "0 U.S. 1 and 1 X.Y.Z. 2");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 0), cites.len);
+}
+
+test "format-neutral: 2006-Ohio-2095" {
+    try expectSingleFullCite("2006-Ohio-2095", 0, 14, "2006", "Ohio", "2095", "Ohio");
+}
+
+test "format-neutral 3-4 digit page: 2007-NMCERT-008" {
+    try expectSingleFullCite("2007-NMCERT-008", 0, 15, "2007", "NMCERT", "008", "NMCERT");
+}
+
+test "illinois neutral: 2017 IL App (1st) 143684-B" {
+    try expectSingleFullCite("2017 IL App (1st) 143684-B", 0, 26, "2017", "IL App (1st)", "143684-B", "IL App (1st)");
+}
+
+test "year-volume with suffixed page: 1993 Conn. Super. Ct. 5243-P" {
+    try expectSingleFullCite("Failed to recognize 1993 Conn. Super. Ct. 5243-P", 20, 48, "1993", "Conn. Super. Ct.", "5243-P", "Conn. Super. Ct.");
+}
+
+test "year_page: T.C. Memo. 2019-233" {
+    try expectSingleFullCite("word T.C. Memo. 2019-233", 5, 24, "2019", "T.C. Memo.", "233", "T.C. Memo.");
+}
+
+test "year_page multiword reporter: T.C. Summary Opinion 2018-133" {
+    try expectSingleFullCite("T.C. Summary Opinion 2018-133", 0, 29, "2018", "T.C. Summary Opinion", "133", "T.C. Summary Opinion");
+}
+
+test "CCH paragraph cite: volume-less with comma page" {
+    const cites = try extract(testing.allocator, "blah blah Bankr. L. Rep. (CCH) P12,345. blah blah");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    const c = cites[0];
+    try testing.expectEqual(@as(u32, 10), c.span_start);
+    try testing.expectEqual(@as(u32, 38), c.span_end);
+    try testing.expectEqual(@as(?[]const u8, null), c.volume);
+    try testing.expectEqualStrings("Bankr. L. Rep. (CCH)", c.reporter);
+    try testing.expectEqualStrings("12,345", c.page.?);
+    try testing.expectEqualStrings("Bankr. L. Rep.", c.correctedReporter());
+}
+
+test "louisiana format: 2009 12345 (La.App. 1 Cir. 05/10/10)" {
+    const cites = try extract(testing.allocator, "blah blah, 2009 12345 (La.App. 1 Cir. 05/10/10). blah blah");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    const c = cites[0];
+    try testing.expectEqual(@as(u32, 11), c.span_start);
+    try testing.expectEqual(@as(u32, 47), c.span_end);
+    try testing.expectEqualStrings("2009", c.volume.?);
+    try testing.expectEqualStrings("La.App. 1 Cir.", c.reporter);
+    try testing.expectEqualStrings("12345", c.page.?);
+}
+
+test "custom-shape editions do not match the standard shape: 1 T.C. Memo. 5" {
+    // T.C. Memo.'s template list replaces $full_cite entirely
+    const cites = try extract(testing.allocator, "1 T.C. Memo. 5");
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
 }
