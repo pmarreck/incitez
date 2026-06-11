@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# CLI surface tests: --about, --help, exit codes.
+# NO `set -e`: commands under test are EXPECTED to return non-zero on error
+# paths; the pass/fail harness handles exit-code assertions explicitly.
+set -u
+
+BIN="${INCITEZ_BIN:-./zig-out/bin/incitez}"
+PASS=0
+FAIL=0
+
+pass() {
+	PASS=$((PASS + 1))
+}
+
+fail() {
+	echo "  FAIL: $1" >&2
+	FAIL=$((FAIL + 1))
+}
+
+if [[ ! -x "$BIN" ]]; then
+	echo "  FAIL: binary not found at $BIN" >&2
+	exit 1
+fi
+
+# --about: one line, version, platform-arch; exit 0
+out=$("$BIN" --about 2>/dev/null)
+rc=$?
+[[ $rc -eq 0 ]] && pass || fail "--about exit code (got $rc)"
+[[ $(printf '%s\n' "$out" | wc -l) -eq 1 ]] && pass || fail "--about is one line"
+case "$out" in
+	*"incitez 0."*) pass ;;
+	*) fail "--about contains name+version (got: $out)" ;;
+esac
+case "$out" in
+	*aarch64* | *x86_64*) pass ;;
+	*) fail "--about contains arch (got: $out)" ;;
+esac
+
+# --help and -h: usage text on stdout, empty stderr, exit 0
+for flag in --help -h; do
+	out=$("$BIN" "$flag" 2>/dev/null)
+	rc=$?
+	err=$("$BIN" "$flag" 2>&1 >/dev/null)
+	[[ $rc -eq 0 ]] && pass || fail "$flag exit code (got $rc)"
+	case "$out" in
+		*Usage:*) pass ;;
+		*) fail "$flag prints usage" ;;
+	esac
+	[[ -z "$err" ]] && pass || fail "$flag stderr is empty (got: $err)"
+done
+
+# no args: usage to stderr, nonzero exit
+out=$("$BIN" 2>/dev/null)
+rc=$?
+err=$("$BIN" 2>&1 >/dev/null)
+[[ $rc -ne 0 ]] && pass || fail "no-args exits nonzero"
+[[ -z "$out" ]] && pass || fail "no-args stdout is empty"
+case "$err" in
+	*Usage:*) pass ;;
+	*) fail "no-args prints usage to stderr" ;;
+esac
+
+echo "  $PASS passed, $FAIL failed"
+exit "$FAIL"

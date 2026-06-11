@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Run the full incitez test suite via Nix (sandboxed, deterministic).
+# Exit code = number of failed suites (0 = all pass).
+# Does NOT use `nix develop -c zig build` to avoid host OS detection issues.
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
+system=$(nix eval --raw 'nixpkgs#system' 2>/dev/null || echo "aarch64-darwin")
+
+FAILURES=0
+
+echo "=== Zig unit tests (nix build, sandboxed) ==="
+if nix build ".#checks.${system}.test" 2>&1; then
+	echo "PASS: unit tests"
+else
+	echo "FAIL: unit tests"
+	((FAILURES++))
+fi
+
+echo ""
+echo "=== Building binary for CLI tests ==="
+if ! ./build > /dev/null 2>&1; then
+	echo "FAIL: build"
+	((FAILURES++))
+else
+	if [[ -d tests/cli ]]; then
+		echo "=== CLI tests ==="
+		for test_script in tests/cli/*; do
+			if [[ -x "$test_script" ]]; then
+				test_name="$(basename "$test_script")"
+				if INCITEZ_BIN="$SCRIPT_DIR/zig-out/bin/incitez" "$test_script"; then
+					echo "PASS: $test_name"
+				else
+					echo "FAIL: $test_name"
+					((FAILURES++))
+				fi
+			fi
+		done
+	fi
+fi
+
+echo ""
+if [[ "$FAILURES" -gt 0 ]]; then
+	echo "FAILED: $FAILURES suite(s)"
+	exit "$FAILURES"
+fi
+echo "ALL TESTS PASSED"

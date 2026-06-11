@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Symlink the flake-pinned upstream sources (eyecite, reporters-db, courts-db)
+# into deps/ for local source analysis. The flake.lock is the pin; this just
+# materializes read-only store paths at predictable workspace locations.
+# Idempotent — safe to re-run (e.g. after a GC or a flake input bump).
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.." || exit 1
+
+archive_json=$(nix flake archive --json 2>/dev/null) || {
+	echo "FAILED: nix flake archive (network needed on first run)" >&2
+	exit 1
+}
+
+mkdir -p deps
+for dep in eyecite-src reporters-db-src courts-db-src; do
+	path=$(printf '%s' "$archive_json" | nix run 'nixpkgs#jq' -- -r ".inputs.\"$dep\".path")
+	if [[ -z "$path" || "$path" == "null" ]]; then
+		echo "FAILED: no store path for input $dep" >&2
+		exit 1
+	fi
+	ln -sfn "$path" "deps/$dep"
+	echo "deps/$dep -> $path"
+done

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Build incitez via nix (sandboxed, deterministic — no host tooling).
+# Usage: ./build [--debug] [extra nix build args]
+set -uo pipefail
+set -E
+
+trap 'echo "ERR at ${BASH_SOURCE[0]}:${LINENO}: $BASH_COMMAND" >&2' ERR
+
+run() {
+	"$@" || {
+		echo "FAILED: $*" >&2
+		exit 1
+	}
+}
+
+target=""
+if [[ "${1:-}" == "debug" || "${1:-}" == "--debug" ]]; then
+	target=".#debug"
+	shift
+fi
+
+run nix build $target "$@"
+mkdir -p zig-out/bin
+run install -m755 result/bin/* zig-out/bin/

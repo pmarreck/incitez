@@ -1,0 +1,14 @@
+.{
+    .name = .incitez,
+    .fingerprint = 0xd2a2ca3ab4d5b69a,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "include",
+        "cli",
+    },
+}

@@ -1,0 +1,167 @@
+{
+  "nodes": {
+    "courts-db-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779149521,
+        "narHash": "sha256-nGG8mhtbg5J4H3CBTEedGZ/ySuD8FKEHqi+LHnrtNB0=",
+        "owner": "freelawproject",
+        "repo": "courts-db",
+        "rev": "c471ff9dfd5aabf3e15cf6dc5bc543b1d3569aff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "freelawproject",
+        "repo": "courts-db",
+        "type": "github"
+      }
+    },
+    "eyecite-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1759512237,
+        "narHash": "sha256-WifXThZHXw/TF5jhho0bYvmMTBXUSNUcpasRprUfjiY=",
+        "owner": "freelawproject",
+        "repo": "eyecite",
+        "rev": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "freelawproject",
+        "repo": "eyecite",
+        "type": "github"
+      }
+    },
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1696426674,
+        "narHash": "sha256-kvjfFW7WAETZlt09AgDn1MrtKzP7t90Vf7vypd3OL1U=",
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "0f9255e01c2351cc7d116c072cb317785dd33b33",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1781141223,
+        "narHash": "sha256-Eye4UQJjC4TLobclolFCMl6MrjgiF6Bk1cOI5x8SH00=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b503dde361500433ca25a32e8f4d218bf58fb659",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "reporters-db-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779470896,
+        "narHash": "sha256-bhgb8D3PBBAVOtAXdIC8/GsAQJarJ5fjES/VUGY0JeE=",
+        "owner": "freelawproject",
+        "repo": "reporters-db",
+        "rev": "3c5d6fc3bed07df55fef8b3d44c6120744d1ed72",
+        "type": "github"
+      },
+      "original": {
+        "owner": "freelawproject",
+        "repo": "reporters-db",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "courts-db-src": "courts-db-src",
+        "eyecite-src": "eyecite-src",
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs",
+        "reporters-db-src": "reporters-db-src",
+        "zig-overlay": "zig-overlay"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "zig-overlay": {
+      "inputs": {
+        "flake-compat": "flake-compat",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": "systems_2"
+      },
+      "locked": {
+        "lastModified": 1780967389,
+        "narHash": "sha256-R+e70r1FSAR3keV6Dexk3hJplDHuTBX51lSKpDBQMkU=",
+        "owner": "mitchellh",
+        "repo": "zig-overlay",
+        "rev": "e303caa9a6cc3a3e2b20a9e339961f418d905794",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mitchellh",
+        "repo": "zig-overlay",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

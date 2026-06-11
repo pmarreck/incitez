@@ -1,0 +1,47 @@
+# Zig build artifacts
+.zig-cache/
+zig-out/
+zig-cache/
+
+# Nix
+.direnv/
+
+# Editor files
+*.swp
+*~
+
+# Build artifacts
+*.o
+*.a
+
+# macOS
+.DS_Store
+
+# Semantic search
+.codescan/
+
+# Cloned source for analysis
+deps/*-src/
+deps/*_src/
+deps/*_source/
+
+# Test-generated ffmpeg symlinks
+scripts/ffmpeg-bin/
+result/
+result
+CLAUDE.md
+.serena
+inbox
+.worktrees/
+
+# Side-effect of `zig build --fetch=all` (~380MB).
+zig-pkg/
+# Pre-upgrade lock backups.
+flake.lock.bak_*
+.git-old/
+.claude/
+result-win/
+.watchmanconfig
+
+# anything else:
+AGENTS.md
