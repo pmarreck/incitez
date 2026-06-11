@@ -10,5 +10,7 @@
         "src",
         "include",
         "cli",
+        "tools",
+        "data",
     },
 }
