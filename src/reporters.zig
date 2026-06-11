@@ -31,7 +31,52 @@ pub fn lookup(key: []const u8) []const MatchEntry {
     return table[start..lo];
 }
 
+pub const ReporterMatch = struct {
+    entry: *const MatchEntry,
+    key_len: usize,
+};
+
+/// Finds the longest reporter abbreviation (canonical or variant) that is a
+/// prefix of `text` ending at a token boundary. Longest-first probing with
+/// exact binary search per candidate length — O(max_key_len · log n), no
+/// automaton needed at current scale (the matcher anchors on volume digits,
+/// so this only runs at candidate positions).
+pub fn longestMatch(text: []const u8) ?ReporterMatch {
+    const max = @min(text.len, tables.max_key_len);
+    var len: usize = max;
+    while (len > 0) : (len -= 1) {
+        const candidates = lookup(text[0..len]);
+        if (candidates.len > 0) {
+            return .{ .entry = &candidates[0], .key_len = len };
+        }
+    }
+    return null;
+}
+
 // ── Tests ───────────────────────────────────────────────────────────
+
+test "longestMatch prefers the longer reporter" {
+    // "F. Supp. 2d" must win over the shorter "F." / "F. Supp." prefixes
+    const m = longestMatch("F. Supp. 2d 100").?;
+    try std.testing.expectEqualStrings("F. Supp. 2d", editions[m.entry.edition].abbrev);
+    try std.testing.expectEqual(@as(usize, 11), m.key_len);
+}
+
+test "longestMatch finds nothing in prose" {
+    try std.testing.expectEqual(@as(?ReporterMatch, null), longestMatch("musketeers met"));
+}
+
+test "longestMatch table-wide self-consistency (whole-set sweep)" {
+    // every match-table key, presented as its own text, must match itself
+    // at exactly its own length
+    for (tables.match_table) |entry| {
+        const m = longestMatch(entry.key) orelse {
+            std.debug.print("key '{s}' did not match itself\n", .{entry.key});
+            return error.TestUnexpectedResult;
+        };
+        try std.testing.expectEqual(entry.key.len, m.key_len);
+    }
+}
 
 test "match table is sorted by key with valid edition indices (whole-set sweep)" {
     var prev: ?[]const u8 = null;

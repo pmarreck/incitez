@@ -171,6 +171,10 @@ pub fn main(init: std.process.Init) !void {
     }
     try w.writeAll("};\n");
 
+    var max_key_len: usize = 0;
+    for (matches.items) |m| max_key_len = @max(max_key_len, m.key.len);
+    try w.print("\npub const max_key_len: usize = {d};\n", .{max_key_len});
+
     const out = try std.Io.Dir.cwd().createFile(io, args[2], .{});
     defer out.close(io);
     try out.writeStreamingAll(io, aw.written());

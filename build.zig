@@ -70,19 +70,37 @@ pub fn build(b: *std.Build) void {
     // -- Unit tests --
     // use_llvm: the self-hosted x86_64 backend SEGVs compiling test binaries
     // in Debug mode (Zig 0.16); force the LLVM backend on test steps.
+    const core_test_mod = b.createModule(.{
+        .root_source_file = b.path("src/lib.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{tables_import},
+    });
     const tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/lib.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{tables_import},
-        }),
+        .root_module = core_test_mod,
         .use_llvm = true,
     });
     const run_tests = b.addRunArtifact(tests);
-    b.step("test", "Run unit tests").dependOn(&run_tests.step);
+
+    // -- Acceptance tests (oracle-verified eyecite corpus, ratcheted) --
+    const acceptance_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/acceptance.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "incitez", .module = core_test_mod }},
+        }),
+        .use_llvm = true,
+    });
+    const run_acceptance = b.addRunArtifact(acceptance_tests);
+
+    const test_step = b.step("test", "Run unit + acceptance tests");
+    test_step.dependOn(&run_tests.step);
+    test_step.dependOn(&run_acceptance.step);
 
     // Compile tests without running them — lets CI patchelf the binaries
     // before execution inside the Nix sandbox on Linux.
-    b.step("test-compile", "Compile tests without running").dependOn(&tests.step);
+    const test_compile = b.step("test-compile", "Compile tests without running");
+    test_compile.dependOn(&tests.step);
+    test_compile.dependOn(&acceptance_tests.step);
 }
