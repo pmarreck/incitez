@@ -3,8 +3,8 @@
 Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (processed).
 
 ## In Progress
-- [ ] M2: Port eyecite test corpus — extractor (tools/extract_corpus.py) runs eyecite's own test_pairs under the pinned oracle env (.#eyecite-env), verifies oracle-vs-own-suite integrity, serializes actual cites (types/groups/metadata/spans) → tests/corpus/eyecite_corpus.json
-- [ ] M1: Garnix green on first push (check after CI cycle)
+- [ ] M2: full-cite METADATA pass (eyecite add_post_citation/find_case_name parity): year, court (paren → courts-db), pin_cite, parenthetical, plaintiff/defendant backward scan with stop words. Activate corresponding fields in the acceptance driver comparison → eligible set grows beyond 64.
+- [ ] M1: Garnix green (was in_progress at last check — verify!)
 
 ## Design notes (M2 matcher, from reading eyecite internals)
 - eyecite extractor model: per-edition regex templates (default `$full_cite` = `$volume $reporter,? $page`), expanded via regexes.json variables; 208 of 1368 editions carry custom templates; short-cite regexes derived by `at ...page` substitution.
@@ -24,6 +24,10 @@ Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (
 
 ## Completed
 - [x] Read kickoff + design brief; copied spec into docs/ (2026-06-11 ~14:00 EST)
+- [x] M2: corpus port — 193 oracle-verified cases / 6 methods → tests/corpus/eyecite_corpus.json; .#eyecite-env (pinned eyecite 2.7.6) in flake (2026-06-11 ~15:00 EST)
+- [x] M2: full-citation matcher CORE — pattern-VM (build-time compiled from eyecite templates, strict closed vocabulary), 64/64 eligible corpus cases green incl. all custom shapes; acceptance ratchet at 64 (2026-06-11 ~16:30 EST)
+  - 1 known unanchored program (S.W. fuzzy regex) deliberately skipped at runtime — revisit with differential gate
+  - spans are BYTE offsets (vs eyecite's code-point offsets) by design; driver converts
 - [x] M1: Scaffold — build.zig, flake.nix (zig 0.16.0 pin; eyecite v2.7.6 / reporters-db 3.2.65 / courts-db 0.10.27 as pinned non-flake inputs), C FFI + C CLI skeletons, ./build + ./test, 13 CLI smoke assertions, all green locally (2026-06-11 14:20 EST)
   - Licenses verified at pin time: all three BSD-2-Clause (exact text read from store paths)
   - Curiosity poke kept open: does the Linux patchelf dance behave with a no-libc test binary? Garnix will tell.

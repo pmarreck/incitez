@@ -1,11 +1,18 @@
 # Dirtree: Stateful directory trees in the CLI for humans and LLMs. https://github.com/pmarreck/dirtree
 ver=1.2
 annotate=[
+	MISTAKES.md = Process mistakes log (pipe exit-code masking; jj+nix stale-tree race)
 	build.zig = Hexagonal build: static lib (C ABI) + C CLI dogfooding FFI + test/test-compile steps (use_llvm forced)
 	cli/main.c = C CLI shell over the FFI: --about/--help; all I/O lives here
 	docs/incitez_design.md = THE SPEC: design brief from legal_ai (licensing, MFIC test strategy, perf targets, milestones)
 	flake.nix = Zig 0.16.0 pin via zig-overlay; eyecite/reporters-db/courts-db pinned non-flake inputs; packages.{default,debug}, checks.test, devShell
+	scripts/extract-corpus = Wrapper: build .#eyecite-env and run corpus extractor
 	scripts/link-deps = Symlinks flake-pinned eyecite/reporters-db/courts-db store paths into deps/ for analysis
+	scripts/revendor = Re-vendor reporters-db/courts-db JSON + licenses + provenance from flake pins
+	src/extract.zig = Citation extractor: reporter-anchored scan + bounded-backtracking pattern VM
 	src/lib.zig = Pure Zig core (no I/O) + C FFI exports; currently version export only
+	tests/acceptance.zig = Corpus acceptance driver: per-field comparison, char->byte span conversion, two-sided pass-count ratchet
 	tests/cli/test-basic = CLI surface assertions: --about/--help/exit codes/stderr cleanliness
+	tests/corpus/eyecite_corpus.json = Oracle-verified acceptance corpus: 193 cases from eyecite 2.7.6 FindTest (BSD-2-Clause)
+	tools/extract_corpus.py = Corpus extractor: AST-evals eyecite test_pairs in oracle env, integrity-gates, serializes (test-time Python exception)
 ]
