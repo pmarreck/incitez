@@ -74,6 +74,10 @@ fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.e
             if (!std.mem.eql(u8, s, actual.correctedReporter())) return false;
         }
     }
+    // court (resolved courts-db id, or guessed scotus)
+    if (expected.get("metadata")) |md| {
+        if (!optFieldMatches(md.object.get("court"), actual.court)) return false;
+    }
     // year (validated integer; null when absent or out of range)
     if (expected.get("year")) |y| {
         const exp_year: ?u16 = switch (y) {

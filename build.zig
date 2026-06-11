@@ -29,6 +29,23 @@ pub fn build(b: *std.Build) void {
         .module = tables_mod,
     };
 
+    const gen_courts_exe = b.addExecutable(.{
+        .name = "gen-courts",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/gen_courts.zig"),
+            .target = b.graph.host,
+            .optimize = .ReleaseSafe,
+        }),
+    });
+    const gen_courts_run = b.addRunArtifact(gen_courts_exe);
+    gen_courts_run.addFileArg(b.path("data/courts_db/courts.json"));
+    const courts_src = gen_courts_run.addOutputFileArg("courts_tables.zig");
+    const courts_mod = b.createModule(.{ .root_source_file = courts_src });
+    const courts_import = std.Build.Module.Import{
+        .name = "courts_tables",
+        .module = courts_mod,
+    };
+
     // -- Static library with C ABI (the FFI boundary around the pure Zig core) --
     const lib = b.addLibrary(.{
         .name = "incitez",
@@ -38,7 +55,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
             .link_libc = true,
-            .imports = &.{tables_import},
+            .imports = &.{ tables_import, courts_import },
         }),
     });
     b.installArtifact(lib);
@@ -75,7 +92,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{tables_import},
+        .imports = &.{ tables_import, courts_import },
     });
     const tests = b.addTest(.{
         .root_module = core_test_mod,

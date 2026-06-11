@@ -1,6 +1,7 @@
 const std = @import("std");
 const reporters = @import("reporters.zig");
 const tables = @import("reporters_tables");
+const courts = @import("courts_tables");
 
 pub const Kind = enum {
     full_case,
@@ -34,6 +35,9 @@ pub const Citation = struct {
     /// Raw court string from the paren — resolution to a courts-db id is a
     /// separate pass.
     court_paren: ?[]const u8 = null,
+    /// Resolved courts-db court id (e.g. "ca4"), or "scotus" guessed from
+    /// the reporter. Static string from the generated table.
+    court: ?[]const u8 = null,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
@@ -73,6 +77,13 @@ pub fn extract(allocator: std.mem.Allocator, text: []const u8) ![]Citation {
             c.year_text = post.year_text;
             c.year = post.year;
             c.court_paren = post.court;
+            if (post.court) |paren_court| {
+                c.court = resolveCourtByParen(paren_court);
+            }
+            // eyecite guess_court: SCOTUS reporters imply the court
+            if (c.court == null and tables.editions[c.edition].is_scotus) {
+                c.court = "scotus";
+            }
             if (c.year == null) {
                 if (preCiteYear(text, c.span_start)) |yt| {
                     c.year_text = yt;
@@ -150,6 +161,31 @@ fn parsePostCitation(text: []const u8, start: usize) PostCitation {
         p += 1;
     }
     return .{};
+}
+
+/// Maps a court paren string ("4th Cir.", "Pa.Super.") to a courts-db id,
+/// mirroring eyecite get_court_by_paren: strip non-word chars + lowercase,
+/// then exact match wins; otherwise the LAST prefix match in courts.json
+/// file order (yes, last — replicated faithfully).
+fn resolveCourtByParen(paren: []const u8) ?[]const u8 {
+    var buf: [128]u8 = undefined;
+    var n: usize = 0;
+    for (paren) |c| {
+        if (std.ascii.isAlphanumeric(c) or c == '_') {
+            if (n == buf.len) return null; // pathological input: no match
+            buf[n] = std.ascii.toLower(c);
+            n += 1;
+        }
+    }
+    if (n == 0) return null;
+    const query = buf[0..n];
+
+    var prefix_hit: ?[]const u8 = null;
+    for (courts.courts) |court| {
+        if (std.mem.eql(u8, court.norm, query)) return court.id;
+        if (std.mem.startsWith(u8, court.norm, query)) prefix_hit = court.id;
+    }
+    return prefix_hit;
 }
 
 /// eyecite's median case-name backward-seek window, in words.
@@ -645,6 +681,41 @@ test "year not at paren end is rejected: (1982 Pa.)" {
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
+}
+
+test "court resolution: (4th Cir. 1982) -> ca4" {
+    const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("ca4", cites[0].court.?);
+}
+
+test "court resolution without internal space: (Pa.Super. 1982) -> pasuperct" {
+    const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (Pa.Super. 1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("pasuperct", cites[0].court.?);
+}
+
+test "court resolution exact: (Pa. 2017) -> pa" {
+    const cites = try extract(testing.allocator, "Commonwealth v. Muniz, 164 A.3d 1189 (Pa. 2017)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("pa", cites[0].court.?);
+}
+
+test "scotus guessed from reporter without paren (guess_court parity)" {
+    const cites = try extract(testing.allocator, "1 U.S. 1");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("scotus", cites[0].court.?);
+}
+
+test "non-scotus reporter without paren has no court" {
+    const cites = try extract(testing.allocator, "1 F.2d 1");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].court);
 }
 
 test "two citations in one string" {

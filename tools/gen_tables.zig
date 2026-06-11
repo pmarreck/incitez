@@ -805,6 +805,9 @@ pub fn main(init: std.process.Init) !void {
         \\    reporter_name: []const u8,
         \\    cite_type: CiteType,
         \\    programs: []const u16,
+        \\    /// eyecite Reporter.is_scotus: federal + "supreme" in name, or
+        \\    /// a scotus_early cite_type (drives guess_court).
+        \\    is_scotus: bool,
         \\}};
         \\
         \\pub const MatchEntry = struct {{
@@ -856,11 +859,17 @@ pub fn main(init: std.process.Init) !void {
 
     try w.writeAll("\npub const editions: []const Edition = &.{\n");
     for (editions.items, 0..) |ed, i| {
+        const is_scotus = (std.mem.eql(u8, ed.cite_type, "federal") and
+            containsSupreme(ed.name)) or
+            std.mem.indexOf(u8, ed.cite_type, "scotus") != null;
         try w.writeAll("    .{ .abbrev = ");
         try writeZigString(w, ed.abbrev);
         try w.writeAll(", .reporter_name = ");
         try writeZigString(w, ed.name);
-        try w.print(", .cite_type = .{s}, .programs = &ed{d}_progs }},\n", .{ ed.cite_type, i });
+        try w.print(
+            ", .cite_type = .{s}, .programs = &ed{d}_progs, .is_scotus = {} }},\n",
+            .{ ed.cite_type, i, is_scotus },
+        );
     }
     try w.writeAll(
         \\};
@@ -911,6 +920,21 @@ fn internProgram(
     try programs.append(arena, compiled);
     try program_ids.put(arena, expanded, id);
     return id;
+}
+
+fn containsSupreme(name: []const u8) bool {
+    if (name.len < 7) return false;
+    for (0..name.len - 6) |i| {
+        var eq = true;
+        for ("supreme", 0..) |c, k| {
+            if (std.ascii.toLower(name[i + k]) != c) {
+                eq = false;
+                break;
+            }
+        }
+        if (eq) return true;
+    }
+    return false;
 }
 
 fn matchLessThan(_: void, a: Match, b: Match) bool {

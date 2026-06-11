@@ -3,8 +3,7 @@
 Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (processed).
 
 ## In Progress
-- [ ] M2: full-cite METADATA pass (eyecite add_post_citation/find_case_name parity): year, court (paren → courts-db), pin_cite, parenthetical, plaintiff/defendant backward scan with stop words. Activate corresponding fields in the acceptance driver comparison → eligible set grows beyond 64.
-- [ ] M1: Garnix green (was in_progress at last check — verify!)
+- [ ] M2 metadata, remaining: court resolution (courts-db codegen + get_court_by_paren + the scotus-without-paren rule), pin_cite (+clean_pin_cite), parenthetical (process_parenthetical trimming), extra, plaintiff/defendant (find_case_name backward scan), full_span. Activate each in the driver as it lands.
 
 ## Design notes (M2 matcher, from reading eyecite internals)
 - eyecite extractor model: per-edition regex templates (default `$full_cite` = `$volume $reporter,? $page`), expanded via regexes.json variables; 208 of 1368 editions carry custom templates; short-cite regexes derived by `at ...page` substitution.
@@ -25,6 +24,9 @@ Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (
 ## Completed
 - [x] Read kickoff + design brief; copied spec into docs/ (2026-06-11 ~14:00 EST)
 - [x] M2: corpus port — 193 oracle-verified cases / 6 methods → tests/corpus/eyecite_corpus.json; .#eyecite-env (pinned eyecite 2.7.6) in flake (2026-06-11 ~15:00 EST)
+- [x] M1: Garnix CI green on yolo (incl. Linux patchelf path — poke answered) (2026-06-11 ~16:45 EST)
+- [x] M2: year metadata — post-citation court/date paren + CA pre-citation year; driver compares year; 64/64 (2026-06-11 ~17:15 EST)
+  - year ceiling constant 2027 (clockless core) — bump with corpus re-extraction or inject; divergence note: pre-cite year lacks eyecite's case-name gate
 - [x] M2: full-citation matcher CORE — pattern-VM (build-time compiled from eyecite templates, strict closed vocabulary), 64/64 eligible corpus cases green incl. all custom shapes; acceptance ratchet at 64 (2026-06-11 ~16:30 EST)
   - 1 known unanchored program (S.W. fuzzy regex) deliberately skipped at runtime — revisit with differential gate
   - spans are BYTE offsets (vs eyecite's code-point offsets) by design; driver converts
