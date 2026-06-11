@@ -1,0 +1,9 @@
+# Per-repo jj config, versioned. jj reads this from a user-level path
+# (~/.config/jj/repos/<hash>/config.toml) that is NOT inside the repo;
+# run ./setup after cloning to install it.
+
+[snapshot]
+# courts.json (vendored from courts-db) is 1.9MiB; jj's default 1MiB cap
+# silently refuses to track it (the build then fails only in the Nix
+# sandbox, where src = the git tree).
+max-new-file-size = "8MiB"

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Install the versioned per-repo jj config (.jj-repo-config.toml) into the
+# user-level location jj actually reads. Idempotent; backs up a differing
+# pre-existing config. Run after `jj git clone` and after any change to
+# .jj-repo-config.toml.
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
+dest=$(jj config path --repo 2>/dev/null) || {
+	echo "FAILED: jj config path --repo (is this a jj repo?)" >&2
+	exit 1
+}
+
+if [[ -f "$dest" ]] && cmp -s .jj-repo-config.toml "$dest"; then
+	echo "already current: $dest"
+	exit 0
+fi
+
+if [[ -f "$dest" ]]; then
+	backup="$dest.bak.$(date +%s)"
+	cp "$dest" "$backup"
+	echo "backed up existing config to $backup"
+fi
+
+mkdir -p "$(dirname "$dest")"
+cp .jj-repo-config.toml "$dest"
+echo "installed: $dest"
