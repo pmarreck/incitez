@@ -4,6 +4,8 @@ Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (
 
 ## In Progress
 - [ ] M2 metadata, remaining: pin_cite (+clean_pin_cite), parenthetical (process_parenthetical trimming), extra, plaintiff/defendant (find_case_name backward scan), full_span. Activate each in the driver as it lands.
+- [ ] INVESTIGATE (found by ./bm): on the 150×-concatenated corpus doc, vm finds 20700 cites vs pcre2 20550 — exactly 1/seam. Adjacent-citation boundary semantics differ (Python finditer consumes the trailing boundary char, starving the next citation's leading boundary; the VM doesn't). The M4 differential gate vs real eyecite adjudicates which is oracle-correct. Add a seam-adjacency case to the cross-engine test either way.
+- [ ] INCITEZ_ENGINE env-var switch: plumbing exists in the core (Engine enum); the env read lands with the CLI extract surface (M5) — env is I/O, core stays pure.
 
 ## Design notes (M2 matcher, from reading eyecite internals)
 - eyecite extractor model: per-edition regex templates (default `$full_cite` = `$volume $reporter,? $page`), expanded via regexes.json variables; 208 of 1368 editions carry custom templates; short-cite regexes derived by `at ...page` substitution.
@@ -22,6 +24,7 @@ Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (
 - [ ] M6: docscan integration + legal_ai harness wiring (planned with Einstein after M5)
 
 ## Completed
+- [x] PCRE2 dual-engine harness (Peter-directed): pcre2 fork as flake input (static+JIT), eyecite-literal extractors emitted by codegen, Engine enum, per-engine corpus ratchets (64/64 BOTH), cross-engine differential 0/193, ./bm engine benchmark — vm 17.35× faster wall-clock than JIT'd PCRE2 on 1.7MB (449ms vs 7.8s steady-state; one-shot 0.90s vs 15.7s) (2026-06-11 ~19:30 EST)
 - [x] Read kickoff + design brief; copied spec into docs/ (2026-06-11 ~14:00 EST)
 - [x] M2: corpus port — 193 oracle-verified cases / 6 methods → tests/corpus/eyecite_corpus.json; .#eyecite-env (pinned eyecite 2.7.6) in flake (2026-06-11 ~15:00 EST)
 - [x] M1: Garnix CI green on yolo (incl. Linux patchelf path — poke answered) (2026-06-11 ~16:45 EST)

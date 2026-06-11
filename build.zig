@@ -148,4 +148,16 @@ pub fn build(b: *std.Build) void {
     const test_compile = b.step("test-compile", "Compile tests without running");
     test_compile.dependOn(&tests.step);
     test_compile.dependOn(&acceptance_tests.step);
+
+    // -- Engine benchmark tool (driven by ./bm via hyperfine) --
+    const bench = b.addExecutable(.{
+        .name = "incitez-bench",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/bench.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "incitez", .module = core_test_mod }},
+        }),
+    });
+    b.installArtifact(bench);
 }

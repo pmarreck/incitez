@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Engine benchmark: vm vs pcre2 over a synthetic legal document assembled
+# from the acceptance corpus. Results append to BENCHMARKS.md (committed,
+# hardware-keyed). Always ReleaseFast (the bench binary refuses Debug).
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
+run() {
+	"$@" || {
+		echo "FAILED: $*" >&2
+		exit 1
+	}
+}
+
+run ./build
+
+workdir="${TMPDIR:-/tmp}"
+base="$workdir/incitez-bench-base.txt"
+doc="$workdir/incitez-bench.txt"
+
+run nix run 'nixpkgs#jq' -- -r '.methods[][] | .text' tests/corpus/eyecite_corpus.json > "$base"
+: > "$doc"
+for _ in $(seq 1 150); do cat "$base" >> "$doc"; done
+bytes=$(wc -c < "$doc" | tr -d ' ')
+
+echo "=== steady-state (in-process, 5 iters) ==="
+vm_line=$(./zig-out/bin/incitez-bench vm "$doc" 5)
+p2_line=$(./zig-out/bin/incitez-bench pcre2 "$doc" 5)
+echo "$vm_line"
+echo "$p2_line"
+
+echo "=== one-shot incl. startup + engine init (hyperfine) ==="
+hf_json="$workdir/incitez-bench-hf.json"
+run nix develop -c hyperfine -N --warmup 3 \
+	--export-json "$hf_json" \
+	"./zig-out/bin/incitez-bench vm $doc 1" \
+	"./zig-out/bin/incitez-bench pcre2 $doc 1"
+
+vm_oneshot=$(nix run 'nixpkgs#jq' -- -r '.results[0].mean' "$hf_json")
+p2_oneshot=$(nix run 'nixpkgs#jq' -- -r '.results[1].mean' "$hf_json")
+
+hw="$(uname -m)-$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -s)"
+{
+	echo "## $(date '+%Y-%m-%d %H:%M') — $hw — ${bytes} bytes input"
+	echo '```'
+	echo "$vm_line"
+	echo "$p2_line"
+	echo "one-shot mean: vm ${vm_oneshot}s, pcre2 ${p2_oneshot}s"
+	echo '```'
+	echo
+} >> BENCHMARKS.md
+
+echo "appended to BENCHMARKS.md"
