@@ -2,6 +2,14 @@ const std = @import("std");
 const reporters = @import("reporters.zig");
 const tables = @import("reporters_tables");
 const courts = @import("courts_tables");
+const pcre2_engine = @import("pcre2_engine.zig");
+
+/// Which candidate-finding implementation to use. `.vm` is incitez's
+/// anchored pattern VM; `.pcre2` runs the eyecite-literal regexes through
+/// PCRE2 — an independent second path for differential comparison
+/// (selected via INCITEZ_ENGINE at the CLI/FFI edge; the core takes it as
+/// a parameter).
+pub const Engine = enum { vm, pcre2 };
 
 pub const Kind = enum {
     full_case,
@@ -62,42 +70,113 @@ pub const default_max_valid_year: u16 = 2027;
 /// Returned slice is owned by the caller (free with `allocator.free`);
 /// all string fields are zero-copy slices into `text`.
 pub fn extract(allocator: std.mem.Allocator, text: []const u8) ![]Citation {
+    return extractWithEngine(allocator, text, .vm);
+}
+
+pub fn extractWithEngine(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    engine: Engine,
+) ![]Citation {
     var cites: std.ArrayListUnmanaged(Citation) = .empty;
     errdefer cites.deinit(allocator);
+    switch (engine) {
+        .vm => try vmScan(allocator, text, &cites),
+        .pcre2 => try pcre2Scan(allocator, text, &cites),
+    }
+    for (cites.items) |*c| finishCitation(text, c);
+    return cites.toOwnedSlice(allocator);
+}
 
+fn vmScan(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    cites: *std.ArrayListUnmanaged(Citation),
+) !void {
     var i: usize = 0;
-    scan: while (i < text.len) {
+    while (i < text.len) {
         if (!firstByteCandidate(text[i])) {
             i += 1;
             continue;
         }
         if (bestMatchAt(text, i)) |cite| {
-            var c = cite;
-            const post = parsePostCitation(text, c.span_end);
-            c.year_text = post.year_text;
-            c.year = post.year;
-            c.court_paren = post.court;
-            if (post.court) |paren_court| {
-                c.court = resolveCourtByParen(paren_court);
-            }
-            // eyecite guess_court: SCOTUS reporters imply the court
-            if (c.court == null and tables.editions[c.edition].is_scotus) {
-                c.court = "scotus";
-            }
-            if (c.year == null) {
-                if (preCiteYear(text, c.span_start)) |yt| {
-                    c.year_text = yt;
-                    const y = std.fmt.parseInt(u16, yt, 10) catch unreachable;
-                    c.year = y;
-                }
-            }
-            try cites.append(allocator, c);
-            i = c.span_end;
-            continue :scan;
+            try cites.append(allocator, cite);
+            i = cite.span_end;
+            continue;
         }
         i += 1;
     }
-    return cites.toOwnedSlice(allocator);
+}
+
+fn pcre2Scan(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    cites: *std.ArrayListUnmanaged(Citation),
+) !void {
+    const cands = try pcre2_engine.scan(allocator, text);
+    defer allocator.free(cands);
+    for (cands) |cand| {
+        try cites.append(allocator, makeCitation(
+            text,
+            cand.start,
+            cand.end,
+            cand.volume,
+            cand.reporter,
+            cand.page,
+            cand.edition,
+            cand.is_variant,
+        ));
+    }
+}
+
+/// Shared post-candidate metadata: court/date paren, court resolution,
+/// scotus guess, pre-citation year. Both engines converge here.
+fn finishCitation(text: []const u8, c: *Citation) void {
+    const post = parsePostCitation(text, c.span_end);
+    c.year_text = post.year_text;
+    c.year = post.year;
+    c.court_paren = post.court;
+    if (post.court) |paren_court| {
+        c.court = resolveCourtByParen(paren_court);
+    }
+    // eyecite guess_court: SCOTUS reporters imply the court
+    if (c.court == null and tables.editions[c.edition].is_scotus) {
+        c.court = "scotus";
+    }
+    if (c.year == null) {
+        if (preCiteYear(text, c.span_start)) |yt| {
+            c.year_text = yt;
+            c.year = std.fmt.parseInt(u16, yt, 10) catch unreachable;
+        }
+    }
+}
+
+fn makeCitation(
+    text: []const u8,
+    start: u32,
+    end: u32,
+    volume: ?[]const u8,
+    reporter_found: []const u8,
+    page_raw: ?[]const u8,
+    edition: u32,
+    is_variant: bool,
+) Citation {
+    // all-underscore page is a "known missing" placeholder: spanned, but null
+    const page: ?[]const u8 = if (page_raw) |pg|
+        (if (pg.len > 0 and pg[0] == '_') null else pg)
+    else
+        null;
+    _ = text;
+    return .{
+        .kind = .full_case,
+        .span_start = start,
+        .span_end = end,
+        .volume = volume,
+        .reporter = reporter_found,
+        .page = page,
+        .edition = edition,
+        .is_variant = is_variant,
+    };
 }
 
 // ── Post-citation metadata (eyecite POST_FULL_CITATION_REGEX) ────────
@@ -319,15 +398,21 @@ fn bestMatchAt(text: []const u8, i: usize) ?Citation {
             for (edition.programs) |pid| {
                 const prog = tables.programs[pid];
                 if (prog.pre_min > prog.pre_max) continue; // unanchored placeholder
-                if (tryProgram(text, i, key_len, prog)) |cand| {
+                if (tryProgram(text, i, key_len, prog)) |hit| {
                     if (best == null or
-                        cand.span_start < best.?.span_start or
-                        (cand.span_start == best.?.span_start and cand.span_end > best.?.span_end))
+                        hit.start < best.?.span_start or
+                        (hit.start == best.?.span_start and hit.end > best.?.span_end))
                     {
-                        var c = cand;
-                        c.edition = entry.edition;
-                        c.is_variant = entry.is_variant;
-                        best = c;
+                        best = makeCitation(
+                            text,
+                            hit.start,
+                            hit.end,
+                            hit.volume,
+                            text[i .. i + key_len],
+                            hit.page,
+                            entry.edition,
+                            entry.is_variant,
+                        );
                     }
                 }
             }
@@ -335,6 +420,13 @@ fn bestMatchAt(text: []const u8, i: usize) ?Citation {
     }
     return best;
 }
+
+const ProgramHit = struct {
+    start: u32,
+    end: u32,
+    volume: ?[]const u8,
+    page: ?[]const u8,
+};
 
 const Captures = struct {
     start: [tables.group_count]?u32 = @splat(null),
@@ -348,7 +440,7 @@ const Captures = struct {
     }
 };
 
-fn tryProgram(text: []const u8, anchor: usize, key_len: usize, prog: tables.Program) ?Citation {
+fn tryProgram(text: []const u8, anchor: usize, key_len: usize, prog: tables.Program) ?ProgramHit {
     const lo = anchor -| @as(usize, prog.pre_max);
     const hi = anchor -| @as(usize, prog.pre_min);
     var s = lo;
@@ -363,21 +455,11 @@ fn tryProgram(text: []const u8, anchor: usize, key_len: usize, prog: tables.Prog
         // trailing boundary
         if (post_end < text.len and std.ascii.isAlphanumeric(text[post_end])) continue;
 
-        const page_raw = caps.slice(text, .page);
-        const page: ?[]const u8 = if (page_raw) |pg|
-            (if (pg.len > 0 and pg[0] == '_') null else pg)
-        else
-            null;
-
         return .{
-            .kind = .full_case,
-            .span_start = @intCast(s),
-            .span_end = @intCast(post_end),
+            .start = @intCast(s),
+            .end = @intCast(post_end),
             .volume = caps.slice(text, .volume),
-            .reporter = text[anchor .. anchor + key_len],
-            .page = page,
-            .edition = 0, // filled by caller
-            .is_variant = false,
+            .page = caps.slice(text, .page),
         };
     }
     return null;
@@ -716,6 +798,33 @@ test "non-scotus reporter without paren has no court" {
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].court);
+}
+
+test "pcre2 engine agrees with vm engine on representative citations" {
+    const samples = [_][]const u8{
+        "Lissner v. Test, 1 U.S. 1 (1982)",
+        "bob Lissner v. Test 1 F.2d 1 (1982)",
+        "2006-Ohio-2095",
+        "blah blah Bankr. L. Rep. (CCH) P12,345. blah blah",
+        "word T.C. Memo. 2019-233",
+        "see 1 U.S. 1; also 2 F.2d 3.",
+        "the 3 musketeers met 4 friends in 1982",
+        "lorem 111 S.W. 12th St.",
+    };
+    for (samples) |text| {
+        const vm_cites = try extractWithEngine(testing.allocator, text, .vm);
+        defer testing.allocator.free(vm_cites);
+        const p_cites = try extractWithEngine(testing.allocator, text, .pcre2);
+        defer testing.allocator.free(p_cites);
+        try testing.expectEqual(vm_cites.len, p_cites.len);
+        for (vm_cites, p_cites) |a, b| {
+            try testing.expectEqual(a.span_start, b.span_start);
+            try testing.expectEqual(a.span_end, b.span_end);
+            try testing.expectEqual(a.edition, b.edition);
+            try testing.expectEqual(a.year, b.year);
+            try testing.expectEqualStrings(a.correctedReporter(), b.correctedReporter());
+        }
+    }
 }
 
 test "two citations in one string" {

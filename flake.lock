@@ -82,6 +82,24 @@
         "type": "github"
       }
     },
+    "pcre2-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778798085,
+        "narHash": "sha256-a37QL33zCTth7qMBtzwjBkUNjmku6kRa0rrz7oSAOxA=",
+        "ref": "refs/heads/main",
+        "rev": "873ecf6466a0ddf62facfffbd387213249db20bb",
+        "revCount": 2227,
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/pmarreck/pcre2"
+      },
+      "original": {
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/pmarreck/pcre2"
+      }
+    },
     "reporters-db-src": {
       "flake": false,
       "locked": {
@@ -104,6 +122,7 @@
         "eyecite-src": "eyecite-src",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
+        "pcre2-src": "pcre2-src",
         "reporters-db-src": "reporters-db-src",
         "zig-overlay": "zig-overlay"
       }

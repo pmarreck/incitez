@@ -8,6 +8,26 @@ pub fn build(b: *std.Build) void {
         "Optimization mode (default: ReleaseFast)",
     ) orelse .ReleaseFast;
 
+    // Static PCRE2 for the alternate engine path. Flake builds pass
+    // -Dpcre2-prefix; the devshell exports PCRE2_PREFIX.
+    const pcre2_prefix = b.option(
+        []const u8,
+        "pcre2-prefix",
+        "Path to a static PCRE2 install (include/, lib/libpcre2-8.a)",
+    ) orelse b.graph.environ_map.get("PCRE2_PREFIX") orelse {
+        std.debug.panic(
+            "PCRE2 not found: pass -Dpcre2-prefix=… or enter the dev shell " ++
+                "(nix develop exports PCRE2_PREFIX)",
+            .{},
+        );
+    };
+    const pcre2_include: std.Build.LazyPath = .{
+        .cwd_relative = b.fmt("{s}/include", .{pcre2_prefix}),
+    };
+    const pcre2_lib: std.Build.LazyPath = .{
+        .cwd_relative = b.fmt("{s}/lib/libpcre2-8.a", .{pcre2_prefix}),
+    };
+
     // -- Build-time table codegen: reporters-db JSON → Zig source module --
     // The generator is a host tool; ReleaseSafe keeps it on the LLVM backend
     // (the self-hosted x86_64 Debug backend is still crash-prone in 0.16).
@@ -47,16 +67,19 @@ pub fn build(b: *std.Build) void {
     };
 
     // -- Static library with C ABI (the FFI boundary around the pure Zig core) --
+    const lib_mod = b.createModule(.{
+        .root_source_file = b.path("src/lib.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{ tables_import, courts_import },
+    });
+    lib_mod.addIncludePath(pcre2_include);
+    lib_mod.addObjectFile(pcre2_lib);
     const lib = b.addLibrary(.{
         .name = "incitez",
         .linkage = .static,
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/lib.zig"),
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
-            .imports = &.{ tables_import, courts_import },
-        }),
+        .root_module = lib_mod,
     });
     b.installArtifact(lib);
     b.installFile("include/incitez.h", "include/incitez.h");
@@ -72,6 +95,7 @@ pub fn build(b: *std.Build) void {
         .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror" },
     });
     cli_mod.addIncludePath(b.path("include"));
+    cli_mod.addObjectFile(pcre2_lib);
     cli_mod.linkLibrary(lib);
     const cli = b.addExecutable(.{
         .name = "incitez",
@@ -92,8 +116,11 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true, // pcre2 needs libc
         .imports = &.{ tables_import, courts_import },
     });
+    core_test_mod.addIncludePath(pcre2_include);
+    core_test_mod.addObjectFile(pcre2_lib);
     const tests = b.addTest(.{
         .root_module = core_test_mod,
         .use_llvm = true,

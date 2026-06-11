@@ -22,9 +22,17 @@
       url = "github:freelawproject/courts-db";
       flake = false;
     };
+    # Peter's PCRE2 fork — alternate regex-engine code path for the
+    # dual-engine comparison harness (vm vs pcre2 vs python oracle).
+    pcre2-src = {
+      # git+submodules: JIT requires the sljit submodule, absent from
+      # GitHub tarball fetches
+      url = "git+https://github.com/pmarreck/pcre2?submodules=1";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, zig-overlay, eyecite-src, reporters-db-src, courts-db-src }:
+  outputs = { self, nixpkgs, flake-utils, zig-overlay, eyecite-src, reporters-db-src, courts-db-src, pcre2-src }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -35,6 +43,31 @@
           pkgs.darwin.cctools
           pkgs.apple-sdk
         ];
+
+        # Static PCRE2 (8-bit, JIT) from Peter's fork, for the alternate
+        # engine path. CMake build straight from the git tree.
+        pcre2 = pkgs.stdenv.mkDerivation {
+          pname = "pcre2-static";
+          version = "fork";
+          src = pcre2-src;
+          nativeBuildInputs = [ pkgs.cmake ];
+          cmakeFlags = [
+            "-DBUILD_SHARED_LIBS=OFF"
+            "-DPCRE2_SUPPORT_JIT=ON"
+            "-DPCRE2_BUILD_PCRE2GREP=OFF"
+            "-DPCRE2_BUILD_TESTS=OFF"
+            # absolute install dirs: pcre2's pkgconfig templates otherwise
+            # trip nixpkgs' broken-cmake-paths check (nixpkgs#144170)
+            "-DCMAKE_INSTALL_LIBDIR=${placeholder "out"}/lib"
+            "-DCMAKE_INSTALL_INCLUDEDIR=${placeholder "out"}/include"
+          ];
+          # We consume lib/libpcre2-8.a + include/ directly; the generated
+          # pkgconfig/scripts double-join prefixes (nixpkgs#144170) and the
+          # docs are dead weight — drop them rather than patch them.
+          postInstall = ''
+            rm -rf $out/lib/pkgconfig $out/bin $out/share $out/lib/cmake
+          '';
+        };
 
         # ── Pinned eyecite as the differential oracle ────────────────────
         # Test-time only; never ships in the binary. The one justified
@@ -109,7 +142,7 @@
             export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
             mkdir -p $ZIG_GLOBAL_CACHE_DIR
             ${darwinIncludeHook}
-            zig build --prefix $out -Doptimize=${optimizeMode}
+            zig build --prefix $out -Doptimize=${optimizeMode} -Dpcre2-prefix=${pcre2}
           '';
 
           dontInstall = true;
@@ -120,6 +153,8 @@
         packages.debug = mkIncitez "Debug";
         # Oracle env for corpus extraction + differential testing (test-time only)
         packages.eyecite-env = eyecitePython;
+        # Exposed for direct builds/debugging of the engine dependency
+        packages.pcre2 = pcre2;
 
         checks.test = pkgs.stdenv.mkDerivation {
           pname = "incitez-test";
@@ -141,8 +176,9 @@
             # into binaries, which does not exist in the Nix sandbox. Compile
             # the test binaries first, patchelf them, then run the test step
             # which reuses the cached (now patched) artifacts.
+            export PCRE2_PREFIX=${pcre2}
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-              zig build test-compile
+              zig build test-compile -Dpcre2-prefix=${pcre2}
               DL="$(cat ${pkgs.stdenv.cc}/nix-support/dynamic-linker)"
               for d in .zig-cache zig-out; do
                 [ -d "$d" ] || continue
@@ -151,7 +187,7 @@
                 done
               done
             ''}
-            timeout 600 zig build test || {
+            timeout 600 zig build test -Dpcre2-prefix=${pcre2} || {
               echo "Tests timed out or failed after 10 minutes"
               exit 1
             }
@@ -172,11 +208,13 @@
 
           # Source-analysis convenience: where the pinned upstream sources live.
           shellHook = ''
+            export PCRE2_PREFIX="${pcre2}"
             echo "incitez dev shell"
             echo "  zig:          $(zig version)"
             echo "  eyecite:      ${eyecite-src}"
             echo "  reporters-db: ${reporters-db-src}"
             echo "  courts-db:    ${courts-db-src}"
+            echo "  pcre2:        ${pcre2}"
           '';
         };
       }

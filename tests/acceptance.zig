@@ -12,6 +12,8 @@ const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
 const RATCHET_EXPECTED_PASSES: usize = 64;
+const RATCHET_PCRE2_EXPECTED_PASSES: usize = 64;
+const EXPECTED_ENGINE_DIVERGENCES: usize = 0;
 
 const CaseResult = struct {
     passed: usize = 0,
@@ -96,8 +98,12 @@ fn optFieldMatches(expected: ?std.json.Value, actual: ?[]const u8) bool {
     return std.mem.eql(u8, exp_str.?, actual.?);
 }
 
-test "acceptance ratchet: full case citations vs eyecite corpus" {
-    const allocator = std.testing.allocator;
+fn runCorpus(
+    allocator: std.mem.Allocator,
+    engine: incitez.extraction.Engine,
+    ratchet: usize,
+    label: []const u8,
+) !void {
     const parsed = try std.json.parseFromSlice(std.json.Value, allocator, corpus_json, .{});
     defer parsed.deinit();
 
@@ -117,7 +123,7 @@ test "acceptance ratchet: full case citations vs eyecite corpus" {
             const text = jsonStr(case.get("text").?).?;
             const expected_cites = case.get("cites").?.array.items;
 
-            const actual = try incitez.extraction.extract(allocator, text);
+            const actual = try incitez.extraction.extractWithEngine(allocator, text, engine);
             defer allocator.free(actual);
 
             var ok = actual.len == expected_cites.len;
@@ -142,20 +148,84 @@ test "acceptance ratchet: full case citations vs eyecite corpus" {
         }
     }
 
-    if (result.passed != RATCHET_EXPECTED_PASSES) {
+    if (result.passed != ratchet) {
         std.debug.print(
-            "\nacceptance ratchet: {d}/{d} eligible cases pass (ratchet expects exactly {d})\n",
-            .{ result.passed, result.attempted, RATCHET_EXPECTED_PASSES },
+            "\n{s} ratchet: {d}/{d} eligible cases pass (ratchet expects exactly {d})\n",
+            .{ label, result.passed, result.attempted, ratchet },
         );
-        if (result.passed < RATCHET_EXPECTED_PASSES) {
+        if (result.passed < ratchet) {
             std.debug.print("REGRESSION — failing cases:\n", .{});
             for (result.failures.items) |f| std.debug.print("  {s}\n", .{f});
         } else {
-            std.debug.print(
-                "progress! bump RATCHET_EXPECTED_PASSES to {d} after reviewing\n",
-                .{result.passed},
-            );
+            std.debug.print("progress! bump the {s} ratchet to {d} after reviewing\n", .{ label, result.passed });
         }
         return error.RatchetMismatch;
     }
+}
+
+test "acceptance ratchet (vm): full case citations vs eyecite corpus" {
+    try runCorpus(std.testing.allocator, .vm, RATCHET_EXPECTED_PASSES, "vm");
+}
+
+test "acceptance ratchet (pcre2): full case citations vs eyecite corpus" {
+    try runCorpus(std.testing.allocator, .pcre2, RATCHET_PCRE2_EXPECTED_PASSES, "pcre2");
+}
+
+// Cross-engine differential: both engines over EVERY corpus text (all
+// methods, eligibility ignored — divergences on unsupported shapes are
+// data, not noise). Two-sided: the divergence count must equal the
+// constant exactly.
+test "cross-engine differential: vm vs pcre2 over all corpus texts" {
+    const allocator = std.testing.allocator;
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, corpus_json, .{});
+    defer parsed.deinit();
+
+    var diverged: usize = 0;
+    var total: usize = 0;
+    var methods_it = parsed.value.object.get("methods").?.object.iterator();
+    while (methods_it.next()) |method| {
+        for (method.value_ptr.array.items) |case_val| {
+            const text = jsonStr(case_val.object.get("text").?).?;
+            total += 1;
+
+            const a = try incitez.extraction.extractWithEngine(allocator, text, .vm);
+            defer allocator.free(a);
+            const b = try incitez.extraction.extractWithEngine(allocator, text, .pcre2);
+            defer allocator.free(b);
+
+            var same = a.len == b.len;
+            if (same) {
+                for (a, b) |x, y| {
+                    if (x.span_start != y.span_start or x.span_end != y.span_end or
+                        x.edition != y.edition or x.year != y.year or
+                        !optEq(x.volume, y.volume) or !optEq(x.page, y.page) or
+                        !optEq(x.court, y.court))
+                    {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+            if (!same) {
+                diverged += 1;
+                std.debug.print("ENGINE DIVERGENCE [{s}]: {s} (vm {d} cites, pcre2 {d})\n", .{
+                    method.key_ptr.*, text, a.len, b.len,
+                });
+            }
+        }
+    }
+
+    if (diverged != EXPECTED_ENGINE_DIVERGENCES) {
+        std.debug.print(
+            "\ncross-engine: {d}/{d} texts diverge (expected exactly {d})\n",
+            .{ diverged, total, EXPECTED_ENGINE_DIVERGENCES },
+        );
+        return error.RatchetMismatch;
+    }
+}
+
+fn optEq(a: ?[]const u8, b: ?[]const u8) bool {
+    if (a == null and b == null) return true;
+    if (a == null or b == null) return false;
+    return std.mem.eql(u8, a.?, b.?);
 }

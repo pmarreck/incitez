@@ -48,5 +48,6 @@ Honest target to publish once measured: "1–2 orders of magnitude end-to-end; 1
 4. Differential CI gate vs pinned eyecite + mutation suite + benchmark gate.
 5. C FFI + CLI (`incitez extract file.txt --json`).
 6. docscan integration (citations as chunk metadata); legal_ai harness stage-1 wiring.
+7. **WASM build target** — *Peter-endorsed 2026-06-11* (originated as Einstein's monetization proposal; ratified: "never leaving the browser is certainly a sell to lawyers"). Powers the mecha.llc browser demo: client-side citation checking where the document never leaves the lawyer's machine — the privilege-preserving differentiator no server-posting competitor matches. Architecture note: the core stays WASM-clean throughout milestones 1–6 (costs ~nothing); the server-side API and the WASM demo are complementary deployments of the same core, not a fork. Sequenced after the CLI milestone — not a license for present-day scope creep.
 
 Effort calibration: z7z went first-line→feature-complete in ~72h of wall clock. This is smaller. Sessions, not weeks.

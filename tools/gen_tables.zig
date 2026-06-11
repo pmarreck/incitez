@@ -677,6 +677,14 @@ pub fn main(init: std.process.Init) !void {
     var programs: std.ArrayListUnmanaged(Compiled) = .empty;
     var program_ids: std.StringArrayHashMapUnmanaged(u32) = .empty; // expanded regex → id
     var unanchored_count: usize = 0;
+    var pcre2_extractors: std.ArrayListUnmanaged(Pcre2Extractor) = .empty;
+    var pcre2_seen: std.StringArrayHashMapUnmanaged(void) = .empty;
+
+    const EntryEd = struct {
+        local: u32,
+        abbrev: []const u8,
+        expanded: []const []const u8,
+    };
 
     var series_it = root.iterator();
     while (series_it.next()) |series| {
@@ -694,12 +702,14 @@ pub fn main(init: std.process.Init) !void {
             }
 
             var local: std.StringHashMapUnmanaged(u32) = .empty;
+            var entry_eds: std.ArrayListUnmanaged(EntryEd) = .empty;
             var ed_it = entry.get("editions").?.object.iterator();
             while (ed_it.next()) |ed| {
                 const idx: u32 = @intCast(editions.items.len);
 
                 // compile this edition's regex templates (default $full_cite)
                 var ids: std.ArrayListUnmanaged(u32) = .empty;
+                var expanded_list: std.ArrayListUnmanaged([]const u8) = .empty;
                 const templates: []const std.json.Value = blk: {
                     if (ed.value_ptr.object.get("regexes")) |r| {
                         if (r == .array) break :blk r.array.items;
@@ -707,6 +717,8 @@ pub fn main(init: std.process.Init) !void {
                     break :blk &.{};
                 };
                 if (templates.len == 0) {
+                    const expanded = try recursiveSubstitute(arena, "$full_cite", &vars);
+                    try expanded_list.append(arena, expanded);
                     try ids.append(arena, try internProgram(
                         arena,
                         "$full_cite",
@@ -717,6 +729,8 @@ pub fn main(init: std.process.Init) !void {
                     ));
                 } else {
                     for (templates) |t| {
+                        const expanded = try recursiveSubstitute(arena, t.string, &vars);
+                        try expanded_list.append(arena, expanded);
                         try ids.append(arena, try internProgram(
                             arena,
                             t.string,
@@ -735,9 +749,16 @@ pub fn main(init: std.process.Init) !void {
                     .program_ids = ids.items,
                 });
                 try local.put(arena, ed.key_ptr.*, idx);
+                try entry_eds.append(arena, .{
+                    .local = idx,
+                    .abbrev = ed.key_ptr.*,
+                    .expanded = expanded_list.items,
+                });
                 try matches.append(arena, .{ .key = ed.key_ptr.*, .edition = idx, .is_variant = false });
             }
 
+            // per-edition variation keys (needed for pcre2 alternations)
+            var var_keys: std.AutoHashMapUnmanaged(u32, std.ArrayListUnmanaged([]const u8)) = .empty;
             if (entry.get("variations")) |variations| {
                 var var_it = variations.object.iterator();
                 while (var_it.next()) |v| {
@@ -750,6 +771,37 @@ pub fn main(init: std.process.Init) !void {
                         return error.DanglingVariation;
                     };
                     try matches.append(arena, .{ .key = v.key_ptr.*, .edition = idx, .is_variant = true });
+                    const gop = try var_keys.getOrPut(arena, idx);
+                    if (!gop.found_existing) gop.value_ptr.* = .empty;
+                    try gop.value_ptr.append(arena, v.key_ptr.*);
+                }
+            }
+
+            // eyecite-literal extractors for the PCRE2 path: per template,
+            // one regex with the exact edition name and one with all its
+            // variations (mirrors eyecite _add_regexes)
+            for (entry_eds.items) |ee| {
+                for (ee.expanded) |expanded| {
+                    try internPcre2Extractor(
+                        arena,
+                        expanded,
+                        &.{ee.abbrev},
+                        ee.local,
+                        false,
+                        &pcre2_extractors,
+                        &pcre2_seen,
+                    );
+                    if (var_keys.get(ee.local)) |vk| {
+                        try internPcre2Extractor(
+                            arena,
+                            expanded,
+                            vk.items,
+                            ee.local,
+                            true,
+                            &pcre2_extractors,
+                            &pcre2_seen,
+                        );
+                    }
                 }
             }
         }
@@ -899,6 +951,29 @@ pub fn main(init: std.process.Init) !void {
         \\
     , .{ max_key_len, first_bytes[0], first_bytes[1], first_bytes[2], first_bytes[3] });
 
+    // eyecite-literal extractor regexes for the PCRE2 engine path
+    try w.writeAll(
+        \\
+        \\/// Full eyecite extractor regexes (edition alternations substituted,
+        \\/// nonalphanum-boundary wrapped, citation = group 1) for the PCRE2
+        \\/// engine path. The owner edition resolves matches to the edition
+        \\/// whose template fired. Regexes sentinel-terminated for the C API.
+        \\pub const Pcre2Extractor = struct {
+        \\    regex: [:0]const u8,
+        \\    edition: u32,
+        \\    is_variant: bool,
+        \\};
+        \\
+        \\pub const pcre2_extractors: []const Pcre2Extractor = &.{
+        \\
+    );
+    for (pcre2_extractors.items) |ex| {
+        try w.writeAll("    .{ .regex = ");
+        try writeZigString(w, ex.regex);
+        try w.print(", .edition = {d}, .is_variant = {} }},\n", .{ ex.edition, ex.is_variant });
+    }
+    try w.writeAll("};\n");
+
     const out = try std.Io.Dir.cwd().createFile(io, args[3], .{});
     defer out.close(io);
     try out.writeStreamingAll(io, aw.written());
@@ -920,6 +995,71 @@ fn internProgram(
     try programs.append(arena, compiled);
     try program_ids.put(arena, expanded, id);
     return id;
+}
+
+/// Python re.escape (3.7+ semantics): escape regex specials only.
+fn escapePython(arena: std.mem.Allocator, s: []const u8) ![]const u8 {
+    var out: std.ArrayListUnmanaged(u8) = .empty;
+    for (s) |c| {
+        const special = switch (c) {
+            '(', ')', '[', ']', '{', '}', '?', '*', '+', '-', '|', '^', '$',
+            '\\', '.', '&', '~', '#', ' ', '\t', '\n', '\r', 0x0b, 0x0c => true,
+            else => false,
+        };
+        if (special) try out.append(arena, '\\');
+        try out.append(arena, c);
+    }
+    return out.items;
+}
+
+const Pcre2Extractor = struct {
+    regex: []const u8,
+    edition: u32,
+    is_variant: bool,
+};
+
+/// eyecite-literal extractor regex: $edition replaced by an alternation of
+/// escaped reporter strings, wrapped in nonalphanum boundaries with the
+/// citation as group 1. These feed the PCRE2 engine path verbatim. The
+/// owner edition travels with the regex so matches resolve to the edition
+/// whose template actually fired (duplicate abbrevs like "Ohio" exist).
+fn internPcre2Extractor(
+    arena: std.mem.Allocator,
+    expanded: []const u8,
+    names: []const []const u8,
+    edition: u32,
+    is_variant: bool,
+    extractors: *std.ArrayListUnmanaged(Pcre2Extractor),
+    seen: *std.StringArrayHashMapUnmanaged(void),
+) !void {
+    var alternation: std.ArrayListUnmanaged(u8) = .empty;
+    for (names, 0..) |n, i| {
+        if (i > 0) try alternation.append(arena, '|');
+        try alternation.appendSlice(arena, try escapePython(arena, n));
+    }
+
+    var body: std.ArrayListUnmanaged(u8) = .empty;
+    var i: usize = 0;
+    while (i < expanded.len) {
+        if (std.mem.startsWith(u8, expanded[i..], "$edition")) {
+            try body.appendSlice(arena, alternation.items);
+            i += "$edition".len;
+        } else {
+            try body.append(arena, expanded[i]);
+            i += 1;
+        }
+    }
+
+    const wrapped = try std.mem.concat(arena, u8, &.{
+        "(?:^|[^a-zA-Z0-9])(", body.items, ")(?:[^a-zA-Z0-9]|$)",
+    });
+    if (seen.contains(wrapped)) return;
+    try seen.put(arena, wrapped, {});
+    try extractors.append(arena, .{
+        .regex = wrapped,
+        .edition = edition,
+        .is_variant = is_variant,
+    });
 }
 
 fn containsSupreme(name: []const u8) bool {
