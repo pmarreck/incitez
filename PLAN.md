@@ -3,7 +3,14 @@
 Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (processed).
 
 ## In Progress
-- [ ] M1: Private GitHub repo pmarreck/incitez (SSH), yolo bookmark, push, Garnix green
+- [ ] M2: Port eyecite test corpus — extractor (tools/extract_corpus.py) runs eyecite's own test_pairs under the pinned oracle env (.#eyecite-env), verifies oracle-vs-own-suite integrity, serializes actual cites (types/groups/metadata/spans) → tests/corpus/eyecite_corpus.json
+- [ ] M1: Garnix green on first push (check after CI cycle)
+
+## Design notes (M2 matcher, from reading eyecite internals)
+- eyecite extractor model: per-edition regex templates (default `$full_cite` = `$volume $reporter,? $page`), expanded via regexes.json variables; 208 of 1368 editions carry custom templates; short-cite regexes derived by `at ...page` substitution.
+- The regexes.json variable vocabulary is CLOSED (~15 structural shapes: format_neutral, year_included, paragraph, nominative volume, alpha/digit-suffix volumes, comma/period/roman pages, two state one-offs). Plan: gen_tables classifies expanded templates into a pattern enum consumed by hand-written Zig micro-parsers — no regex engine in the core. Strict: unclassifiable template = build error.
+- Metadata pass (add_post_citation): pin_cite, court (via paren), year/month/day, parenthetical, extra; case names via backward scan with stop-words (v, in re, see, etc.).
+- Acceptance driver design: embed corpus JSON, compare per-case; two-sided ratchet constant (pass-count must equal expectation — regression AND unbumped-progress both fail).
 
 ## Next
 - [ ] M1: Vendor reporters-db + courts-db JSON (verify exact license text → THIRD_PARTY_LICENSES); build-time table codegen

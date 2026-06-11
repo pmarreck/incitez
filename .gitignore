@@ -45,3 +45,5 @@ result-win/
 
 # anything else:
 AGENTS.md
+.eyecite-env
+.test_cache/

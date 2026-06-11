@@ -1,0 +1,8780 @@
+{
+ "_extractor": "tools/extract_corpus.py",
+ "_eyecite_version": "2.7.6",
+ "_license": "BSD-2-Clause — see THIRD_PARTY_LICENSES",
+ "_source": "eyecite tests/test_FindTest.py (Free Law Project)",
+ "methods": {
+  "test_disambiguate_citations": [
+   {
+    "cites": [
+     {
+      "corrected_reporter": "P.R.R.",
+      "full_span": [
+       0,
+       10
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "P.R.R.",
+       "volume": "1"
+      },
+      "matched_text": "1 P.R.R. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       10
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 P.R.R. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       9
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       9
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 U. S. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "A.2d",
+       "volume": "1"
+      },
+      "matched_text": "1 A.2d 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 A.2d 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       0,
+       9
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "A. 2d",
+       "volume": "1"
+      },
+      "matched_text": "1 A. 2d 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       9
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 A. 2d 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Pen. & W.",
+      "full_span": [
+       0,
+       15
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "P.R.",
+       "volume": "1"
+      },
+      "matched_text": "1 P.R. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1831"
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": 1831
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 P.R. 1 (1831)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Wis. 2d",
+      "full_span": [
+       0,
+       15
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "W.2d",
+       "volume": "1"
+      },
+      "matched_text": "1 W.2d 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1854"
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": 1854
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 W.2d 1 (1854)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Wash.",
+      "full_span": [
+       0,
+       16
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Wash.",
+       "volume": "1"
+      },
+      "matched_text": "1 Wash. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1890"
+      },
+      "span": [
+       0,
+       9
+      ],
+      "type": "FullCaseCitation",
+      "year": 1890
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 Wash. 1 (1890)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Cranch",
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Cra.",
+       "volume": "1"
+      },
+      "matched_text": "1 Cra. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 Cra. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       11,
+       20
+      ],
+      "groups": {
+       "page": "23",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 23",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 Cranch 1 1 U.S. 23"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "N.M. (J.)",
+      "full_span": [
+       0,
+       18
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Johnson",
+       "volume": "1"
+      },
+      "matched_text": "1 Johnson 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1890"
+      },
+      "span": [
+       0,
+       11
+      ],
+      "type": "FullCaseCitation",
+      "year": 1890
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 Johnson 1 (1890)"
+   },
+   {
+    "cites": [],
+    "clean_steps": [],
+    "kwargs": {
+     "remove_ambiguous": true
+    },
+    "text": "1 Johnson 1 (1806)"
+   }
+  ],
+  "test_find_citations": [
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U.S. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "1 U.S.\n1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       9
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       9
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "1 U.\nS. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       13,
+       21
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       13,
+       21
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "lissner test 1 U.S. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       24
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       16,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Lissner v. Test 1 U.S. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       31
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       16,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Lissner v. Test 1 U.S. 1 (1982)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       24
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       16,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Lissner v. Test 1 U.S. 1 (198⁴)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F.2d",
+      "full_span": [
+       4,
+       35
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "F.2d",
+       "volume": "1"
+      },
+      "matched_text": "1 F.2d 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       20,
+       28
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "bob Lissner v. Test 1 F.2d 1 (1982)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       32
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       17,
+       25
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Lissner v. Test, 1 U.S. 1 (1982)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "So. 2d",
+      "full_span": [
+       0,
+       12
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "So.2d",
+       "volume": "1"
+      },
+      "matched_text": "1 So.2d at 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "1",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       12
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 So.2d at 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       4,
+       54
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "ca4",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 38,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       20,
+       29
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       4,
+       55
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "pasuperct",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 38,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       20,
+       29
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "bob Lissner v. Test 1 U.S. 12, 347-348 (Pa.Super. 1982)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.3d",
+      "full_span": [
+       0,
+       47
+      ],
+      "groups": {
+       "page": "1189",
+       "reporter": "A.3d",
+       "volume": "164"
+      },
+      "matched_text": "164 A.3d 1189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "pa",
+       "day": null,
+       "defendant": "Muniz",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Commonwealth",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2017"
+      },
+      "span": [
+       23,
+       36
+      ],
+      "type": "FullCaseCitation",
+      "year": 2017
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Commonwealth v. Muniz, 164 A.3d 1189 (Pa. 2017)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.3d",
+      "full_span": [
+       0,
+       55
+      ],
+      "groups": {
+       "page": "1189",
+       "reporter": "A.3d",
+       "volume": "164"
+      },
+      "matched_text": "164 A.3d 1189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "pa",
+       "day": "9",
+       "defendant": "Muniz",
+       "extra": null,
+       "month": "Feb.",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Commonwealth",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2017"
+      },
+      "span": [
+       23,
+       36
+      ],
+      "type": "FullCaseCitation",
+      "year": 2017
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Commonwealth v. Muniz, 164 A.3d 1189 (Pa. Feb. 9, 2017)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       88
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "ca4",
+       "day": null,
+       "defendant": "Test",
+       "extra": "1 S. Ct. 2, 358",
+       "month": null,
+       "parenthetical": "overruling foo",
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 38,
+       "pin_cite_span_start": null,
+       "plaintiff": "Bob Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       20,
+       29
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     },
+     {
+      "corrected_reporter": "S. Ct.",
+      "full_span": [
+       0,
+       88
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "S. Ct.",
+       "volume": "1"
+      },
+      "matched_text": "1 S. Ct. 2",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "ca4",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": "overruling foo",
+       "pin_cite": "358",
+       "pin_cite_span_end": 55,
+       "pin_cite_span_start": null,
+       "plaintiff": "Bob Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       40,
+       50
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982) (overruling foo)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       73
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": "discussing abc (Holmes, J., concurring)",
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       16,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Lissner v. Test 1 U.S. 1 (1982) (discussing abc (Holmes, J., concurring))"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       48
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Test",
+       "extra": null,
+       "month": null,
+       "parenthetical": "discussing abc",
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lissner",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1982"
+      },
+      "span": [
+       16,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": 1982
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Lissner v. Test 1 U.S. 1 (1982) (discussing abc); blah (something)."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       5,
+       24
+      ],
+      "groups": {
+       "page": "332",
+       "reporter": "U. S.",
+       "volume": "22"
+      },
+      "matched_text": "22 U. S. 332",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1975"
+      },
+      "span": [
+       5,
+       17
+      ],
+      "type": "FullCaseCitation",
+      "year": 1975
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "asfd 22 U. S. 332 (1975) asdf"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       5,
+       16
+      ],
+      "groups": {
+       "page": "332",
+       "reporter": "A.2d",
+       "volume": "22"
+      },
+      "matched_text": "22 A.2d 332",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       5,
+       16
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "asdf 22 A.2d 332 asdf"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       9,
+       20
+      ],
+      "groups": {
+       "page": "333",
+       "reporter": "A.2d",
+       "volume": "11"
+      },
+      "matched_text": "11 A.2d 333",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       9,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "A.2d 332 11 A.2d 333"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       5,
+       17
+      ],
+      "groups": {
+       "page": "332",
+       "reporter": "A. 2d",
+       "volume": "22"
+      },
+      "matched_text": "22 A. 2d 332",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       5,
+       17
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "asdf 22 A. 2d 332 asdf"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Wash. 2d",
+      "full_span": [
+       0,
+       14
+      ],
+      "groups": {
+       "page": "1016",
+       "reporter": "Wn.2d",
+       "volume": "171"
+      },
+      "matched_text": "171 Wn.2d 1016",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       14
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "171 Wn.2d 1016"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       13
+      ],
+      "groups": {
+       "page": "3",
+       "reporter": "U.S.",
+       "volume": "2"
+      },
+      "matched_text": "2 U.S. 3",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "4-5",
+       "pin_cite_span_end": 13,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "A.",
+      "full_span": [
+       15,
+       24
+      ],
+      "groups": {
+       "page": "33",
+       "reporter": "Atl.",
+       "volume": "3"
+      },
+      "matched_text": "3 Atl. 33",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       15,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "2 U.S. 3, 4-5 (3 Atl. 33)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Neb. Ct. App.",
+      "full_span": [
+       0,
+       24
+      ],
+      "groups": {
+       "page": "lxiv",
+       "reporter": "Neb. App.",
+       "volume": "12"
+      },
+      "matched_text": "12 Neb. App. lxiv",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2004"
+      },
+      "span": [
+       0,
+       17
+      ],
+      "type": "FullCaseCitation",
+      "year": 2004
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "12 Neb. App. lxiv (2004)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "N.W.2d",
+      "full_span": [
+       0,
+       14
+      ],
+      "groups": {
+       "page": "826",
+       "reporter": "N.W.2d",
+       "volume": "559"
+      },
+      "matched_text": "559 N.W.2d 826",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       14
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "559 N.W.2d 826|N.D."
+   },
+   {
+    "cites": [],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U.S. f24601"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       10
+      ],
+      "groups": {
+       "page": null,
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. ___",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       10
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U.S. ___"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       11
+      ],
+      "groups": {
+       "page": null,
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S. ___",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       11
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U. S. ___,"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "NMCERT",
+      "full_span": [
+       0,
+       15
+      ],
+      "groups": {
+       "page": "008",
+       "reporter": "NMCERT",
+       "volume": "2007"
+      },
+      "matched_text": "2007-NMCERT-008",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       15
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "2007-NMCERT-008"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Ohio",
+      "full_span": [
+       0,
+       14
+      ],
+      "groups": {
+       "page": "2095",
+       "reporter": "Ohio",
+       "volume": "2006"
+      },
+      "matched_text": "2006-Ohio-2095",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       14
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "2006-Ohio-2095"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "IL App (4th)",
+      "full_span": [
+       0,
+       24
+      ],
+      "groups": {
+       "page": "160407",
+       "reporter": "IL App (4th)",
+       "volume": "2017"
+      },
+      "matched_text": "2017 IL App (4th) 160407",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "2017 IL App (4th) 160407"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "IL App (1st)",
+      "full_span": [
+       0,
+       26
+      ],
+      "groups": {
+       "page": "143684-B",
+       "reporter": "IL App (1st)",
+       "volume": "2017"
+      },
+      "matched_text": "2017 IL App (1st) 143684-B",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       26
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "2017 IL App (1st) 143684-B"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       24
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       11,
+       24
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo 1 U. S., at 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       25
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       25
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       13,
+       26
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       13,
+       26
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo,” 1 U. S., at 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       29
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Johnson",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       16,
+       29
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Johnson, 1 U. S., at 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       24
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S. at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       24
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S. at 2"
+   },
+   {
+    "cites": [],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S. end"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       7,
+       23
+      ],
+      "groups": {},
+      "matched_text": "supra,",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "parenthetical": null,
+       "pin_cite": "at 2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       12,
+       23
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "before Foo, supra,\nat 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Cal. App. 2d",
+      "full_span": [
+       0,
+       24
+      ],
+      "groups": {
+       "page": "651",
+       "reporter": "Cal.App.2d",
+       "volume": "174"
+      },
+      "matched_text": "174 Cal.App.2d at p. 651",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "651",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       24
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "174 Cal.App.2d at p. 651"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       29
+      ],
+      "groups": {
+       "page": "20",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 20",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "20-25",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       29
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 20-25"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       29
+      ],
+      "groups": {
+       "page": "20",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 20",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "20-25",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       29
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 20-25\\& n. 4"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       25
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": "overruling xyz",
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       25
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 2 (overruling xyz)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       25
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": "overruling xyz",
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       25
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 2(overruling xyz)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       25
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": "discussing xyz (Holmes, J., concurring)",
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       25
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 2 (discussing xyz (Holmes, J., concurring))"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       25
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       25
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 2 (2016)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       29
+      ],
+      "groups": {
+       "page": "20",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 20",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": "overruling xyz",
+       "pin_cite": "20-25",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       12,
+       29
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Foo, 1 U. S., at 20-25 (overruling xyz)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       18
+      ],
+      "groups": {
+       "page": "4",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 4",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": "discussing abc",
+       "pin_cite": "4",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       5,
+       18
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo, 1 U. S., at 4 (discussing abc). Some other nonsense (clarifying nonsense)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mich.",
+      "full_span": [
+       0,
+       12
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Mich.",
+       "volume": "1"
+      },
+      "matched_text": "1 Mich. at 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "1",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       12
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Mich. at 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       13
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       13
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       15,
+       59
+      ],
+      "groups": {
+       "page": "4",
+       "reporter": "U. S.",
+       "volume": "3"
+      },
+      "matched_text": "3 U. S. 4",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": "overruling xyz",
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2010"
+      },
+      "span": [
+       26,
+       35
+      ],
+      "type": "FullCaseCitation",
+      "year": 2010
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U. S., at 2. Foo v. Bar 3 U. S. 4 (2010) (overruling xyz)."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       13
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": "criticizing xyz",
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       13
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       33,
+       77
+      ],
+      "groups": {
+       "page": "4",
+       "reporter": "U. S.",
+       "volume": "3"
+      },
+      "matched_text": "3 U. S. 4",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": "overruling xyz",
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2010"
+      },
+      "span": [
+       44,
+       53
+      ],
+      "type": "FullCaseCitation",
+      "year": 2010
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U. S., at 2 (criticizing xyz). Foo v. Bar 3 U. S. 4 (2010) (overruling xyz)."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       7,
+       24
+      ],
+      "groups": {},
+      "matched_text": "supra,",
+      "metadata": {
+       "antecedent_guess": "asdf",
+       "parenthetical": null,
+       "pin_cite": "at 2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       13,
+       24
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before asdf, supra, at 2"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       7,
+       28
+      ],
+      "groups": {},
+      "matched_text": "supra,",
+      "metadata": {
+       "antecedent_guess": "asdf",
+       "parenthetical": null,
+       "pin_cite": "at 2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": "123"
+      },
+      "span": [
+       17,
+       28
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before asdf, 123 supra, at 2"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       7,
+       19
+      ],
+      "groups": {},
+      "matched_text": "supra,",
+      "metadata": {
+       "antecedent_guess": "Asdf",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       13,
+       19
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Asdf, supra, foo bar"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       7,
+       19
+      ],
+      "groups": {},
+      "matched_text": "supra.",
+      "metadata": {
+       "antecedent_guess": "Asdf",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       13,
+       19
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before Asdf, supra. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       7,
+       18
+      ],
+      "groups": {},
+      "matched_text": "supra",
+      "metadata": {
+       "antecedent_guess": "asdf",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       13,
+       18
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "before asdf, supra end"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       10
+      ],
+      "groups": {},
+      "matched_text": "supra",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "parenthetical": "overruling ...",
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       5,
+       10
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo, supra (overruling ...) (ignore this)"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       16
+      ],
+      "groups": {},
+      "matched_text": "supra,",
+      "metadata": {
+       "antecedent_guess": "Foo",
+       "parenthetical": "overruling ...",
+       "pin_cite": "at 2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       5,
+       16
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo, supra, at 2 (overruling ...)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       20
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       28,
+       33
+      ],
+      "groups": {},
+      "matched_text": "Ibid.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       28,
+       33
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12. asdf. Ibid. foo bar lorem ipsum."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       13,
+       18
+      ],
+      "groups": {},
+      "matched_text": "Ibid.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       13,
+       18
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p>before asdf. <i>Ibid.</i></p> <p>foo bar lorem</p>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       48
+      ],
+      "groups": {},
+      "matched_text": "Id.,",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 123",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       48
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id., at 123. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       48
+      ],
+      "groups": {},
+      "matched_text": "Id.,",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 123",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       48
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id.,\nat 123. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       13,
+       24
+      ],
+      "groups": {},
+      "matched_text": "Id.,",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 123",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       13,
+       24
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p>before asdf. <i>Id.,</i> at 123.</p> <p>foo bar</p>"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       13,
+       24
+      ],
+      "groups": {},
+      "matched_text": "Id.,",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 123",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       13,
+       24
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p>before asdf. <i>Id.,</i> at <b>123.</b></p> <p>foo bar</p>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       45
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "¶ 34",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       45
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. ¶ 34. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       56
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 62-63, 67-68",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       56
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. at 62-63, 67-68. f b"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       48
+      ],
+      "groups": {},
+      "matched_text": "Id.,",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at *10",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       48
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id., at *10. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       57
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 7-9, ¶¶ 38-53",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       57
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. at 7-9, ¶¶ 38-53. f b"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       54
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at pp. 45, 64",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       54
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. at pp. 45, 64. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Idaho",
+      "full_span": [
+       1,
+       55
+      ],
+      "groups": {
+       "page": "663",
+       "reporter": "Idaho",
+       "volume": "105"
+      },
+      "matched_text": "105 Idaho 663",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Arvidson",
+       "extra": "672 P2d 231",
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Newbold",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1983"
+      },
+      "span": [
+       22,
+       35
+      ],
+      "type": "FullCaseCitation",
+      "year": 1983
+     },
+     {
+      "corrected_reporter": "P.2d",
+      "full_span": [
+       1,
+       55
+      ],
+      "groups": {
+       "page": "231",
+       "reporter": "P2d",
+       "volume": "672"
+      },
+      "matched_text": "672 P2d 231",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Arvidson",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Newbold",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1983"
+      },
+      "span": [
+       37,
+       48
+      ],
+      "type": "FullCaseCitation",
+      "year": 1983
+     },
+     {
+      "corrected_reporter": "Idaho",
+      "full_span": [
+       77,
+       103
+      ],
+      "groups": {
+       "page": "667",
+       "reporter": "Idaho",
+       "volume": "105"
+      },
+      "matched_text": "105 Idaho at 667",
+      "metadata": {
+       "antecedent_guess": "Newbold",
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "667",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       87,
+       103
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "P.2d",
+      "full_span": [
+       77,
+       119
+      ],
+      "groups": {
+       "page": "235",
+       "reporter": "P2d",
+       "volume": "672"
+      },
+      "matched_text": "672 P2d at 235",
+      "metadata": {
+       "antecedent_guess": "Newbold",
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "235",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       105,
+       119
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": " (Newbold v Arvidson, 105 Idaho 663, 672 P2d 231 [1983]); and something else (Newbold, 105 Idaho at 667, 672 P2d at 235)."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "N.Y.2d",
+      "full_span": [
+       0,
+       35
+      ],
+      "groups": {
+       "page": "582",
+       "reporter": "NY2d",
+       "volume": "63"
+      },
+      "matched_text": "63 NY2d 582",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Rogers",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Rogers",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1984"
+      },
+      "span": [
+       17,
+       28
+      ],
+      "type": "FullCaseCitation",
+      "year": 1984
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Rogers v Rogers (63 NY2d 582 [1984])"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F.2d",
+      "full_span": [
+       8,
+       57
+      ],
+      "groups": {
+       "page": "139",
+       "reporter": "F.2d",
+       "volume": "310"
+      },
+      "matched_text": "310 F.2d 139",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "State of Washington",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Reece",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1962"
+      },
+      "span": [
+       38,
+       50
+      ],
+      "type": "FullCaseCitation",
+      "year": 1962
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "(1963); Reece v. State of Washington, 310 F.2d 139 (1962)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "P.2d",
+      "full_span": [
+       7,
+       45
+      ],
+      "groups": {
+       "page": "251",
+       "reporter": "P. 2d",
+       "volume": "398"
+      },
+      "matched_text": "398 P. 2d 251",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "State",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Bean",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       32,
+       45
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "(Mo.); Bean v. State, — Nev. —, 398 P. 2d 251; "
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "S. Ct.",
+      "full_span": [
+       0,
+       65
+      ],
+      "groups": {
+       "page": "616",
+       "reporter": "S.Ct.",
+       "volume": "136"
+      },
+      "matched_text": "136 S.Ct. 616",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Florida",
+       "extra": "193 L.Ed.2d 504",
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Hurst",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2016"
+      },
+      "span": [
+       28,
+       41
+      ],
+      "type": "FullCaseCitation",
+      "year": 2016
+     },
+     {
+      "corrected_reporter": "L. Ed. 2d",
+      "full_span": [
+       0,
+       65
+      ],
+      "groups": {
+       "page": "504",
+       "reporter": "L.Ed.2d",
+       "volume": "193"
+      },
+      "matched_text": "193 L.Ed.2d 504",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Florida",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Hurst",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2016"
+      },
+      "span": [
+       43,
+       58
+      ],
+      "type": "FullCaseCitation",
+      "year": 2016
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Hurst v. Florida, — U.S. —, 136 S.Ct. 616, 193 L.Ed.2d 504 (2016)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "L. Ed. 2d",
+      "full_span": [
+       0,
+       76
+      ],
+      "groups": {
+       "page": "179",
+       "reporter": "L.Ed.2d",
+       "volume": "213"
+      },
+      "matched_text": "213 L.Ed.2d 179",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Moriana",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "200-201",
+       "pin_cite_span_end": 76,
+       "pin_cite_span_start": null,
+       "plaintiff": "Viking River Cruises",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2022"
+      },
+      "span": [
+       52,
+       67
+      ],
+      "type": "FullCaseCitation",
+      "year": 2022
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "In Viking River Cruises v. Moriana (2022) _ U.S. _ [213 L.Ed.2d 179, 200-201] (Viking River)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "S. Ct.",
+      "full_span": [
+       12,
+       79
+      ],
+      "groups": {
+       "page": "1612",
+       "reporter": "S.Ct.",
+       "volume": "138"
+      },
+      "matched_text": "138 S.Ct. 1612",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Lewis",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Epic Systems Corporation",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2018"
+      },
+      "span": [
+       65,
+       79
+      ],
+      "type": "FullCaseCitation",
+      "year": 2018
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "decision in Epic Systems Corporation v. Lewis (2018) __ U.S. __ [138 S.Ct. 1612] (Epic Systems)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "S. Ct.",
+      "full_span": [
+       29,
+       127
+      ],
+      "groups": {
+       "page": "1253",
+       "reporter": "S. Ct.",
+       "volume": "142"
+      },
+      "matched_text": "142 S. Ct. 1253",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Wilson",
+       "extra": "---- L. Ed. 2d ----",
+       "month": null,
+       "parenthetical": "emphasis added",
+       "pin_cite": "1259",
+       "pin_cite_span_end": 82,
+       "pin_cite_span_start": null,
+       "plaintiff": "Sys.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2022"
+      },
+      "span": [
+       61,
+       76
+      ],
+      "type": "FullCaseCitation",
+      "year": 2022
+     },
+     {
+      "corrected_reporter": "S. Ct.",
+      "full_span": [
+       137,
+       218
+      ],
+      "groups": {
+       "page": "1715",
+       "reporter": "S. Ct.",
+       "volume": "139"
+      },
+      "matched_text": "139 S. Ct. 1715",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bartlett",
+       "extra": "204 L. Ed. 2d 1",
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "1722",
+       "pin_cite_span_end": 194,
+       "pin_cite_span_start": null,
+       "plaintiff": "Nieves",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2019"
+      },
+      "span": [
+       173,
+       188
+      ],
+      "type": "FullCaseCitation",
+      "year": 2019
+     },
+     {
+      "corrected_reporter": "L. Ed. 2d",
+      "full_span": [
+       137,
+       218
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "L. Ed. 2d",
+       "volume": "204"
+      },
+      "matched_text": "204 L. Ed. 2d 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Bartlett",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Nieves",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2019"
+      },
+      "span": [
+       196,
+       211
+      ],
+      "type": "FullCaseCitation",
+      "year": 2019
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "speech.” Houston Cmty. Coll. Sys. v. Wilson, ---- U.S. ----, 142 S. Ct. 1253, 1259, ---- L. Ed. 2d ---- (2022) (emphasis added) (quoting Nieves v. Bartlett, ---- U.S. ----, 139 S. Ct. 1715, 1722, 204 L. Ed. 2d 1 (2019);"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       9,
+       59
+      ],
+      "groups": {
+       "page": "315",
+       "reporter": "U.S.",
+       "volume": "360"
+      },
+      "matched_text": "360 U.S. 315",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "People of State of New York",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Spano",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       47,
+       59
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "curiams. Spano v. People of State of New York, 360 U.S. 315"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       13,
+       63
+      ],
+      "groups": {
+       "page": "315",
+       "reporter": "U.S.",
+       "volume": "360"
+      },
+      "matched_text": "360 U.S. 315",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "People of State of New York",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Spano",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       51,
+       63
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Per Curiams. Spano v. People of State of New York, 360 U.S. 315"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F. Supp. 2d",
+      "full_span": [
+       0,
+       55
+      ],
+      "groups": {
+       "page": "1084",
+       "reporter": "F Supp 2d",
+       "volume": "427"
+      },
+      "matched_text": "427 F Supp 2d 1084",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "ksd",
+       "day": null,
+       "defendant": "Vanderpool",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Mavrovich",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2006"
+      },
+      "span": [
+       24,
+       42
+      ],
+      "type": "FullCaseCitation",
+      "year": 2006
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Mavrovich v Vanderpool, 427 F Supp 2d 1084 [D Kan 2006]"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F. Supp. 2d",
+      "full_span": [
+       0,
+       55
+      ],
+      "groups": {
+       "page": "1084",
+       "reporter": "F Supp 2d",
+       "volume": "427"
+      },
+      "matched_text": "427 F Supp 2d 1084",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "ksd",
+       "day": null,
+       "defendant": "Vanderpool",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Mavrovich",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2006"
+      },
+      "span": [
+       24,
+       42
+      ],
+      "type": "FullCaseCitation",
+      "year": 2006
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Mavrovich v Vanderpool, 427 F Supp 2d 1084 (D Kan 2006)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       50
+      ],
+      "groups": {},
+      "matched_text": "id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "119:12-14",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       50
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. id. 119:12-14. foo bar"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       37,
+       40
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       37,
+       40
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. No page number."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       3
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": "overruling ...",
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       3
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Id. (overruling ...) (ignore this)"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": "overruling ...",
+       "pin_cite": "at 2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Id. at 2 (overruling ...)"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       16,
+       19
+      ],
+      "groups": {},
+      "matched_text": "§99",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       16,
+       19
+      ],
+      "type": "UnknownCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "lorem ipsum see §99 of the U.S. code."
+   },
+   {
+    "cites": [],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "lorem 111 S.W. 12th St."
+   },
+   {
+    "cites": [],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "lorem 111 N. W. 12th St."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Ga.",
+      "full_span": [
+       0,
+       22
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Ga.",
+       "volume": "1"
+      },
+      "matched_text": "1 Ga. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Smith",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Miles",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       15,
+       22
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "Miles",
+      "full_span": [
+       37,
+       65
+      ],
+      "groups": {
+       "page": "3",
+       "reporter": "Miles",
+       "volume": "1"
+      },
+      "matched_text": "1 Miles 3",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Else",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Something",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       56,
+       65
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "Miles",
+      "full_span": [
+       67,
+       80
+      ],
+      "groups": {
+       "page": "10",
+       "reporter": "Miles",
+       "volume": "1"
+      },
+      "matched_text": "1 Miles at 10",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "10",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       67,
+       80
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Miles v. Smith 1 Ga. 1; asdfasdf asd Something v. Else, 1 Miles 3; 1 Miles at 10"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       37,
+       93
+      ],
+      "groups": {
+       "page": "793",
+       "reporter": "A.2d",
+       "volume": "455"
+      },
+      "matched_text": "455 A.2d 793",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "ri",
+       "day": null,
+       "defendant": "Liberty Mut. Ins. Co.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Amick",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1983"
+      },
+      "span": [
+       69,
+       81
+      ],
+      "type": "FullCaseCitation",
+      "year": 1983
+     },
+     {
+      "full_span": [
+       127,
+       139
+      ],
+      "groups": {},
+      "matched_text": "Amick at 795",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": "at 795",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Amick",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       127,
+       139
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "General Casualty cites as compelling Amick v. Liberty Mut. Ins. Co., 455 A.2d 793 (R.I. 1983). In that case ... Stats, do. See Amick at 795"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       55,
+       64
+      ],
+      "groups": {},
+      "matched_text": "Foo at 62",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": "at 62",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       55,
+       64
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar 1 U.S. 12, 347-348. something something, In Foo at 62, we see that"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       39
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "United States",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 39,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       21,
+       30
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       107,
+       116
+      ],
+      "groups": {},
+      "matched_text": "Foo at 62",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": "at 62",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       107,
+       116
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. United States 1 U.S. 12, 347-348. something something ... the United States at 1776 we see that and Foo at 62"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       26,
+       55
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 55,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       37,
+       46
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "In Foo at 62 we see that, Foo v. Bar 1 U.S. 12, 347-348. something something,"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mass.",
+      "full_span": [
+       6,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "Mass.",
+       "volume": "1"
+      },
+      "matched_text": "1 Mass. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Foo",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       10,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       55,
+       64
+      ],
+      "groups": {},
+      "matched_text": "Foo at 62",
+      "metadata": {
+       "defendant": "Foo",
+       "parenthetical": null,
+       "pin_cite": "at 62",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       55,
+       64
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "In re Foo 1 Mass. 12, 347-348. something something, in Foo at 62, we see that, "
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mass.",
+      "full_span": [
+       6,
+       29
+      ],
+      "groups": {
+       "page": "12",
+       "reporter": "Mass.",
+       "volume": "1"
+      },
+      "matched_text": "1 Mass. 12",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Foo",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "347-348",
+       "pin_cite_span_end": 29,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       10,
+       20
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "In re Foo 1 Mass. 12, 347-348. something something, in at we see that"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F.2d",
+      "full_span": [
+       0,
+       48
+      ],
+      "groups": {
+       "page": "657",
+       "reporter": "F.2d",
+       "volume": "909"
+      },
+      "matched_text": "909 F.2d 657",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Boch Oldsmobile, Inc.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "660",
+       "pin_cite_span_end": 48,
+       "pin_cite_span_start": null,
+       "plaintiff": "U.S.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       31,
+       43
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       65,
+       96
+      ],
+      "groups": {
+       "page": "241",
+       "reporter": "U.S.",
+       "volume": "454"
+      },
+      "matched_text": "454 U.S. at 241",
+      "metadata": {
+       "antecedent_guess": "Piper Aircraft",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "241",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       81,
+       96
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "U.S. v. Boch Oldsmobile, Inc., 909 F.2d 657, 660 (1st Cir.1990); Piper Aircraft, 454 U.S. at 241"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       11,
+       55
+      ],
+      "groups": {
+       "page": "535",
+       "reporter": "U. S.",
+       "volume": "417"
+      },
+      "matched_text": "417 U. S. 535",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Mancari",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "552",
+       "pin_cite_span_end": 48,
+       "pin_cite_span_start": null,
+       "plaintiff": "Morton",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1974"
+      },
+      "span": [
+       30,
+       43
+      ],
+      "type": "FullCaseCitation",
+      "year": 1974
+     },
+     {
+      "full_span": [
+       125,
+       128
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       125,
+       128
+      ],
+      "type": "IdCitation"
+     },
+     {
+      "full_span": [
+       132,
+       146
+      ],
+      "groups": {},
+      "matched_text": "Mancari at 665",
+      "metadata": {
+       "defendant": "Mancari",
+       "parenthetical": null,
+       "pin_cite": "at 665",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       132,
+       146
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "we said in Morton v. Mancari, 417 U. S. 535, 552 (1974) “Literally every piece ....”. “asisovereign tribal entities . . . .” Id. In Mancari at 665"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Conn. Super. Ct.",
+      "full_span": [
+       20,
+       48
+      ],
+      "groups": {
+       "page": "5243-P",
+       "reporter": "Conn. Super. Ct.",
+       "volume": "1993"
+      },
+      "matched_text": "1993 Conn. Super. Ct. 5243-P",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       20,
+       48
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Failed to recognize 1993 Conn. Super. Ct. 5243-P"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       4,
+       13
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S., 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       4,
+       13
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "foo 1 U.S., 1 bar"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Bankr. L. Rep.",
+      "full_span": [
+       10,
+       38
+      ],
+      "groups": {
+       "page": "12,345",
+       "reporter": "Bankr. L. Rep. (CCH)",
+       "volume": null
+      },
+      "matched_text": "Bankr. L. Rep. (CCH) P12,345",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       10,
+       38
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "blah blah Bankr. L. Rep. (CCH) P12,345. blah blah"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "La.App. 1 Cir.",
+      "full_span": [
+       11,
+       47
+      ],
+      "groups": {
+       "date_filed": "05/10/10",
+       "page": "12345",
+       "reporter": "La.App. 1 Cir.",
+       "volume": "2009"
+      },
+      "matched_text": "2009 12345 (La.App. 1 Cir. 05/10/10)",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       11,
+       47
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "blah blah, 2009 12345 (La.App. 1 Cir. 05/10/10). blah blah"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U.S. 1 ("
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       3,
+       16
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": "Bar",
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       8,
+       16
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "v. Bar, 1 U.S. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       12
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S., at 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "1",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       12
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U.S., at 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       2,
+       14
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S., at 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "1",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       2,
+       14
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": ", 1 U.S., at 1"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       6
+      ],
+      "groups": {},
+      "matched_text": "supra.",
+      "metadata": {
+       "antecedent_guess": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       0,
+       6
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "supra."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       2,
+       8
+      ],
+      "groups": {},
+      "matched_text": "supra.",
+      "metadata": {
+       "antecedent_guess": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       2,
+       8
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": ", supra."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       10
+      ],
+      "groups": {},
+      "matched_text": "supra.",
+      "metadata": {
+       "antecedent_guess": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": "123"
+      },
+      "span": [
+       4,
+       10
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "123 supra."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       3
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       3
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Id."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       8
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": "at 1",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Id. at 1."
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       3
+      ],
+      "groups": {},
+      "matched_text": "Id.",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       3
+      ],
+      "type": "IdCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Id. foo"
+   },
+   {
+    "cites": [],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "foo1 U.S. 1, 1. U.S. 1foo"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S. Dist. LEXIS",
+      "full_span": [
+       0,
+       107
+      ],
+      "groups": {
+       "page": "12335",
+       "reporter": "U.S. Dist. LEXIS",
+       "volume": "2000"
+      },
+      "matched_text": "2000 U.S. Dist. LEXIS 12335",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "nysd",
+       "day": "25",
+       "defendant": "Nature's Farm Prods., No. 99 Civ. 9404 (SHS)",
+       "extra": null,
+       "month": "Aug.",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Corp.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2000"
+      },
+      "span": [
+       55,
+       82
+      ],
+      "type": "FullCaseCitation",
+      "year": 2000
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Corp. v. Nature's Farm Prods., No. 99 Civ. 9404 (SHS), 2000 U.S. Dist. LEXIS 12335 (S.D.N.Y. Aug. 25, 2000)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       92
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2277, 2278, 2279, 2280, 2281, 2282, 2283, 2284, 2286, 2287, 2288, 2289, 2290, 2291",
+       "pin_cite_span_end": 92,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       8
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 U.S. 1, 2277, 2278, 2279, 2280, 2281, 2282, 2283, 2284, 2286, 2287, 2288, 2289, 2290, 2291"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.3d",
+      "full_span": [
+       0,
+       47
+      ],
+      "groups": {
+       "page": "1189",
+       "reporter": "A.3d",
+       "volume": "164"
+      },
+      "matched_text": "164 A.3d 1189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "pa",
+       "day": null,
+       "defendant": "Muniz",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Commonwealth",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2017"
+      },
+      "span": [
+       23,
+       36
+      ],
+      "type": "FullCaseCitation",
+      "year": 2017
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Commonwealth v. Muniz, 164 A.3d 1189 (Pa. 2017)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F. Supp.",
+      "full_span": [
+       0,
+       34
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "F.Supp.",
+       "volume": "1"
+      },
+      "matched_text": "1 F.Supp. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "sc",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1967"
+      },
+      "span": [
+       13,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": 1967
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Foo v. Bar,  1 F.Supp. 1 (SC 1967)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       33,
+       53
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "K.F.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2009"
+      },
+      "span": [
+       45,
+       53
+      ],
+      "type": "FullCaseCitation",
+      "year": 2009
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "trial court’s ruling. (See In re K.F. (2009) 1 U.S. 1 "
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       1,
+       17
+      ],
+      "groups": {
+       "page": null,
+       "reporter": "U.S.",
+       "volume": "576"
+      },
+      "matched_text": "576 U.S. ___",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "13",
+       "pin_cite_span_end": 17,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       1,
+       13
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "\n 576 U.S. ___, 13"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       44
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Goldsmith Seeds",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Shady Grove Farms",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       36,
+       44
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "Shady Grove Farms ​v Goldsmith Seeds 1 U.S. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       44
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Goldsmith Seeds",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Shady Grove Farms",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       36,
+       44
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "Shady Grove Farms v Goldsmith Seeds 1 U.S. 1  \b*\u0007\u0007΋þİ΋‬ڋ‪-\u0014V‬‬"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       11,
+       34
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "K.F.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "4",
+       "pin_cite_span_end": 34,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2009"
+      },
+      "span": [
+       23,
+       31
+      ],
+      "type": "FullCaseCitation",
+      "year": 2009
+     },
+     {
+      "corrected_reporter": "Cal. Rptr. 3d",
+      "full_span": [
+       11,
+       54
+      ],
+      "groups": {
+       "page": "784",
+       "reporter": "Cal.Rptr.3d",
+       "volume": "92"
+      },
+      "matched_text": "92 Cal.Rptr.3d 784",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "K.F.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2009"
+      },
+      "span": [
+       36,
+       54
+      ],
+      "type": "FullCaseCitation",
+      "year": 2009
+     },
+     {
+      "corrected_reporter": "Cal. App. 4th",
+      "full_span": [
+       57,
+       130
+      ],
+      "groups": {
+       "page": "547",
+       "reporter": "Cal.App.4th",
+       "volume": "154"
+      },
+      "matched_text": "154 Cal.App.4th 547",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "TEA Systems Corp.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "558",
+       "pin_cite_span_end": 130,
+       "pin_cite_span_start": null,
+       "plaintiff": "Yield Dynamics, Inc.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2007"
+      },
+      "span": [
+       106,
+       125
+      ],
+      "type": "FullCaseCitation",
+      "year": 2007
+     },
+     {
+      "corrected_reporter": "Cal. Rptr. 3d",
+      "full_span": [
+       57,
+       148
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Cal.Rptr.3d",
+       "volume": "66"
+      },
+      "matched_text": "66 Cal.Rptr.3d 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "TEA Systems Corp.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Yield Dynamics, Inc.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2007"
+      },
+      "span": [
+       132,
+       148
+      ],
+      "type": "FullCaseCitation",
+      "year": 2007
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "(See In re K.F. (2009) 1 U.S. 1, 4 [92 Cal.Rptr.3d 784]; Yield Dynamics, Inc. v. TEA Systems Corp. (2007) 154 Cal.App.4th 547, 558 [66 Cal.Rptr.3d 1].)”"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       22
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       14,
+       22
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       65,
+       76
+      ],
+      "groups": {},
+      "matched_text": "supra,",
+      "metadata": {
+       "antecedent_guess": "Bar",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       70,
+       76
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "In Foo v. Bar 1 U.S. 1, ... yadda yadda yadda the case of Foo v. Bar, supra, was affirmed"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       3,
+       23
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "U.S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U.S. 1",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Bar",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Foo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       15,
+       23
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       66,
+       76
+      ],
+      "groups": {},
+      "matched_text": "supra",
+      "metadata": {
+       "antecedent_guess": "Bar",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "volume": null
+      },
+      "span": [
+       71,
+       76
+      ],
+      "type": "SupraCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p>In <i>Foo</i> v. <i>Bar,</i> 1 U.S. 1, ... yadda yadda yadda the case of <i>Foo</i> v. <i>Bar, supra</i><i>,</i> was affirmed.</p>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F. Supp.",
+      "full_span": [
+       1,
+       59
+      ],
+      "groups": {
+       "page": "876",
+       "reporter": "F.Supp.",
+       "volume": "367"
+      },
+      "matched_text": "367 F.Supp. 876",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Esquire, Inc.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "879",
+       "pin_cite_span_end": 59,
+       "pin_cite_span_start": null,
+       "plaintiff": "Grant",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       39,
+       54
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "F. Supp.",
+      "full_span": [
+       76,
+       116
+      ],
+      "groups": {
+       "page": "884",
+       "reporter": "F.Supp.",
+       "volume": "316"
+      },
+      "matched_text": "316 F.Supp. at 884",
+      "metadata": {
+       "antecedent_guess": "Esquire, Inc., supra",
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "884",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       98,
+       116
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>Grant </em>v. <em>Esquire, Inc. </em>(S.D.N.Y. 1973) 367 F.Supp. 876, 879.) ...\n             <em>Grant </em>v. <em>Esquire, Inc., supra, </em>316 F.Supp. at 884.)</p>\n             <p id=\"b883-5\">III. </p> "
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Cal. App. 5th",
+      "full_span": [
+       28,
+       76
+      ],
+      "groups": {
+       "page": "1146",
+       "reporter": "Cal.App.5th",
+       "volume": "13"
+      },
+      "matched_text": "13 Cal.App.5th at 1146",
+      "metadata": {
+       "antecedent_guess": "Kaiser Foundation",
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "1146",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       54,
+       76
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "However, as we explained in Kaiser Foundation, supra, 13 Cal.App.5th at 1146"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "WL",
+      "full_span": [
+       0,
+       92
+      ],
+      "groups": {
+       "page": "2375225",
+       "reporter": "WL",
+       "volume": "2015"
+      },
+      "matched_text": "2015 WL 2375225",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Keystone Orthopedic Specialists, S.C., Wachn, LCC",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "at p. *4",
+       "pin_cite_span_end": 92,
+       "pin_cite_span_start": null,
+       "plaintiff": "Angelopoulos",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       67,
+       82
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       115,
+       133
+      ],
+      "groups": {},
+      "matched_text": "Angelopoulos p. *4",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": "p. *4",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Angelopoulos",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       115,
+       133
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Angelopoulos v. Keystone Orthopedic Specialists, S.C., Wachn, LCC, 2015 WL 2375225, at p. *4. yadda yadda yadda... Angelopoulos p. *4;"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "WL",
+      "full_span": [
+       0,
+       82
+      ],
+      "groups": {
+       "page": "2375225",
+       "reporter": "WL",
+       "volume": "2015"
+      },
+      "matched_text": "2015 WL 2375225",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Keystone Orthopedic Specialists, S.C., Wachn, LCC",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Angelopoulos",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       67,
+       82
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Angelopoulos v. Keystone Orthopedic Specialists, S.C., Wachn, LCC, 2015 WL 2375225"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       5,
+       69
+      ],
+      "groups": {
+       "page": "388",
+       "reporter": "U. S.",
+       "volume": "403"
+      },
+      "matched_text": "403 U. S. 388",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Six Unknown Fed. Narcotics Agents",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Bivens",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1971"
+      },
+      "span": [
+       49,
+       62
+      ],
+      "type": "FullCaseCitation",
+      "year": 1971
+     },
+     {
+      "full_span": [
+       107,
+       120
+      ],
+      "groups": {},
+      "matched_text": "Bivens at 122",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": "at 122",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Bivens",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       107,
+       120
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "See <em>Bivens </em>v. <em>Six Unknown Fed. Narcotics Agents, </em>403 U. S. 388 (1971). The legal issue there was whether a <em>Bivens </em> at 122, action can be employed..."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Or.",
+      "full_span": [
+       68,
+       78
+      ],
+      "groups": {
+       "page": "255",
+       "reporter": "Or",
+       "volume": "342"
+      },
+      "matched_text": "342 Or 255",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       68,
+       78
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p>State v. Luna-Benitez (S53965). Alternative writ issued, dismissed, 342 Or 255</p>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mass.",
+      "full_span": [
+       30,
+       63
+      ],
+      "groups": {
+       "page": "147",
+       "reporter": "Mass.",
+       "volume": "135"
+      },
+      "matched_text": "135 Mass. 147",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Hyde Park",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Crane",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       50,
+       63
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p>The somewhat similar cases of <i>Crane</i> v. <i>Hyde Park,</i> 135 <span class=\"star-pagination\">*355</span> Mass. 147, and <i>Mahoning County</i> v. <i>Young,</i> 16 U.S. App. 253, also cited by the defendant, likewise turned upon a question of forfeiture for breach of a condition subsequent in a deed to a municipal corporation.</p>"
+   }
+  ],
+  "test_find_journal_citations": [
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Minn. L. Rev.",
+      "full_span": [
+       0,
+       17
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Minn. L. Rev.",
+       "volume": "1"
+      },
+      "matched_text": "1 Minn. L. Rev. 1",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       17
+      ],
+      "type": "FullJournalCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Minn. L. Rev. 1"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Minn. L. Rev.",
+      "full_span": [
+       0,
+       22
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Minn. L. Rev.",
+       "volume": "1"
+      },
+      "matched_text": "1 Minn. L. Rev. 1",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2-3",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       0,
+       17
+      ],
+      "type": "FullJournalCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Minn. L. Rev. 1, 2-3"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Minn. L. Rev.",
+      "full_span": [
+       0,
+       24
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Minn. L. Rev.",
+       "volume": "1"
+      },
+      "matched_text": "1 Minn. L. Rev. 1",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": "2007"
+      },
+      "span": [
+       0,
+       17
+      ],
+      "type": "FullJournalCitation",
+      "year": 2007
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Minn. L. Rev. 1 (2007)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Minn. L. Rev.",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Minn. L. Rev.",
+       "volume": "1"
+      },
+      "matched_text": "1 Minn. L. Rev. 1",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2-3",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": "2007"
+      },
+      "span": [
+       0,
+       17
+      ],
+      "type": "FullJournalCitation",
+      "year": 2007
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Minn. L. Rev. 1, 2-3 (2007)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Minn. L. Rev.",
+      "full_span": [
+       0,
+       60
+      ],
+      "groups": {
+       "page": "1",
+       "reporter": "Minn. L. Rev.",
+       "volume": "1"
+      },
+      "matched_text": "1 Minn. L. Rev. 1",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": "discussing ...",
+       "pin_cite": "2-3",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": "2007"
+      },
+      "span": [
+       0,
+       17
+      ],
+      "type": "FullJournalCitation",
+      "year": 2007
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Minn. L. Rev. 1, 2-3 (2007) (discussing ...) (ignore this)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Marq. L. Rev.",
+      "full_span": [
+       0,
+       30
+      ],
+      "groups": {
+       "page": "475",
+       "reporter": "Marq. L. Rev.",
+       "volume": "77"
+      },
+      "matched_text": "77 Marq. L. Rev. 475",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": "1993"
+      },
+      "span": [
+       0,
+       20
+      ],
+      "type": "FullJournalCitation",
+      "year": 1993
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "77 Marq. L. Rev. 475 (1993-94)"
+   }
+  ],
+  "test_find_law_citations": [
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mass. Gen. Laws",
+      "full_span": [
+       0,
+       26
+      ],
+      "groups": {
+       "chapter": "1",
+       "reporter": "Mass. Gen. Laws",
+       "section": "2"
+      },
+      "matched_text": "Mass. Gen. Laws ch. 1, § 2",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": null
+      },
+      "span": [
+       0,
+       26
+      ],
+      "type": "FullLawCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Mass. Gen. Laws ch. 1, § 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Stat.",
+      "full_span": [
+       0,
+       9
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "Stat.",
+       "volume": "1"
+      },
+      "matched_text": "1 Stat. 2",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": null
+      },
+      "span": [
+       0,
+       9
+      ],
+      "type": "FullLawCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "1 Stat. 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Fla. Stat.",
+      "full_span": [
+       0,
+       26
+      ],
+      "groups": {
+       "reporter": "Fla. Stat.",
+       "section": "120.68"
+      },
+      "matched_text": "Fla. Stat. § 120.68",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": "2007"
+      },
+      "span": [
+       0,
+       19
+      ],
+      "type": "FullLawCitation",
+      "year": 2007
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Fla. Stat. § 120.68 (2007)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Ariz. Rev. Stat. Ann.",
+      "full_span": [
+       0,
+       51
+      ],
+      "groups": {
+       "reporter": "Ariz. Rev. Stat. Ann.",
+       "section": "36-3701"
+      },
+      "matched_text": "Ariz. Rev. Stat. Ann. § 36-3701",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "et seq.",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": "West",
+       "year": "2009"
+      },
+      "span": [
+       0,
+       31
+      ],
+      "type": "FullLawCitation",
+      "year": 2009
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Ariz. Rev. Stat. Ann. § 36-3701 et seq. (West 2009)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mass. Gen. Laws",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "chapter": "1",
+       "reporter": "Mass. Gen. Laws",
+       "section": "2-3"
+      },
+      "matched_text": "Mass. Gen. Laws ch. 1, §§ 2-3",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": null
+      },
+      "span": [
+       0,
+       29
+      ],
+      "type": "FullLawCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Mass. Gen. Laws ch. 1, §§ 2-3"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Kan. Stat. Ann.",
+      "full_span": [
+       0,
+       56
+      ],
+      "groups": {
+       "reporter": "Kan. Stat. Ann.",
+       "section": "21-3516"
+      },
+      "matched_text": "Kan. Stat. Ann. § 21-3516",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": "repealed",
+       "pin_cite": "(a)(2)",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": null
+      },
+      "span": [
+       0,
+       25
+      ],
+      "type": "FullLawCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Kan. Stat. Ann. § 21-3516(a)(2) (repealed) (ignore this)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Ohio Rev. Code Ann.",
+      "full_span": [
+       0,
+       54
+      ],
+      "groups": {
+       "reporter": "Ohio Rev. Code Ann.",
+       "section": "5739.02"
+      },
+      "matched_text": "Ohio Rev. Code Ann. § 5739.02",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "(B)(7)",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": "Lexis Supp.",
+       "year": "2010"
+      },
+      "span": [
+       0,
+       29
+      ],
+      "type": "FullLawCitation",
+      "year": 2010
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Ohio Rev. Code Ann. § 5739.02(B)(7) (Lexis Supp. 2010)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Wis. Stat.",
+      "full_span": [
+       0,
+       36
+      ],
+      "groups": {
+       "reporter": "Wis. Stat.",
+       "section": "655.002"
+      },
+      "matched_text": "Wis. Stat. § 655.002",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "(2)(c)",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": "2005"
+      },
+      "span": [
+       0,
+       20
+      ],
+      "type": "FullLawCitation",
+      "year": 2005
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Wis. Stat. § 655.002(2)(c) (2005-06)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Ark. Code Ann.",
+      "full_span": [
+       0,
+       46
+      ],
+      "groups": {
+       "reporter": "Ark. Code Ann.",
+       "section": "23-3-119"
+      },
+      "matched_text": "Ark. Code Ann. § 23-3-119",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "(a)(2) and (d)",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": "1987"
+      },
+      "span": [
+       0,
+       25
+      ],
+      "type": "FullLawCitation",
+      "year": 1987
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Ark. Code Ann. § 23-3-119(a)(2) and (d) (1987)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mass. Gen. Laws",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "chapter": "1",
+       "reporter": "Mass. Gen. Laws",
+       "section": "2-3"
+      },
+      "matched_text": "Mass. Gen. Laws ch. 1, §§ 2-3",
+      "metadata": {
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "publisher": null,
+       "year": null
+      },
+      "span": [
+       0,
+       29
+      ],
+      "type": "FullLawCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Mass. Gen. Laws ch. 1, §§ 2-3"
+   }
+  ],
+  "test_find_tc_citations": [
+   {
+    "cites": [
+     {
+      "corrected_reporter": "T.C. No.",
+      "full_span": [
+       4,
+       18
+      ],
+      "groups": {
+       "page": "233",
+       "reporter": "T.C. No.",
+       "volume": "1"
+      },
+      "matched_text": "1 T.C. No. 233",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       4,
+       18
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "the 1 T.C. No. 233"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "T.C. Memo.",
+      "full_span": [
+       5,
+       24
+      ],
+      "groups": {
+       "page": "233",
+       "reporter": "T.C. Memo.",
+       "volume": "2019"
+      },
+      "matched_text": "T.C. Memo. 2019-233",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       5,
+       24
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "word T.C. Memo. 2019-233"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "T.C. Summary Opinion",
+      "full_span": [
+       10,
+       39
+      ],
+      "groups": {
+       "page": "233",
+       "reporter": "T.C. Summary Opinion",
+       "volume": "2019"
+      },
+      "matched_text": "T.C. Summary Opinion 2019-233",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       10,
+       39
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "something T.C. Summary Opinion 2019-233"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "T.C. Summary Opinion",
+      "full_span": [
+       0,
+       29
+      ],
+      "groups": {
+       "page": "133",
+       "reporter": "T.C. Summary Opinion",
+       "volume": "2018"
+      },
+      "matched_text": "T.C. Summary Opinion 2018-133",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": null,
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       0,
+       29
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "T.C. Summary Opinion 2018-133"
+   }
+  ],
+  "test_markup_plaintiff_and_antecedent_guesses": [
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       18,
+       61
+      ],
+      "groups": {
+       "page": "189",
+       "reporter": "U.S.",
+       "volume": "254"
+      },
+      "matched_text": "254 U.S. 189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "United States",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Jin Fuey Moy",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       49,
+       61
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "and more and more <em>Jin Fuey Moy</em><em>v. United States,</em>\n            254 U.S. 189. Petitioner contends"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       20,
+       63
+      ],
+      "groups": {
+       "page": "189",
+       "reporter": "U.S.",
+       "volume": "254"
+      },
+      "matched_text": "254 U.S. 189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "United States",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Jin Fuey Moy",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       51,
+       63
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>Overruled</em> and so on <em>Jin Fuey Moy v. United States,</em> 254 U.S. 189. Petitioner contends"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       20,
+       63
+      ],
+      "groups": {
+       "page": "189",
+       "reporter": "U.S.",
+       "volume": "254"
+      },
+      "matched_text": "254 U.S. 189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "United States",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Jin Fuey Moy",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       51,
+       63
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>Overruled</em> and so on <em>Jin Fuey Moy</em> <em>v. United States,</em> 254 U.S. 189. Petitioner contends"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       1,
+       52
+      ],
+      "groups": {
+       "page": "544",
+       "reporter": "U. S.",
+       "volume": "550"
+      },
+      "matched_text": "550 U. S. 544",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Twombly",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Bell Atlantic Corp.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2007"
+      },
+      "span": [
+       32,
+       45
+      ],
+      "type": "FullCaseCitation",
+      "year": 2007
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>Bell Atlantic Corp. </em>v. <em>Twombly, </em>550 U. S. 544 (2007),"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       14,
+       65
+      ],
+      "groups": {
+       "page": "324",
+       "reporter": "U.S.",
+       "volume": "508"
+      },
+      "matched_text": "508 U.S. 324",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Am. Sav. Bank",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "United States",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1993"
+      },
+      "span": [
+       46,
+       58
+      ],
+      "type": "FullCaseCitation",
+      "year": 1993
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "con-firmable. <em>United States v. Am. Sav. Bank, </em> 508 U.S. 324 (1993). That plan proposed to bifurcate the claim and"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       2,
+       45
+      ],
+      "groups": {
+       "page": "189",
+       "reporter": "U.S.",
+       "volume": "254"
+      },
+      "matched_text": "254 U.S. 189",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "United States",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Jin Fuey Moy",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       33,
+       45
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       82,
+       94
+      ],
+      "groups": {},
+      "matched_text": "Jin Fuey Moy",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Jin Fuey Moy",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       82,
+       94
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": ". <em>Jin Fuey Moy</em> <em>v. United States,</em> 254 U.S. 189. Petitioner contends.  Regardless in <em>Jin Fuey Moy</em> the court ruled"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Conn.",
+      "full_span": [
+       38,
+       82
+      ],
+      "groups": {
+       "page": "529",
+       "reporter": "Conn.",
+       "volume": "50"
+      },
+      "matched_text": "50 Conn. 529",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Hartford",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "541-542",
+       "pin_cite_span_end": 82,
+       "pin_cite_span_start": null,
+       "plaintiff": "Beardsley",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       61,
+       73
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<p id=\"b453-6\">\n  The supreme court of Connecticut, in\n  <em>\n   Beardsley\n  </em>\n  v.\n  <em>\n   Hartford,\n  </em>\n  50 Conn. 529, 541-542, after quoting the maxim of the common law;\n  <em>\n   cessante ratione legis-, cessat ipsa lex,\n  </em>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       74,
+       126
+      ],
+      "groups": {
+       "page": "324",
+       "reporter": "U.S.",
+       "volume": "508"
+      },
+      "matched_text": "508 U.S. 324",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Am. Sav. Bank",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Smart Nobelman",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1993"
+      },
+      "span": [
+       107,
+       119
+      ],
+      "type": "FullCaseCitation",
+      "year": 1993
+     },
+     {
+      "full_span": [
+       264,
+       279
+      ],
+      "groups": {},
+      "matched_text": "Smart Nobelman",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Smart Nobelman",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       264,
+       278
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": " partially secured by a debtor’s principal residence was not con-firmable. <em>Smart Nobelman v. Am. Sav. Bank, </em>508 U.S. 324 (1993). That plan proposed to bifurcate the claim and... pay the unsecured... only by a lien on the debtor’s principal residence.” codifies the <em>Smart Nobelman </em>decision in individual debtor chapter 11 cases."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       13,
+       42
+      ],
+      "groups": {
+       "page": "2",
+       "reporter": "U. S.",
+       "volume": "1"
+      },
+      "matched_text": "1 U. S., at 2",
+      "metadata": {
+       "antecedent_guess": "Smith Johnson",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "2",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       29,
+       42
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "the court in <em>Smith Johnson</em>, 1 U. S., at 2"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "So. 2d",
+      "full_span": [
+       28,
+       101
+      ],
+      "groups": {
+       "page": "253",
+       "reporter": "So.2d",
+       "volume": "242"
+      },
+      "matched_text": "242 So.2d 253",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Foy",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "257",
+       "pin_cite_span_end": 79,
+       "pin_cite_span_start": null,
+       "plaintiff": "Thrift Funds Canal, Inc.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1970"
+      },
+      "span": [
+       61,
+       74
+      ],
+      "type": "FullCaseCitation",
+      "year": 1970
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "Judge Regan (dissenting) in <i>Thrift Funds Canal,</i> Inc. v. Foy, 242 So.2d 253, 257 (La.App. 4 Cir. 1970), calls"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       2,
+       43
+      ],
+      "groups": {
+       "page": "1085",
+       "reporter": "U.S.",
+       "volume": "541"
+      },
+      "matched_text": "541 U.S. 1085",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Tatum",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Smart",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2004"
+      },
+      "span": [
+       23,
+       36
+      ],
+      "type": "FullCaseCitation",
+      "year": 2004
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "inline_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>\n   Smart v. Tatum,\n  </em>\n \n  541 U.S. 1085 (2004);\n  <em>\n"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "P.2d",
+      "full_span": [
+       0,
+       44
+      ],
+      "groups": {
+       "page": "1081",
+       "reporter": "P.2d",
+       "volume": "201"
+      },
+      "matched_text": "201 P.2d 1081",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Harrah",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Craig",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       31,
+       44
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [],
+    "kwargs": {},
+    "text": "Craig v. Harrah, ___ Nev. ___ [201 P.2d 1081]. ("
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "N.J.",
+      "full_span": [
+       0,
+       51
+      ],
+      "groups": {
+       "page": "151",
+       "reporter": "N.J.",
+       "volume": "44"
+      },
+      "matched_text": "44 N.J. 151",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Hodgson",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "United States",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       40,
+       51
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "A.2d",
+      "full_span": [
+       0,
+       66
+      ],
+      "groups": {
+       "page": "542",
+       "reporter": "A. 2d",
+       "volume": "207"
+      },
+      "matched_text": "207 A. 2d 542",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Hodgson",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "United States",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       53,
+       66
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": " <i>United States</i> v. <i>Hodgson,</i> ___ Iowa ___, 44 N.J. 151, 207 A. 2d 542;"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "F.2d",
+      "full_span": [
+       0,
+       56
+      ],
+      "groups": {
+       "page": "429",
+       "reporter": "F.2d",
+       "volume": "351"
+      },
+      "matched_text": "351 F.2d 429",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "New Jersey",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "United States ex rel. Russo",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       44,
+       56
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": " <i>United States ex rel. Russo v. New Jersey</i>, 351 F.2d 429 something something"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       74,
+       120
+      ],
+      "groups": {
+       "page": "324",
+       "reporter": "U.S.",
+       "volume": "508"
+      },
+      "matched_text": "508 U.S. 324",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Am. Sav. Bank",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Nobelman",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1993"
+      },
+      "span": [
+       101,
+       113
+      ],
+      "type": "FullCaseCitation",
+      "year": 1993
+     },
+     {
+      "full_span": [
+       303,
+       318
+      ],
+      "groups": {},
+      "matched_text": "Nobelman at 332",
+      "metadata": {
+       "defendant": null,
+       "parenthetical": null,
+       "pin_cite": "at 332",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Nobelman",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       303,
+       318
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": " partially secured by a debtor’s principal residence was not con-firmable. <em>Nobelman v. Am. Sav. Bank, </em>508 U.S. 324 (1993). That plan proposed to bifurcate the claim and... pay the unsecured... only by a lien on the debtor’s principal residence.” codifies the  a lien on the debtor’s principal residence.” <em>Nobelman </em>at 332, decision in individual debtor chapter 11 cases."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "S.W.2d",
+      "full_span": [
+       4,
+       48
+      ],
+      "groups": {
+       "page": "670",
+       "reporter": "S.W.2d",
+       "volume": "793"
+      },
+      "matched_text": "793 S.W.2d 670",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Wackenhut Corp.",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "DeSantis",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       34,
+       48
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<i>See <span class=\"SpellE\">DeSantis</span> v. Wackenhut Corp.</i>, 793 S.W.2d 670;"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       1
+      ],
+      "groups": {},
+      "matched_text": "§",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       1
+      ],
+      "type": "UnknownCitation"
+     },
+     {
+      "corrected_reporter": "S.W.2d",
+      "full_span": [
+       21,
+       56
+      ],
+      "groups": {
+       "page": "176",
+       "reporter": "S.W.2d",
+       "volume": "725"
+      },
+      "matched_text": "725 S.W.2d at 176",
+      "metadata": {
+       "antecedent_guess": "Strawberry Hill",
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": "Gonzalez, J., dissenting",
+       "pin_cite": "176",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       39,
+       56
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "</span>§ 3.1 (2d ed. 1977), <i>Strawberry Hill</i>, 725 S.W.2d at 176 (Gonzalez, J., dissenting);"
+   },
+   {
+    "cites": [
+     {
+      "full_span": [
+       0,
+       1
+      ],
+      "groups": {},
+      "matched_text": "§",
+      "metadata": {
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null
+      },
+      "span": [
+       0,
+       1
+      ],
+      "type": "UnknownCitation"
+     },
+     {
+      "corrected_reporter": "S.W.2d",
+      "full_span": [
+       21,
+       50
+      ],
+      "groups": {
+       "page": "176",
+       "reporter": "S.W.2d",
+       "volume": "725"
+      },
+      "matched_text": "725 S.W.2d at 176",
+      "metadata": {
+       "antecedent_guess": "Hill",
+       "court": null,
+       "day": null,
+       "month": null,
+       "parenthetical": "Gonzalez, J., dissenting",
+       "pin_cite": "176",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       33,
+       50
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "</span>§ 3.1 (2d ed. 1977), <i>(See Hill</i>, 725 S.W.2d at 176 (Gonzalez, J., dissenting));"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       0,
+       43
+      ],
+      "groups": {
+       "page": "36",
+       "reporter": "U. S.",
+       "volume": "342"
+      },
+      "matched_text": "342 U. S. 36",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Carignan",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "41",
+       "pin_cite_span_end": 43,
+       "pin_cite_span_start": null,
+       "plaintiff": "United States",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       27,
+       39
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<i>United States</i> v. <i>Carignan,</i> <span class=\"star-pagination\">*528</span> 342 U. S. 36, 41;"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "So. 2d",
+      "full_span": [
+       11,
+       108
+      ],
+      "groups": {
+       "page": "463",
+       "reporter": "So.2d",
+       "volume": "669"
+      },
+      "matched_text": "669 So.2d 463",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Vanner",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "464",
+       "pin_cite_span_end": 108,
+       "pin_cite_span_start": null,
+       "plaintiff": "Our Lady of the Lake Hosp.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       90,
+       103
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "objection. <i>Our Lady of the Lake Hosp. v. Vanner,</i> 95-0754, p. 3 (La.App. 1 Cir. 12/15/95), 669 So.2d 463, 464;"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       42,
+       66
+      ],
+      "groups": {
+       "page": "201",
+       "reporter": "U.S.",
+       "volume": "533"
+      },
+      "matched_text": "533 U.S. at 201",
+      "metadata": {
+       "antecedent_guess": "Saucier",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "201",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       51,
+       66
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "S. Ct.",
+      "full_span": [
+       42,
+       82
+      ],
+      "groups": {
+       "page": "2151",
+       "reporter": "S.Ct.",
+       "volume": "121"
+      },
+      "matched_text": "121 S.Ct. 2151",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Saucier",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       68,
+       82
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "immunity outlined by the Supreme Court in <em>Saucier, </em><page-number citation-index=\"1\" label=\"1029\">*1029</page-number>533 U.S. at 201, 121 S.Ct. 2151"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Mont.",
+      "full_span": [
+       11,
+       66
+      ],
+      "groups": {
+       "page": "403",
+       "reporter": "Mont.",
+       "volume": "59"
+      },
+      "matched_text": "59 Mont. 403",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Carroll’s Estate",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "413",
+       "pin_cite_span_end": 66,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       49,
+       61
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "this Court.\n  <em>\n   Holm; In Re Carroll’s Estate\n  </em>\n  (1921), 59 Mont. 403, 413."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       7,
+       33
+      ],
+      "groups": {
+       "page": "248",
+       "reporter": "U.S.",
+       "volume": "477"
+      },
+      "matched_text": "477 U.S. at 248",
+      "metadata": {
+       "antecedent_guess": "Anderson",
+       "court": "scotus",
+       "day": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": "248",
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "year": null
+      },
+      "span": [
+       18,
+       33
+      ],
+      "type": "ShortCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "party.”\n              <em>\n               Anderson, 477\n              </em>\n              U.S. at 248"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "A.D.2d",
+      "full_span": [
+       4,
+       32
+      ],
+      "groups": {
+       "page": "215",
+       "reporter": "A.D.2d",
+       "volume": "4"
+      },
+      "matched_text": "4 A.D.2d 215",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Spellman",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       20,
+       32
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "and <em>In re Spellman, 4 </em>A.D.2d 215 (N.Y.App.Div.1957). <em>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "So. 3d",
+      "full_span": [
+       4,
+       54
+      ],
+      "groups": {
+       "page": "1173",
+       "reporter": "So.3d",
+       "volume": "104"
+      },
+      "matched_text": "104 So.3d 1173",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "State",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Akins",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "2012"
+      },
+      "span": [
+       20,
+       34
+      ],
+      "type": "FullCaseCitation",
+      "year": 2012
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>Cf. Akins v. State, </em>104 So.3d 1173 (Fla. 1st DCA 2012)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Cal. 2d",
+      "full_span": [
+       7,
+       34
+      ],
+      "groups": {
+       "page": "756",
+       "reporter": "Cal.2d",
+       "volume": "41"
+      },
+      "matched_text": "41 Cal.2d 756",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Dixon",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": "1953"
+      },
+      "span": [
+       14,
+       27
+      ],
+      "type": "FullCaseCitation",
+      "year": 1953
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>\n   In re Dixon,\n  </em>\n  41 Cal.2d 756 (1953)."
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "U.S.",
+      "full_span": [
+       15,
+       45
+      ],
+      "groups": {
+       "page": "293",
+       "reporter": "U.S.",
+       "volume": "388"
+      },
+      "matched_text": "388 U.S. 293",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": "scotus",
+       "day": null,
+       "defendant": "Denno",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Stovall",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       33,
+       45
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "dentification. Stovall v. Denno, 388 U.S. 293, "
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "S.W.3d",
+      "full_span": [
+       9,
+       41
+      ],
+      "groups": {
+       "page": "38",
+       "reporter": "S.W.3d",
+       "volume": "156"
+      },
+      "matched_text": "156 S.W.3d 38",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Stephens",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Cass",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       28,
+       41
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "<em>see also Cass v. Stephens</em>,\r\n156 S.W.3d 38"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Va. App.",
+      "full_span": [
+       32,
+       70
+      ],
+      "groups": {
+       "page": "299",
+       "reporter": "Va. App.",
+       "volume": "26"
+      },
+      "matched_text": "26 Va. App. 299",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Commonwealth",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Ohree",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       55,
+       70
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "the trial court.â€™â€ (quoting Ohree v. Commonwealth, </pre><span class=\"citation no-link\"><span class=\"volume\">26</span> <span class=\"reporter\">Va. App.</span> <span class=\"page\">299</span>"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Ga.",
+      "full_span": [
+       18,
+       46
+      ],
+      "groups": {
+       "page": "216",
+       "reporter": "Ga.",
+       "volume": "286"
+      },
+      "matched_text": "286 Ga. 216",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "State",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Harper",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       35,
+       46
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "S.E.2d",
+      "full_span": [
+       18,
+       78
+      ],
+      "groups": {
+       "page": "786",
+       "reporter": "SE2d",
+       "volume": "686"
+      },
+      "matched_text": "686 SE2d 786",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "State",
+       "extra": ")",
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Harper",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       58,
+       70
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "See id.; see also Harper v. State, </pre><span class=\"citation no-link\">286 Ga. 216</span><pre class=\"inline\">, 218\n(1) (686 SE2d 786) (2009)"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "Tenn.",
+      "full_span": [
+       0,
+       47
+      ],
+      "groups": {
+       "page": "339",
+       "reporter": "Tenn.",
+       "volume": "179"
+      },
+      "matched_text": "179 Tenn. 339",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "State ex rel. Killebrew",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Lynch",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       34,
+       47
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": "\n\nLynch v. State ex rel. Killebrew, 179 Tenn. 339"
+   },
+   {
+    "cites": [
+     {
+      "corrected_reporter": "P.2d",
+      "full_span": [
+       4,
+       70
+      ],
+      "groups": {
+       "page": "1170",
+       "reporter": "P.2d",
+       "volume": "676"
+      },
+      "matched_text": "676 P.2d 1170",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "City and County of Denver",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": "Loup-Miller Const. Co.",
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       57,
+       70
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "corrected_reporter": "P.2d",
+      "full_span": [
+       92,
+       118
+      ],
+      "groups": {
+       "page": "1170",
+       "reporter": "P.2d",
+       "volume": "676"
+      },
+      "matched_text": "676 P.2d 1170",
+      "metadata": {
+       "antecedent_guess": null,
+       "court": null,
+       "day": null,
+       "defendant": "Loup-Miller",
+       "extra": null,
+       "month": null,
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null,
+       "year": null
+      },
+      "span": [
+       105,
+       118
+      ],
+      "type": "FullCaseCitation",
+      "year": null
+     },
+     {
+      "full_span": [
+       129,
+       140
+      ],
+      "groups": {},
+      "matched_text": "Loup-Miller",
+      "metadata": {
+       "defendant": "Loup-Miller",
+       "parenthetical": null,
+       "pin_cite": null,
+       "pin_cite_span_end": null,
+       "pin_cite_span_start": null,
+       "plaintiff": null,
+       "resolved_case_name": null,
+       "resolved_case_name_short": null
+      },
+      "span": [
+       129,
+       140
+      ],
+      "type": "ReferenceCitation"
+     }
+    ],
+    "clean_steps": [
+     "html",
+     "all_whitespace"
+    ],
+    "kwargs": {},
+    "text": " <i>See </i><i>Loup-Miller Const. Co. v. City and County of Denver,</i> 676 P.2d 1170 (Colo.1984) .... <i>See </i><i>Loup-Miller,</i> 676 P.2d 1170 and so on <i>Loup-Miller</i>"
+   }
+  ]
+ }
+}

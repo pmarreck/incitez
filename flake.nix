@@ -36,6 +36,61 @@
           pkgs.apple-sdk
         ];
 
+        # ── Pinned eyecite as the differential oracle ────────────────────
+        # Test-time only; never ships in the binary. The one justified
+        # exception to the no-Python rule: there is no other oracle of
+        # comparable authority for citation extraction.
+        py = pkgs.python3Packages;
+
+        fast-diff-match-patch = py.buildPythonPackage rec {
+          pname = "fast_diff_match_patch";
+          version = "2.1.0";
+          pyproject = true;
+          src = py.fetchPypi {
+            inherit pname version;
+            hash = "sha256-rEAte/8EqE82PMW/qUhQm8TvhELG691WTETcOWE77EA=";
+          };
+          build-system = [ py.setuptools ];
+          doCheck = false;
+        };
+
+        reporters-db-py = py.buildPythonPackage {
+          pname = "reporters-db";
+          version = "3.2.65";
+          pyproject = true;
+          src = reporters-db-src;
+          build-system = [ py.setuptools ];
+          doCheck = false;
+        };
+
+        courts-db-py = py.buildPythonPackage {
+          pname = "courts-db";
+          version = "0.10.27";
+          pyproject = true;
+          src = courts-db-src;
+          build-system = [ py.setuptools ];
+          doCheck = false;
+        };
+
+        eyecite = py.buildPythonPackage {
+          pname = "eyecite";
+          version = "2.7.6";
+          pyproject = true;
+          src = eyecite-src;
+          build-system = [ py.setuptools ];
+          dependencies = [
+            courts-db-py
+            reporters-db-py
+            fast-diff-match-patch
+            py.lxml
+            py.pyahocorasick
+            py.regex
+          ];
+          doCheck = false;
+        };
+
+        eyecitePython = pkgs.python3.withPackages (_: [ eyecite ]);
+
         darwinIncludeHook = pkgs.lib.optionalString isDarwin ''
           export C_INCLUDE_PATH="${pkgs.apple-sdk}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include''${C_INCLUDE_PATH:+:$C_INCLUDE_PATH}"
         '';
@@ -63,6 +118,8 @@
       in {
         packages.default = mkIncitez "ReleaseFast";
         packages.debug = mkIncitez "Debug";
+        # Oracle env for corpus extraction + differential testing (test-time only)
+        packages.eyecite-env = eyecitePython;
 
         checks.test = pkgs.stdenv.mkDerivation {
           pname = "incitez-test";

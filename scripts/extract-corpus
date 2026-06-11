@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Re-extract the acceptance corpus from the pinned eyecite oracle.
+# Run after bumping the eyecite-src flake input. Commits happen manually
+# after reviewing the diff.
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.." || exit 1
+
+run() {
+	"$@" || {
+		echo "FAILED: $*" >&2
+		exit 1
+	}
+}
+
+if [[ ! -d deps/eyecite-src ]]; then
+	run ./scripts/link-deps
+fi
+
+run nix build .#eyecite-env -o .eyecite-env
+mkdir -p tests/corpus
+run ./.eyecite-env/bin/python tools/extract_corpus.py deps/eyecite-src tests/corpus/eyecite_corpus.json
