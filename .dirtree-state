@@ -2,6 +2,7 @@
 ver=1.2
 annotate=[
 	MISTAKES.md = Process mistakes log (pipe exit-code masking; jj+nix stale-tree race)
+	bm = Benchmark runner: synthetic doc from corpus, hyperfine one-shot + steady-state, appends BENCHMARKS.md
 	build.zig = Hexagonal build: static lib (C ABI) + C CLI dogfooding FFI + test/test-compile steps (use_llvm forced)
 	cli/main.c = C CLI shell over the FFI: --about/--help; all I/O lives here
 	docs/incitez_design.md = THE SPEC: design brief from legal_ai (licensing, MFIC test strategy, perf targets, milestones)
@@ -11,8 +12,10 @@ annotate=[
 	scripts/revendor = Re-vendor reporters-db/courts-db JSON + licenses + provenance from flake pins
 	src/extract.zig = Citation extractor: reporter-anchored scan + bounded-backtracking pattern VM
 	src/lib.zig = Pure Zig core (no I/O) + C FFI exports; currently version export only
+	src/pcre2_engine.zig = PCRE2 engine path: eyecite-literal regexes via C API, lazy JIT compile, finditer-semantics scan
 	tests/acceptance.zig = Corpus acceptance driver: per-field comparison, char->byte span conversion, two-sided pass-count ratchet
 	tests/cli/test-basic = CLI surface assertions: --about/--help/exit codes/stderr cleanliness
 	tests/corpus/eyecite_corpus.json = Oracle-verified acceptance corpus: 193 cases from eyecite 2.7.6 FindTest (BSD-2-Clause)
+	tools/bench.zig = Engine benchmark exe (vm|pcre2, refuses Debug builds)
 	tools/extract_corpus.py = Corpus extractor: AST-evals eyecite test_pairs in oracle env, integrity-gates, serializes (test-time Python exception)
 ]

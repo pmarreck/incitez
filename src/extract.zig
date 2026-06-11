@@ -46,6 +46,9 @@ pub const Citation = struct {
     /// Resolved courts-db court id (e.g. "ca4"), or "scotus" guessed from
     /// the reporter. Static string from the generated table.
     court: ?[]const u8 = null,
+    /// Pin cite (clean_pin_cite semantics: raw capture stripped of leading/
+    /// trailing commas and spaces). Slice into the input text.
+    pin_cite: ?[]const u8 = null,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
@@ -129,13 +132,14 @@ fn pcre2Scan(
     }
 }
 
-/// Shared post-candidate metadata: court/date paren, court resolution,
-/// scotus guess, pre-citation year. Both engines converge here.
+/// Shared post-candidate metadata: pin cite, court/date paren, court
+/// resolution, scotus guess, pre-citation year. Both engines converge here.
 fn finishCitation(text: []const u8, c: *Citation) void {
     const post = parsePostCitation(text, c.span_end);
     c.year_text = post.year_text;
     c.year = post.year;
     c.court_paren = post.court;
+    c.pin_cite = post.pin_cite;
     if (post.court) |paren_court| {
         c.court = resolveCourtByParen(paren_court);
     }
@@ -185,6 +189,7 @@ const PostCitation = struct {
     year_text: ?[]const u8 = null,
     year: ?u16 = null,
     court: ?[]const u8 = null,
+    pin_cite: ?[]const u8 = null,
 };
 
 const MONTHS = [_][]const u8{
@@ -194,29 +199,35 @@ const MONTHS = [_][]const u8{
     "October",   "Oct.", "November", "Nov.",  "December", "Dec.",
 };
 
-/// Scans forward from the end of a citation for the court/date paren:
-/// `[pin cite,]? extra [\(\[] court? month? day? YEAR [\)\]]`. The court is
-/// everything in the paren before the whitespace that precedes a month or
-/// the year (Python's lazy `.*?` + lookahead). The paren must close right
-/// after the year or the whole branch fails (no year, no court).
+/// Scans forward from the end of a citation, mirroring eyecite's
+/// POST_FULL_CITATION_REGEX two branches: `pin_cite? ,? extra [\(\[] court?
+/// month? day? YEAR [\)\]]` preferred; bare `pin_cite` as the fallback when
+/// no valid court/date paren follows. The court is everything in the paren
+/// before the whitespace that precedes a month or the year (Python's lazy
+/// `.*?` + lookahead); the paren must close right after the year or the
+/// whole branch fails.
 fn parsePostCitation(text: []const u8, start: usize) PostCitation {
+    const pin = parsePinCite(text, start);
+    const pin_only: PostCitation = .{ .pin_cite = if (pin) |p| p.cleaned else null };
+    const after_pin = if (pin) |p| p.end else start;
+
     // `extra` window: [^(;]* (newline = paragraph token boundary upstream)
-    var i = start;
+    var i = after_pin;
     while (i < text.len) : (i += 1) {
         const c = text[i];
         if (c == '(' or c == '[') break;
-        if (c == ';' or c == '\n') return .{};
+        if (c == ';' or c == '\n') return pin_only;
     }
-    if (i >= text.len) return .{};
+    if (i >= text.len) return pin_only;
     const open = i;
     const close = blk: {
         var j = open + 1;
         while (j < text.len) : (j += 1) {
             const c = text[j];
             if (c == ')' or c == ']') break :blk j;
-            if (c == '\n') return .{};
+            if (c == '\n') return pin_only;
         }
-        return .{};
+        return pin_only;
     };
     const inner = text[open + 1 .. close];
 
@@ -234,12 +245,156 @@ fn parsePostCitation(text: []const u8, start: usize) PostCitation {
                     .year_text = date.year_text,
                     .year = date.year,
                     .court = if (court.len == 0) null else court,
+                    .pin_cite = pin_only.pin_cite,
                 };
             }
         }
         p += 1;
     }
-    return .{};
+    return pin_only;
+}
+
+const PinCiteResult = struct {
+    end: usize, // end offset of the raw pin capture in text
+    cleaned: []const u8, // clean_pin_cite: raw stripped of ", " both ends
+};
+
+/// eyecite PIN_CITE_REGEX: `,? ?(at )? TOKEN (, ?TOKEN)*` with a trailing
+/// lookahead requiring `,.;)]\`, ` ?[([`, or end of text. The star is
+/// greedy with backtracking: trailing repetitions are dropped until the
+/// lookahead holds (this is what stops a pin cite from eating the volume
+/// of a following parallel citation).
+fn parsePinCite(text: []const u8, start: usize) ?PinCiteResult {
+    var p = start;
+    if (p < text.len and text[p] == ',') p += 1;
+    if (p < text.len and text[p] == ' ') p += 1;
+    if (p + 3 <= text.len and std.mem.eql(u8, text[p .. p + 3], "at ")) p += 3;
+    p = parsePinToken(text, p) orelse return null;
+
+    var reps: [64]usize = undefined; // pre-rep positions for backtracking
+    var n_reps: usize = 0;
+    while (n_reps < reps.len) {
+        var q = p;
+        if (q >= text.len or text[q] != ',') break;
+        q += 1;
+        if (q < text.len and text[q] == ' ') q += 1;
+        const t = parsePinToken(text, q) orelse break;
+        reps[n_reps] = p;
+        n_reps += 1;
+        p = t;
+    }
+    while (!pinLookaheadOk(text, p)) {
+        if (n_reps == 0) return null;
+        n_reps -= 1;
+        p = reps[n_reps];
+    }
+    const cleaned = std.mem.trim(u8, text[start..p], ", ");
+    if (cleaned.len == 0) return null;
+    return .{ .end = p, .cleaned = cleaned };
+}
+
+fn pinLookaheadOk(text: []const u8, p: usize) bool {
+    if (p >= text.len) return true;
+    return switch (text[p]) {
+        ',', '.', ';', ')', ']', '\\', '(', '[' => true,
+        ' ' => p + 1 < text.len and (text[p + 1] == '(' or text[p + 1] == '['),
+        else => false,
+    };
+}
+
+/// One pin-cite token: optional label + optional space, then
+/// `\d+:\d+(-\d+(:\d+)?)?` (page:line) or `*?\d+(-\d+)?` (page range).
+/// Python backtracks the optional label off when the number fails.
+fn parsePinToken(text: []const u8, start: usize) ?usize {
+    if (parsePinLabel(text, start)) |after_label| {
+        var q = after_label;
+        if (q < text.len and text[q] == ' ') q += 1;
+        if (parsePinNumber(text, q)) |e| return e;
+    }
+    return parsePinNumber(text, start);
+}
+
+/// Labels, in eyecite's alternation order: (& )?note | (& )?nn?.? |
+/// (& )?fn?.? | ¶{1,2} | §{1,2} | *{1,4} | pg.? | pp?.?
+fn parsePinLabel(text: []const u8, start: usize) ?usize {
+    const rest = text[start..];
+    const amp: usize = if (std.mem.startsWith(u8, rest, "& ")) 2 else 0;
+    const r = rest[amp..];
+    if (std.mem.startsWith(u8, r, "note")) return start + amp + 4;
+    if (r.len > 0 and (r[0] == 'n' or r[0] == 'f')) {
+        var e: usize = 1;
+        if (e < r.len and r[e] == 'n' and r[0] != 'f') e += 1;
+        if (r[0] == 'f' and e < r.len and r[e] == 'n') e += 1;
+        if (e < r.len and r[e] == '.') e += 1;
+        return start + amp + e;
+    }
+    if (amp != 0) return null; // "& " requires note/n/f after it
+    if (std.mem.startsWith(u8, rest, "\xc2\xb6")) { // ¶
+        var e: usize = 2;
+        if (std.mem.startsWith(u8, rest[e..], "\xc2\xb6")) e += 2;
+        return start + e;
+    }
+    if (std.mem.startsWith(u8, rest, "\xc2\xa7")) { // §
+        var e: usize = 2;
+        if (std.mem.startsWith(u8, rest[e..], "\xc2\xa7")) e += 2;
+        return start + e;
+    }
+    if (rest.len > 0 and rest[0] == '*') {
+        var e: usize = 1;
+        while (e < rest.len and e < 4 and rest[e] == '*') e += 1;
+        return start + e;
+    }
+    if (std.mem.startsWith(u8, rest, "pg")) {
+        var e: usize = 2;
+        if (e < rest.len and rest[e] == '.') e += 1;
+        return start + e;
+    }
+    if (rest.len > 0 and rest[0] == 'p') {
+        var e: usize = 1;
+        if (e < rest.len and rest[e] == 'p') e += 1;
+        if (e < rest.len and rest[e] == '.') e += 1;
+        return start + e;
+    }
+    return null;
+}
+
+fn digitRun(text: []const u8, start: usize) usize {
+    var p = start;
+    while (p < text.len and isDigit(text[p])) p += 1;
+    return p;
+}
+
+fn parsePinNumber(text: []const u8, start: usize) ?usize {
+    // page:line form first (eyecite alternation order): \d+:\d+(-\d+(:\d+)?)?
+    const d1 = digitRun(text, start);
+    if (d1 > start and d1 < text.len and text[d1] == ':') {
+        const d2 = digitRun(text, d1 + 1);
+        if (d2 > d1 + 1) {
+            var e = d2;
+            if (e < text.len and text[e] == '-') {
+                const d3 = digitRun(text, e + 1);
+                if (d3 > e + 1) {
+                    e = d3;
+                    if (e < text.len and text[e] == ':') {
+                        const d4 = digitRun(text, e + 1);
+                        if (d4 > e + 1) e = d4;
+                    }
+                }
+            }
+            return e;
+        }
+    }
+    // page range: [*]?\d+(-\d+)?
+    var q = start;
+    if (q < text.len and text[q] == '*') q += 1;
+    const e1 = digitRun(text, q);
+    if (e1 == q) return null;
+    var e = e1;
+    if (e < text.len and text[e] == '-') {
+        const e2 = digitRun(text, e + 1);
+        if (e2 > e + 1) e = e2;
+    }
+    return e;
 }
 
 /// Maps a court paren string ("4th Cir.", "Pa.Super.") to a courts-db id,
@@ -798,6 +953,52 @@ test "non-scotus reporter without paren has no court" {
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].court);
+}
+
+test "pin cite: simple range before court paren" {
+    const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("347-348", cites[0].pin_cite.?);
+    try testing.expectEqual(@as(?u16, 1982), cites[0].year);
+}
+
+test "pin cite stops before a following parallel citation" {
+    const cites = try extract(testing.allocator, "Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982) (overruling foo)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqualStrings("347-348", cites[0].pin_cite.?);
+    try testing.expectEqualStrings("358", cites[1].pin_cite.?);
+}
+
+test "pin cite survives when the paren is not a court/date paren" {
+    // (3 Atl. 33) has no 4-digit year: branch 1 fails, pin-only branch holds
+    const cites = try extract(testing.allocator, "2 U.S. 3, 4-5 (3 Atl. 33)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqualStrings("4-5", cites[0].pin_cite.?);
+    try testing.expectEqual(@as(?u16, null), cites[0].year);
+}
+
+test "pin cite terminated by period" {
+    const cites = try extract(testing.allocator, "In re Foo 1 Mass. 12, 347-348. something something,");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("347-348", cites[0].pin_cite.?);
+}
+
+test "pin cite comma list" {
+    const cites = try extract(testing.allocator, "1 U.S. 1, 2277, 2278, 2279 (1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("2277, 2278, 2279", cites[0].pin_cite.?);
+}
+
+test "no pin cite when nothing follows" {
+    const cites = try extract(testing.allocator, "1 U.S. 1 (1982)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].pin_cite);
 }
 
 test "pcre2 engine agrees with vm engine on representative citations" {

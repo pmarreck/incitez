@@ -2,6 +2,13 @@
 
 Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (processed).
 
+## Direction (Peter, 2026-06-11)
+The VM is the product; make it excellent. PCRE2 stays as a second oracle in the
+dual-engine harness (and a possible later optimization target), but VM-first is
+settled — the VM-WASM argument (no JIT needed in-browser) carried it.
+Priority: correctness/parity slices first (metadata, short forms), THEN the
+anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
+
 ## In Progress
 - [ ] M2 metadata, remaining: pin_cite (+clean_pin_cite), parenthetical (process_parenthetical trimming), extra, plaintiff/defendant (find_case_name backward scan), full_span. Activate each in the driver as it lands.
 - [ ] INVESTIGATE (found by ./bm): on the 150×-concatenated corpus doc, vm finds 20700 cites vs pcre2 20550 — exactly 1/seam. Adjacent-citation boundary semantics differ (Python finditer consumes the trailing boundary char, starving the next citation's leading boundary; the VM doesn't). The M4 differential gate vs real eyecite adjudicates which is oracle-correct. Add a seam-adjacency case to the cross-engine test either way.
@@ -22,6 +29,7 @@ Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (
 - [ ] M4: Differential CI gate vs pinned eyecite (nix Python, test-time only) + mutation suite + two-sided ±10% benchmark gate (history committed, hardware-keyed)
 - [ ] M5: C FFI (flat structs, arena ownership) + CLI `incitez extract file.txt --json`; notify Einstein via LLMsend
 - [ ] M6: docscan integration + legal_ai harness wiring (planned with Einstein after M5)
+- [ ] M7: WASM build target (Peter-ratified) — browser demo, **Elm UI** (Peter+Einstein decision 2026-06-11): nothing leaves the browser, fast, and no runtime exceptions. Note: in-browser the VM engine advantage WIDENS — wasm has no executable pages, so PCRE2 would run interpreted there; the VM needs no JIT at all.
 
 ## Completed
 - [x] PCRE2 dual-engine harness (Peter-directed): pcre2 fork as flake input (static+JIT), eyecite-literal extractors emitted by codegen, Engine enum, per-engine corpus ratchets (64/64 BOTH), cross-engine differential 0/193, ./bm engine benchmark — vm 17.35× faster wall-clock than JIT'd PCRE2 on 1.7MB (449ms vs 7.8s steady-state; one-shot 0.90s vs 15.7s) (2026-06-11 ~19:30 EST)
