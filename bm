@@ -57,7 +57,7 @@ if [[ -n "${prev_ns:-}" && -n "${vm_ns:-}" && "$prev_ns" -gt 0 ]]; then
 	delta_pct=$(( (vm_ns - prev_ns) * 100 / prev_ns ))
 	if (( delta_pct > 10 || delta_pct < -10 )); then
 		echo ""
-		echo "\033[1;31mBENCHMARK GATE: vm ${delta_pct}% vs previous baseline (${prev_ns} -> ${vm_ns} ns/iter) — outside ±10%!\033[0m"
+		printf '\033[1;31mBENCHMARK GATE: vm %s%% vs previous baseline (%s -> %s ns/iter) — outside ±10%%!\033[0m\n' "$delta_pct" "$prev_ns" "$vm_ns"
 		echo "Investigate before accepting; this run is now the recorded baseline."
 		gate_status=1
 	else
