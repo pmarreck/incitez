@@ -80,6 +80,8 @@ fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.e
     if (expected.get("metadata")) |md| {
         if (!optFieldMatches(md.object.get("court"), actual.court)) return false;
         if (!optFieldMatches(md.object.get("pin_cite"), actual.pin_cite)) return false;
+        if (!optFieldMatches(md.object.get("parenthetical"), actual.parenthetical)) return false;
+        if (!optFieldMatches(md.object.get("extra"), actual.extra)) return false;
     }
     // year (validated integer; null when absent or out of range)
     if (expected.get("year")) |y| {

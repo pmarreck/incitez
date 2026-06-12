@@ -49,6 +49,12 @@ pub const Citation = struct {
     /// Pin cite (clean_pin_cite semantics: raw capture stripped of leading/
     /// trailing commas and spaces). Slice into the input text.
     pin_cite: ?[]const u8 = null,
+    /// Parenthetical comment after the court/date paren, e.g.
+    /// "overruling foo" — process_parenthetical trimming applied.
+    parenthetical: ?[]const u8 = null,
+    /// Text between the pin cite and the court/date paren (often parallel
+    /// citations), whitespace-stripped.
+    extra: ?[]const u8 = null,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
@@ -140,6 +146,8 @@ fn finishCitation(text: []const u8, c: *Citation) void {
     c.year = post.year;
     c.court_paren = post.court;
     c.pin_cite = post.pin_cite;
+    c.parenthetical = post.parenthetical;
+    c.extra = post.extra;
     if (post.court) |paren_court| {
         c.court = resolveCourtByParen(paren_court);
     }
@@ -190,7 +198,12 @@ const PostCitation = struct {
     year: ?u16 = null,
     court: ?[]const u8 = null,
     pin_cite: ?[]const u8 = null,
+    parenthetical: ?[]const u8 = null,
+    extra: ?[]const u8 = null,
 };
+
+/// eyecite MAX_MATCH_CHARS: the post-citation scan window.
+const MAX_MATCH_CHARS = 300;
 
 const MONTHS = [_][]const u8{
     "January",   "Jan.", "February", "Feb.",  "March",    "Mar.",
@@ -207,29 +220,37 @@ const MONTHS = [_][]const u8{
 /// `.*?` + lookahead); the paren must close right after the year or the
 /// whole branch fails.
 fn parsePostCitation(text: []const u8, start: usize) PostCitation {
-    const pin = parsePinCite(text, start);
+    // window: tokens accumulate to the next paragraph break, max 300 chars
+    const nl = std.mem.indexOfScalarPos(u8, text, start, '\n') orelse text.len;
+    const win = text[0..@min(nl, start + MAX_MATCH_CHARS)];
+
+    const pin = parsePinCite(win, start);
     const pin_only: PostCitation = .{ .pin_cite = if (pin) |p| p.cleaned else null };
     const after_pin = if (pin) |p| p.end else start;
 
-    // `extra` window: [^(;]* (newline = paragraph token boundary upstream)
+    // `,? ?` then `extra` window: [^(;]*
     var i = after_pin;
-    while (i < text.len) : (i += 1) {
-        const c = text[i];
+    if (i < win.len and win[i] == ',') i += 1;
+    if (i < win.len and win[i] == ' ') i += 1;
+    const extra_start = i;
+    while (i < win.len) : (i += 1) {
+        const c = win[i];
         if (c == '(' or c == '[') break;
-        if (c == ';' or c == '\n') return pin_only;
+        if (c == ';') return pin_only;
     }
-    if (i >= text.len) return pin_only;
+    if (i >= win.len) return pin_only;
     const open = i;
     const close = blk: {
         var j = open + 1;
-        while (j < text.len) : (j += 1) {
-            const c = text[j];
+        while (j < win.len) : (j += 1) {
+            const c = win[j];
             if (c == ')' or c == ']') break :blk j;
-            if (c == '\n') return pin_only;
         }
         return pin_only;
     };
-    const inner = text[open + 1 .. close];
+    const inner = win[open + 1 .. close];
+    const extra_raw = std.mem.trim(u8, win[extra_start..open], &std.ascii.whitespace);
+    const extra: ?[]const u8 = if (extra_raw.len == 0) null else extra_raw;
 
     // candidate positions: paren start, or after each whitespace run
     var p: usize = 0;
@@ -246,12 +267,44 @@ fn parsePostCitation(text: []const u8, start: usize) PostCitation {
                     .year = date.year,
                     .court = if (court.len == 0) null else court,
                     .pin_cite = pin_only.pin_cite,
+                    .extra = extra,
+                    .parenthetical = parseParenthetical(win, close + 1),
                 };
             }
         }
         p += 1;
     }
     return pin_only;
+}
+
+/// PARENTHETICAL_REGEX + process_parenthetical: optional ` ?\(`, greedy
+/// capture to the LAST `)` in the window, then trim at the first unbalanced
+/// close paren; a capture starting with a 4-digit year is nulled.
+fn parseParenthetical(win: []const u8, start: usize) ?[]const u8 {
+    var r = start;
+    if (r < win.len and win[r] == ' ') r += 1;
+    if (r >= win.len or win[r] != '(') return null;
+    var last: usize = win.len;
+    while (last > r + 1) {
+        last -= 1;
+        if (win[last] == ')') break;
+    } else return null;
+    if (last <= r) return null;
+    return processParenthetical(win[r + 1 .. last]);
+}
+
+fn processParenthetical(p: []const u8) ?[]const u8 {
+    var depth: i32 = 0;
+    for (p, 0..) |ch, i| {
+        if (ch == '(') depth += 1;
+        if (ch == ')') depth -= 1;
+        if (depth < 0) {
+            return if (i == 0) null else p[0..i];
+        }
+    }
+    if (p.len >= 4 and isDigit(p[0]) and isDigit(p[1]) and isDigit(p[2]) and isDigit(p[3]))
+        return null;
+    return if (p.len == 0) null else p;
 }
 
 const PinCiteResult = struct {
@@ -999,6 +1052,45 @@ test "no pin cite when nothing follows" {
     defer testing.allocator.free(cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].pin_cite);
+}
+
+test "parenthetical comment and extra (parallel cite text)" {
+    const cites = try extract(testing.allocator, "Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982) (overruling foo)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqualStrings("overruling foo", cites[0].parenthetical.?);
+    try testing.expectEqualStrings("1 S. Ct. 2, 358", cites[0].extra.?);
+    try testing.expectEqualStrings("overruling foo", cites[1].parenthetical.?);
+    try testing.expectEqual(@as(?[]const u8, null), cites[1].extra);
+}
+
+test "nested parenthetical kept whole" {
+    const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (1982) (discussing abc (Holmes, J., concurring))");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("discussing abc (Holmes, J., concurring)", cites[0].parenthetical.?);
+}
+
+test "parenthetical trimmed at unbalanced close paren" {
+    const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (1982) (discussing abc); blah (something).");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("discussing abc", cites[0].parenthetical.?);
+}
+
+test "year-shaped parenthetical is nulled (eyecite parity)" {
+    const cites = try extract(testing.allocator, "1 U.S. 1 (Pa. 1982) (1983)");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].parenthetical);
+}
+
+test "no parenthetical when none follows" {
+    const cites = try extract(testing.allocator, "1 U.S. 1 (1982) and more text");
+    defer testing.allocator.free(cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].parenthetical);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].extra);
 }
 
 test "pcre2 engine agrees with vm engine on representative citations" {
