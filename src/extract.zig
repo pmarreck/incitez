@@ -3,6 +3,7 @@ const reporters = @import("reporters.zig");
 const tables = @import("reporters_tables");
 const courts = @import("courts_tables");
 const pcre2_engine = @import("pcre2_engine.zig");
+const case_name = @import("case_name.zig");
 
 /// Which candidate-finding implementation to use. `.vm` is incitez's
 /// anchored pattern VM; `.pcre2` runs the eyecite-literal regexes through
@@ -55,6 +56,10 @@ pub const Citation = struct {
     /// Text between the pin cite and the court/date paren (often parallel
     /// citations), whitespace-stripped.
     extra: ?[]const u8 = null,
+    /// Case-name parties (find_case_name backward scan). ALLOCATED — free
+    /// via freeCitations, not allocator.free on the slice alone.
+    plaintiff: ?[]const u8 = null,
+    defendant: ?[]const u8 = null,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
@@ -93,8 +98,17 @@ pub fn extractWithEngine(
         .vm => try vmScan(allocator, text, &cites),
         .pcre2 => try pcre2Scan(allocator, text, &cites),
     }
-    for (cites.items) |*c| finishCitation(text, c);
+    for (cites.items, 0..) |*c, i| try finishCitation(allocator, text, cites.items, i, c);
     return cites.toOwnedSlice(allocator);
+}
+
+/// Frees a citation slice including the allocated case-name strings.
+pub fn freeCitations(allocator: std.mem.Allocator, cites: []Citation) void {
+    for (cites) |c| {
+        if (c.plaintiff) |p| allocator.free(p);
+        if (c.defendant) |d| allocator.free(d);
+    }
+    allocator.free(cites);
 }
 
 fn vmScan(
@@ -139,8 +153,15 @@ fn pcre2Scan(
 }
 
 /// Shared post-candidate metadata: pin cite, court/date paren, court
-/// resolution, scotus guess, pre-citation year. Both engines converge here.
-fn finishCitation(text: []const u8, c: *Citation) void {
+/// resolution, scotus guess, case names + pre-citation year. Both engines
+/// converge here.
+fn finishCitation(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    all: []const Citation,
+    self_idx: usize,
+    c: *Citation,
+) !void {
     const post = parsePostCitation(text, c.span_end);
     c.year_text = post.year_text;
     c.year = post.year;
@@ -155,8 +176,26 @@ fn finishCitation(text: []const u8, c: *Citation) void {
     if (c.court == null and tables.editions[c.edition].is_scotus) {
         c.court = "scotus";
     }
+
+    // case names (find_case_name backward scan); other citations' spans act
+    // as the CitationTokens of eyecite's word list
+    var spans_buf: [32]case_name.CiteSpan = undefined;
+    var n_spans: usize = 0;
+    for (all, 0..) |other, oi| {
+        if (oi == self_idx or n_spans == spans_buf.len) continue;
+        spans_buf[n_spans] = .{ .start = other.span_start, .end = other.span_end };
+        n_spans += 1;
+    }
+    const names = try case_name.findCaseName(
+        allocator,
+        text,
+        .{ .start = c.span_start, .end = c.span_end },
+        spans_buf[0..n_spans],
+    );
+    c.plaintiff = names.plaintiff;
+    c.defendant = names.defendant;
     if (c.year == null) {
-        if (preCiteYear(text, c.span_start)) |yt| {
+        if (names.year_text) |yt| {
             c.year_text = yt;
             c.year = std.fmt.parseInt(u16, yt, 10) catch unreachable;
         }
@@ -475,50 +514,6 @@ fn resolveCourtByParen(paren: []const u8) ?[]const u8 {
     return prefix_hit;
 }
 
-/// eyecite's median case-name backward-seek window, in words.
-const BACKWARD_SEEK = 28;
-
-/// California-style pre-citation year: scanning backward word-by-word from
-/// the citation (eyecite _scan_for_case_boundaries), a word matching
-/// `\(\d{4}\)...` records the year; terminal punctuation (; ” ") or an
-/// opening paren after the 4th word stops the scan. The farthest-back match
-/// within the window wins, mirroring eyecite's repeated assignment.
-/// (Divergence note: eyecite applies this only when a candidate case name
-/// is also found; we apply it whenever found — the differential gate will
-/// quantify whether that ever matters in the wild.)
-fn preCiteYear(text: []const u8, span_start: usize) ?[]const u8 {
-    var year: ?[]const u8 = null;
-    var end = span_start;
-    var count: usize = 0;
-    while (count < BACKWARD_SEEK) {
-        while (end > 0 and (text[end - 1] == ' ' or text[end - 1] == '\t')) end -= 1;
-        if (end == 0) break;
-        if (text[end - 1] == '\n') break; // paragraph boundary
-        var start = end;
-        while (start > 0 and !std.ascii.isWhitespace(text[start - 1])) start -= 1;
-        const word = text[start..end];
-        if (std.mem.eql(u8, word, ",")) {
-            end = start;
-            continue;
-        }
-        count += 1;
-        if (word.len >= 6 and word[0] == '(' and word[5] == ')' and
-            allDigits(word[1..5]))
-        {
-            year = word[1..5];
-        } else if (std.mem.endsWith(u8, word, ";") or
-            std.mem.endsWith(u8, word, "\"") or
-            std.mem.endsWith(u8, word, "\xe2\x80\x9d")) // ”
-        {
-            break;
-        } else if (word[0] == '(' and count > 3) {
-            break;
-        }
-        end = start;
-    }
-    return year;
-}
-
 fn allDigits(s: []const u8) bool {
     for (s) |c| {
         if (!isDigit(c)) return false;
@@ -786,7 +781,7 @@ fn expectSingleFullCite(
     corrected: []const u8,
 ) !void {
     const cites = try extract(testing.allocator, text);
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     const c = cites[0];
     try testing.expectEqual(Kind.full_case, c.kind);
@@ -828,7 +823,7 @@ test "roman numeral page" {
 
 test "placeholder page spans the underscores but yields null page (eyecite parity)" {
     const cites = try extract(testing.allocator, "Carpenter v. United States, 585 U.S. ___");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(u32, 28), cites[0].span_start);
     try testing.expectEqual(@as(u32, 40), cites[0].span_end);
@@ -838,28 +833,28 @@ test "placeholder page spans the underscores but yields null page (eyecite parit
 
 test "citation requires non-alphanumeric boundaries (eyecite parity)" {
     const cites = try extract(testing.allocator, "foo1 U.S. 1, 1. U.S. 1foo");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
 }
 
 test "street addresses are not citations: page must end at a token boundary" {
     const a = try extract(testing.allocator, "lorem 111 S.W. 12th St.");
-    defer testing.allocator.free(a);
+    defer freeCitations(testing.allocator, a);
     try testing.expectEqual(@as(usize, 0), a.len);
     const b = try extract(testing.allocator, "lorem 111 N. W. 12th St.");
-    defer testing.allocator.free(b);
+    defer freeCitations(testing.allocator, b);
     try testing.expectEqual(@as(usize, 0), b.len);
 }
 
 test "no citation in plain prose" {
     const cites = try extract(testing.allocator, "the 3 musketeers met 4 friends in 1982");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
 }
 
 test "volume must not be zero-led and reporter must be known" {
     const cites = try extract(testing.allocator, "0 U.S. 1 and 1 X.Y.Z. 2");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
 }
 
@@ -889,7 +884,7 @@ test "year_page multiword reporter: T.C. Summary Opinion 2018-133" {
 
 test "CCH paragraph cite: volume-less with comma page" {
     const cites = try extract(testing.allocator, "blah blah Bankr. L. Rep. (CCH) P12,345. blah blah");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     const c = cites[0];
     try testing.expectEqual(@as(u32, 10), c.span_start);
@@ -902,7 +897,7 @@ test "CCH paragraph cite: volume-less with comma page" {
 
 test "louisiana format: 2009 12345 (La.App. 1 Cir. 05/10/10)" {
     const cites = try extract(testing.allocator, "blah blah, 2009 12345 (La.App. 1 Cir. 05/10/10). blah blah");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     const c = cites[0];
     try testing.expectEqual(@as(u32, 11), c.span_start);
@@ -915,13 +910,13 @@ test "louisiana format: 2009 12345 (La.App. 1 Cir. 05/10/10)" {
 test "custom-shape editions do not match the standard shape: 1 T.C. Memo. 5" {
     // T.C. Memo.'s template list replaces $full_cite entirely
     const cites = try extract(testing.allocator, "1 T.C. Memo. 5");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 0), cites.len);
 }
 
 test "year from simple paren: (1982)" {
     const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, 1982), cites[0].year);
     try testing.expectEqualStrings("1982", cites[0].year_text.?);
@@ -930,7 +925,7 @@ test "year from simple paren: (1982)" {
 
 test "year and court from paren: (4th Cir. 1982)" {
     const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, 1982), cites[0].year);
     try testing.expectEqualStrings("4th Cir.", cites[0].court_paren.?);
@@ -938,7 +933,7 @@ test "year and court from paren: (4th Cir. 1982)" {
 
 test "year and court without space: (Pa.Super. 1982)" {
     const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (Pa.Super. 1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, 1982), cites[0].year);
     try testing.expectEqualStrings("Pa.Super.", cites[0].court_paren.?);
@@ -946,21 +941,21 @@ test "year and court without space: (Pa.Super. 1982)" {
 
 test "misformatted year yields no year: (198⁴)" {
     const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (198⁴)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
 }
 
 test "no paren yields no year" {
     const cites = try extract(testing.allocator, "1 U.S. 1");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
 }
 
 test "out-of-range year: text kept, numeric year null (eyecite get_year parity)" {
     const cites = try extract(testing.allocator, "1 U.S. 1 (1500)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
     try testing.expectEqualStrings("1500", cites[0].year_text.?);
@@ -968,49 +963,49 @@ test "out-of-range year: text kept, numeric year null (eyecite get_year parity)"
 
 test "year not at paren end is rejected: (1982 Pa.)" {
     const cites = try extract(testing.allocator, "1 U.S. 1 (1982 Pa.)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
 }
 
 test "court resolution: (4th Cir. 1982) -> ca4" {
     const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("ca4", cites[0].court.?);
 }
 
 test "court resolution without internal space: (Pa.Super. 1982) -> pasuperct" {
     const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (Pa.Super. 1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("pasuperct", cites[0].court.?);
 }
 
 test "court resolution exact: (Pa. 2017) -> pa" {
     const cites = try extract(testing.allocator, "Commonwealth v. Muniz, 164 A.3d 1189 (Pa. 2017)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("pa", cites[0].court.?);
 }
 
 test "scotus guessed from reporter without paren (guess_court parity)" {
     const cites = try extract(testing.allocator, "1 U.S. 1");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("scotus", cites[0].court.?);
 }
 
 test "non-scotus reporter without paren has no court" {
     const cites = try extract(testing.allocator, "1 F.2d 1");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].court);
 }
 
 test "pin cite: simple range before court paren" {
     const cites = try extract(testing.allocator, "bob Lissner v. Test 1 U.S. 12, 347-348 (4th Cir. 1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("347-348", cites[0].pin_cite.?);
     try testing.expectEqual(@as(?u16, 1982), cites[0].year);
@@ -1018,7 +1013,7 @@ test "pin cite: simple range before court paren" {
 
 test "pin cite stops before a following parallel citation" {
     const cites = try extract(testing.allocator, "Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982) (overruling foo)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 2), cites.len);
     try testing.expectEqualStrings("347-348", cites[0].pin_cite.?);
     try testing.expectEqualStrings("358", cites[1].pin_cite.?);
@@ -1027,7 +1022,7 @@ test "pin cite stops before a following parallel citation" {
 test "pin cite survives when the paren is not a court/date paren" {
     // (3 Atl. 33) has no 4-digit year: branch 1 fails, pin-only branch holds
     const cites = try extract(testing.allocator, "2 U.S. 3, 4-5 (3 Atl. 33)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 2), cites.len);
     try testing.expectEqualStrings("4-5", cites[0].pin_cite.?);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
@@ -1035,28 +1030,28 @@ test "pin cite survives when the paren is not a court/date paren" {
 
 test "pin cite terminated by period" {
     const cites = try extract(testing.allocator, "In re Foo 1 Mass. 12, 347-348. something something,");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("347-348", cites[0].pin_cite.?);
 }
 
 test "pin cite comma list" {
     const cites = try extract(testing.allocator, "1 U.S. 1, 2277, 2278, 2279 (1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("2277, 2278, 2279", cites[0].pin_cite.?);
 }
 
 test "no pin cite when nothing follows" {
     const cites = try extract(testing.allocator, "1 U.S. 1 (1982)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].pin_cite);
 }
 
 test "parenthetical comment and extra (parallel cite text)" {
     const cites = try extract(testing.allocator, "Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982) (overruling foo)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 2), cites.len);
     try testing.expectEqualStrings("overruling foo", cites[0].parenthetical.?);
     try testing.expectEqualStrings("1 S. Ct. 2, 358", cites[0].extra.?);
@@ -1066,31 +1061,85 @@ test "parenthetical comment and extra (parallel cite text)" {
 
 test "nested parenthetical kept whole" {
     const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (1982) (discussing abc (Holmes, J., concurring))");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("discussing abc (Holmes, J., concurring)", cites[0].parenthetical.?);
 }
 
 test "parenthetical trimmed at unbalanced close paren" {
     const cites = try extract(testing.allocator, "Lissner v. Test 1 U.S. 1 (1982) (discussing abc); blah (something).");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqualStrings("discussing abc", cites[0].parenthetical.?);
 }
 
 test "year-shaped parenthetical is nulled (eyecite parity)" {
     const cites = try extract(testing.allocator, "1 U.S. 1 (Pa. 1982) (1983)");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].parenthetical);
 }
 
 test "no parenthetical when none follows" {
     const cites = try extract(testing.allocator, "1 U.S. 1 (1982) and more text");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].parenthetical);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].extra);
+}
+
+fn expectNames(text: []const u8, cite_idx: usize, plaintiff: ?[]const u8, defendant: ?[]const u8) !void {
+    const cites = try extract(testing.allocator, text);
+    defer freeCitations(testing.allocator, cites);
+    try testing.expect(cites.len > cite_idx);
+    const c = cites[cite_idx];
+    if (plaintiff) |p| try testing.expectEqualStrings(p, c.plaintiff.?) else try testing.expectEqual(@as(?[]const u8, null), c.plaintiff);
+    if (defendant) |d| try testing.expectEqualStrings(d, c.defendant.?) else try testing.expectEqual(@as(?[]const u8, null), c.defendant);
+}
+
+test "case name: simple v." {
+    try expectNames("Lissner v. Test 1 U.S. 1", 0, "Lissner", "Test");
+}
+
+test "case name: lowercase word before plaintiff excluded" {
+    try expectNames("bob Lissner v. Test 1 F.2d 1 (1982)", 0, "Lissner", "Test");
+}
+
+test "case name: capitalized word joins plaintiff" {
+    try expectNames("Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982)", 0, "Bob Lissner", "Test");
+    try expectNames("Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982)", 1, "Bob Lissner", "Test");
+}
+
+test "case name: comma after defendant" {
+    try expectNames("Lissner v. Test, 1 U.S. 1 (1982)", 0, "Lissner", "Test");
+}
+
+test "case name: multi-word defendant with lowercase 'of'" {
+    try expectNames("(1963); Reece v. State of Washington, 310 F.2d 139 (1962)", 0, "Reece", "State of Washington");
+}
+
+test "case name: in re style has defendant only" {
+    try expectNames("In re Foo 1 Mass. 12, 347-348. something something, in at we see that", 0, null, "Foo");
+}
+
+test "case name: bare v without period" {
+    try expectNames("Rogers v Rogers (63 NY2d 582 [1984])", 0, "Rogers", "Rogers");
+}
+
+test "case name: across a placeholder citation" {
+    try expectNames("Hurst v. Florida, — U.S. —, 136 S.Ct. 616, 193 L.Ed.2d 504 (2016)", 0, "Hurst", "Florida");
+    try expectNames("Hurst v. Florida, — U.S. —, 136 S.Ct. 616, 193 L.Ed.2d 504 (2016)", 1, "Hurst", "Florida");
+}
+
+test "case name: abbreviation break after v keeps single plaintiff word" {
+    try expectNames("speech.\xe2\x80\x9d Houston Cmty. Coll. Sys. v. Wilson, ---- U.S. ----, 142 S. Ct. 1253, 1259, ---- L. Ed. 2d ---- (2022)", 0, "Sys.", "Wilson");
+}
+
+test "case name: pre-citation year still applies with case name" {
+    const cites = try extract(testing.allocator, "trial court\xe2\x80\x99s ruling. (See In re K.F. (2009) 1 U.S. 1 ");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?u16, 2009), cites[0].year);
 }
 
 test "pcre2 engine agrees with vm engine on representative citations" {
@@ -1106,9 +1155,9 @@ test "pcre2 engine agrees with vm engine on representative citations" {
     };
     for (samples) |text| {
         const vm_cites = try extractWithEngine(testing.allocator, text, .vm);
-        defer testing.allocator.free(vm_cites);
+        defer freeCitations(testing.allocator, vm_cites);
         const p_cites = try extractWithEngine(testing.allocator, text, .pcre2);
-        defer testing.allocator.free(p_cites);
+        defer freeCitations(testing.allocator, p_cites);
         try testing.expectEqual(vm_cites.len, p_cites.len);
         for (vm_cites, p_cites) |a, b| {
             try testing.expectEqual(a.span_start, b.span_start);
@@ -1122,7 +1171,7 @@ test "pcre2 engine agrees with vm engine on representative citations" {
 
 test "two citations in one string" {
     const cites = try extract(testing.allocator, "see 1 U.S. 1; also 2 F.2d 3.");
-    defer testing.allocator.free(cites);
+    defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 2), cites.len);
     try testing.expectEqualStrings("U.S.", cites[0].reporter);
     try testing.expectEqualStrings("F.2d", cites[1].reporter);

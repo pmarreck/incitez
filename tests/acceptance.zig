@@ -82,6 +82,8 @@ fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.e
         if (!optFieldMatches(md.object.get("pin_cite"), actual.pin_cite)) return false;
         if (!optFieldMatches(md.object.get("parenthetical"), actual.parenthetical)) return false;
         if (!optFieldMatches(md.object.get("extra"), actual.extra)) return false;
+        if (!optFieldMatches(md.object.get("plaintiff"), actual.plaintiff)) return false;
+        if (!optFieldMatches(md.object.get("defendant"), actual.defendant)) return false;
     }
     // year (validated integer; null when absent or out of range)
     if (expected.get("year")) |y| {
@@ -127,7 +129,7 @@ fn runCorpus(
             const expected_cites = case.get("cites").?.array.items;
 
             const actual = try incitez.extraction.extractWithEngine(allocator, text, engine);
-            defer allocator.free(actual);
+            defer incitez.extraction.freeCitations(allocator, actual);
 
             var ok = actual.len == expected_cites.len;
             if (ok) {
@@ -192,9 +194,9 @@ test "cross-engine differential: vm vs pcre2 over all corpus texts" {
             total += 1;
 
             const a = try incitez.extraction.extractWithEngine(allocator, text, .vm);
-            defer allocator.free(a);
+            defer incitez.extraction.freeCitations(allocator, a);
             const b = try incitez.extraction.extractWithEngine(allocator, text, .pcre2);
-            defer allocator.free(b);
+            defer incitez.extraction.freeCitations(allocator, b);
 
             var same = a.len == b.len;
             if (same) {

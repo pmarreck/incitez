@@ -10,7 +10,7 @@ Priority: correctness/parity slices first (metadata, short forms), THEN the
 anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
 
 ## In Progress
-- [ ] M2 metadata, remaining: plaintiff/defendant (find_case_name backward scan — the big one), antecedent_guess, full_span comparison. Activate each in the driver as it lands.
+- [ ] M2 metadata, remaining: antecedent_guess (CA-style add_pre_citation), full_span comparison, month/day fields. Then M3 short forms.
 - [ ] Idea (Peter, 2026-06-11): LLM as case-name adjudicator — NOT in the extraction path (breaks offline/WASM/latency story) but as an M4 differential-gate referee: when incitez and eyecite disagree on case names over a real-document corpus, an LLM labels which is right, turning heuristic disagreements into scored ground truth. Could also power an optional server-side enrichment tier later.
 - [ ] INVESTIGATE (found by ./bm): on the 150×-concatenated corpus doc, vm finds 20700 cites vs pcre2 20550 — exactly 1/seam. Adjacent-citation boundary semantics differ (Python finditer consumes the trailing boundary char, starving the next citation's leading boundary; the VM doesn't). The M4 differential gate vs real eyecite adjudicates which is oracle-correct. Add a seam-adjacency case to the cross-engine test either way.
 - [ ] INCITEZ_ENGINE env-var switch: plumbing exists in the core (Engine enum); the env read lands with the CLI extract surface (M5) — env is I/O, core stays pure.
@@ -33,6 +33,7 @@ anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
 - [ ] M7: WASM build target (Peter-ratified) — browser demo, **Elm UI** (Peter+Einstein decision 2026-06-11): nothing leaves the browser, fast, and no runtime exceptions. Note: in-browser the VM engine advantage WIDENS — wasm has no executable pages, so PCRE2 would run interpreted there; the VM needs no JIT at all.
 
 ## Completed
+- [x] M2: case names — find_case_name port (element walker over words/spaces/citations/placeholders/stop-words, all scan branches, _process_case_name v-split + strip_stop_words two-pass, Python negative-slice quirk mirrored); driver compares plaintiff+defendant; 64/64 both engines, 0/193 divergences, leak-free (2026-06-12 ~00:30 EST)
 - [x] M2: pin_cite + parenthetical + extra metadata — full POST_FULL_CITATION_REGEX branch parity; driver compares all three; 64/64 both engines, 0/193 divergences (2026-06-11 ~20:30 EST)
 - [x] PCRE2 dual-engine harness (Peter-directed): pcre2 fork as flake input (static+JIT), eyecite-literal extractors emitted by codegen, Engine enum, per-engine corpus ratchets (64/64 BOTH), cross-engine differential 0/193, ./bm engine benchmark — vm 17.35× faster wall-clock than JIT'd PCRE2 on 1.7MB (449ms vs 7.8s steady-state; one-shot 0.90s vs 15.7s) (2026-06-11 ~19:30 EST)
 - [x] Read kickoff + design brief; copied spec into docs/ (2026-06-11 ~14:00 EST)
