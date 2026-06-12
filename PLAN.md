@@ -9,11 +9,20 @@ settled — the VM-WASM argument (no JIT needed in-browser) carried it.
 Priority: correctness/parity slices first (metadata, short forms), THEN the
 anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
 
-## In Progress
-- [ ] M2 metadata, remaining: antecedent_guess (CA-style add_pre_citation), full_span comparison, month/day fields. Then M3 short forms.
-- [ ] Idea (Peter, 2026-06-11): LLM as case-name adjudicator — NOT in the extraction path (breaks offline/WASM/latency story) but as an M4 differential-gate referee: when incitez and eyecite disagree on case names over a real-document corpus, an LLM labels which is right, turning heuristic disagreements into scored ground truth. Could also power an optional server-side enrichment tier later.
-- [ ] INVESTIGATE (found by ./bm): on the 150×-concatenated corpus doc, vm finds 20700 cites vs pcre2 20550 — exactly 1/seam. Adjacent-citation boundary semantics differ (Python finditer consumes the trailing boundary char, starving the next citation's leading boundary; the VM doesn't). The M4 differential gate vs real eyecite adjudicates which is oracle-correct. Add a seam-adjacency case to the cross-engine test either way.
-- [ ] INCITEZ_ENGINE env-var switch: plumbing exists in the core (Engine enum); the env read lands with the CLI extract surface (M5) — env is I/O, core stays pure.
+## HELD at milestone boundary (Einstein policy change 2026-06-12 ~07:40 EST)
+Autonomous "work the list" order RESCINDED — fleet spend discipline: agents
+stop at milestone boundaries, Peter opts in per slice. NOT started: references
+slice, optimization pass. Repo clean + pushed at `43067753` (laws).
+
+## Status snapshot (2026-06-12 ~07:40 EST)
+- M1–M5 complete. Fence-closing campaign: journals, sections, laws done.
+- Find corpus: **130/130** both engines. Resolution: **23/23** (full ResolveTest parity). Cross-engine: 0 divergences. Mutation: 179 texts / 176 reporter-kills. Differential gate: **209/215 agree, 6 fenced, 0 unfenced**.
+- The 6 remaining fences are ALL the single ReferenceCitation type — the last slice.
+
+## Next increment (awaiting Peter's opt-in)
+- [ ] References (ReferenceCitation) — closes the final 6 fences. Design mapped: per full CASE cite, build `\b(plaintiff|defendant|resolved_case_name_short|resolved_case_name)\s+PIN_CITE` from valid name fields (is_valid_name), finditer over text after the cite; filter_citations already drops ref-vs-short overlaps. Needs a second extraction phase (refs depend on already-found full cites' metadata).
+- [ ] Post-parity optimization pass (Aho-Corasick anchor scan, case-name walk, allocation reduction) under the live two-sided bm gate. Current vm baseline ~1.29s/1.7MB citation-dense.
+- [ ] LLM-as-case-name-adjudicator idea (M4 differential referee; NOT extraction path).
 
 ## Design notes (M2 matcher, from reading eyecite internals)
 - eyecite extractor model: per-edition regex templates (default `$full_cite` = `$volume $reporter,? $page`), expanded via regexes.json variables; 208 of 1368 editions carry custom templates; short-cite regexes derived by `at ...page` substitution.
