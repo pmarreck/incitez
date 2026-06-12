@@ -5,6 +5,7 @@
 const std = @import("std");
 const extraction = @import("extract.zig");
 const resolution = @import("resolve.zig");
+const json_out = @import("json_out.zig");
 
 pub const Citation = extern struct {
     kind: [*:0]const u8,
@@ -135,6 +136,46 @@ export fn incitez_result_free(result: ?*Result) void {
     var arena = r.arena;
     std.heap.c_allocator.destroy(r);
     arena.deinit();
+}
+
+/// Convenience export: extract + resolve + serialize to a NUL-terminated
+/// JSON string (the `--json` schema, identical bytes to the C CLI because
+/// both go through src/json_out.zig). Caller frees with incitez_string_free.
+/// Returns NULL on allocation failure or unknown engine.
+export fn incitez_extract_json(
+    text: [*]const u8,
+    len: usize,
+    engine: ?[*:0]const u8,
+) ?[*:0]u8 {
+    const gpa = std.heap.c_allocator;
+    const eng: extraction.Engine = blk: {
+        const e = engine orelse break :blk .vm;
+        const es = std.mem.span(e);
+        if (es.len == 0 or std.mem.eql(u8, es, "vm")) break :blk .vm;
+        if (std.mem.eql(u8, es, "pcre2")) break :blk .pcre2;
+        return null;
+    };
+
+    var arena = std.heap.ArenaAllocator.init(gpa);
+    defer arena.deinit();
+    const a = arena.allocator();
+
+    const cites = extraction.extractWithEngine(a, text[0..len], eng) catch return null;
+    const assignment = resolution.resolve(a, cites) catch return null;
+
+    var aw: std.Io.Writer.Allocating = .init(a);
+    json_out.writeJson(&aw.writer, cites, assignment) catch return null;
+    const json = aw.written();
+
+    const out = gpa.allocSentinel(u8, json.len, 0) catch return null;
+    @memcpy(out, json);
+    return out.ptr;
+}
+
+/// Frees a string returned by incitez_extract_json.
+export fn incitez_string_free(s: ?[*:0]u8) void {
+    const p = s orelse return;
+    std.heap.c_allocator.free(std.mem.span(p));
 }
 
 // ── Tests (dogfooding the exports from Zig) ─────────────────────────

@@ -64,37 +64,6 @@ static char* read_all(FILE* f, size_t* out_len) {
 	return buf;
 }
 
-static void json_string(FILE* out, const char* s) {
-	if (!s) {
-		fputs("null", out);
-		return;
-	}
-	fputc('"', out);
-	for (const unsigned char* p = (const unsigned char*)s; *p; p++) {
-		switch (*p) {
-			case '"': fputs("\\\"", out); break;
-			case '\\': fputs("\\\\", out); break;
-			case '\n': fputs("\\n", out); break;
-			case '\r': fputs("\\r", out); break;
-			case '\t': fputs("\\t", out); break;
-			default:
-				if (*p < 0x20) {
-					fprintf(out, "\\u%04x", *p);
-				} else {
-					fputc(*p, out);
-				}
-		}
-	}
-	fputc('"', out);
-}
-
-static void json_field(FILE* out, const char* name, const char* value, int* first) {
-	if (!*first) fputs(", ", out);
-	*first = 0;
-	fprintf(out, "\"%s\": ", name);
-	json_string(out, value);
-}
-
 static int cmd_extract(const char* path, int json, const char* engine) {
 	FILE* in = stdin;
 	if (strcmp(path, "-") != 0 && strcmp(path, "@stdin") != 0) {
@@ -112,6 +81,22 @@ static int cmd_extract(const char* path, int json, const char* engine) {
 		return 1;
 	}
 
+	/* JSON mode: one-shot through the shared serializer (same bytes as WASM). */
+	if (json) {
+		char* j = incitez_extract_json(text, len, engine);
+		if (!j) {
+			fprintf(stderr, "incitez: extraction failed (unknown engine '%s'?)\n",
+			        engine ? engine : "vm");
+			free(text);
+			return 1;
+		}
+		fputs(j, stdout);
+		incitez_string_free(j);
+		free(text);
+		return 0;
+	}
+
+	/* Human mode: dogfood the citation-iteration FFI; count to stderr. */
 	incitez_result* result = incitez_extract(text, len, engine);
 	if (!result) {
 		fprintf(stderr, "incitez: extraction failed (unknown engine '%s'?)\n",
@@ -119,48 +104,11 @@ static int cmd_extract(const char* path, int json, const char* engine) {
 		free(text);
 		return 1;
 	}
-
 	size_t count = incitez_result_count(result);
-	if (json) {
-		fputs("[", stdout);
-		for (size_t i = 0; i < count; i++) {
-			const incitez_citation* c = incitez_result_get(result, i);
-			if (i) fputs(",", stdout);
-			fputs("\n {", stdout);
-			int first = 1;
-			json_field(stdout, "kind", c->kind, &first);
-			fprintf(stdout, ", \"span\": [%u, %u], \"full_span\": [%u, %u]",
-			        c->span_start, c->span_end, c->full_span_start, c->full_span_end);
-			json_field(stdout, "volume", c->volume, &first);
-			json_field(stdout, "reporter", c->reporter, &first);
-			json_field(stdout, "page", c->page, &first);
-			json_field(stdout, "corrected_reporter", c->corrected_reporter, &first);
-			json_field(stdout, "pin_cite", c->pin_cite, &first);
-			json_field(stdout, "court", c->court, &first);
-			if (c->year >= 0) {
-				fprintf(stdout, ", \"year\": %d", c->year);
-			} else {
-				fputs(", \"year\": null", stdout);
-			}
-			json_field(stdout, "parenthetical", c->parenthetical, &first);
-			json_field(stdout, "extra", c->extra, &first);
-			json_field(stdout, "plaintiff", c->plaintiff, &first);
-			json_field(stdout, "defendant", c->defendant, &first);
-			json_field(stdout, "antecedent_guess", c->antecedent_guess, &first);
-			if (c->resolution >= 0) {
-				fprintf(stdout, ", \"resolution\": %d", c->resolution);
-			} else {
-				fputs(", \"resolution\": null", stdout);
-			}
-			fputs("}", stdout);
-		}
-		fputs("\n]\n", stdout);
-	} else {
-		for (size_t i = 0; i < count; i++) {
-			const incitez_citation* c = incitez_result_get(result, i);
-			fprintf(stdout, "%zu\t%s\t[%u,%u)\t%.*s\n", i, c->kind, c->span_start,
-			        c->span_end, (int)(c->span_end - c->span_start), text + c->span_start);
-		}
+	for (size_t i = 0; i < count; i++) {
+		const incitez_citation* c = incitez_result_get(result, i);
+		fprintf(stdout, "%zu\t%s\t[%u,%u)\t%.*s\n", i, c->kind, c->span_start,
+		        c->span_end, (int)(c->span_end - c->span_start), text + c->span_start);
 	}
 	fprintf(stderr, "%zu citation%s\n", count, count == 1 ? "" : "s");
 

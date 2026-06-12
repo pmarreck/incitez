@@ -49,6 +49,14 @@ const incitez_citation* incitez_result_get(const incitez_result* result, size_t 
 
 void incitez_result_free(incitez_result* result);
 
+/* Convenience: extract + resolve + serialize to a NUL-terminated JSON string
+ * (the `--json` schema). Returns NULL on failure. Caller frees the returned
+ * string with incitez_string_free. The same serializer backs the WASM
+ * export, so output is byte-identical across CLI and browser. */
+char* incitez_extract_json(const char* text, size_t len, const char* engine);
+
+void incitez_string_free(char* s);
+
 #ifdef __cplusplus
 }
 #endif
