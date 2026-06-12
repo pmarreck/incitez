@@ -366,11 +366,11 @@ fn finishCitation(
     c.defendant = names.defendant;
     c.antecedent_guess = names.antecedent;
     if (names.full_span_start) |fs| c.full_span_start = fs;
-    if (c.year == null) {
-        if (names.year_text) |yt| {
-            c.year_text = yt;
-            c.year = std.fmt.parseInt(u16, yt, 10) catch unreachable;
-        }
+    // eyecite's pre-citation year OVERRIDES a post-paren year (observed
+    // live: "... (1982). Baz v. Qux, 2 F.2d 2 (1983)" yields year 1982)
+    if (names.year_text) |yt| {
+        c.year_text = yt;
+        c.year = std.fmt.parseInt(u16, yt, 10) catch unreachable;
     }
 
     // add_pre_citation: party-less full cites get an antecedent guess from

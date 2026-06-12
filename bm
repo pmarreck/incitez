@@ -42,6 +42,28 @@ vm_oneshot=$(nix run 'nixpkgs#jq' -- -r '.results[0].mean' "$hf_json")
 p2_oneshot=$(nix run 'nixpkgs#jq' -- -r '.results[1].mean' "$hf_json")
 
 hw="$(uname -m)-$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -s)"
+
+# Two-sided gate: ±10% vs the most recent committed entry for this hardware.
+# A sudden speedup is ALSO a failure until explained (house rules); rerunning
+# after review is implicit acceptance since every run appends a new baseline.
+gate_status=0
+vm_ns=$(printf '%s' "$vm_line" | gsed -n 's/.* \([0-9]*\) ns\/iter.*/\1/p')
+prev_ns=$(awk -v hw="$hw" '
+	/^## / { keep = index($0, hw) > 0 }
+	keep && /^vm: / { match($0, /[0-9]+ ns\/iter/); ns = substr($0, RSTART, RLENGTH - 8) }
+	END { print ns }
+' BENCHMARKS.md 2>/dev/null)
+if [[ -n "${prev_ns:-}" && -n "${vm_ns:-}" && "$prev_ns" -gt 0 ]]; then
+	delta_pct=$(( (vm_ns - prev_ns) * 100 / prev_ns ))
+	if (( delta_pct > 10 || delta_pct < -10 )); then
+		echo ""
+		echo "\033[1;31mBENCHMARK GATE: vm ${delta_pct}% vs previous baseline (${prev_ns} -> ${vm_ns} ns/iter) — outside ±10%!\033[0m"
+		echo "Investigate before accepting; this run is now the recorded baseline."
+		gate_status=1
+	else
+		echo "benchmark gate: vm ${delta_pct}% vs baseline (within ±10%)"
+	fi
+fi
 {
 	echo "## $(date '+%Y-%m-%d %H:%M') — $hw — ${bytes} bytes input"
 	echo '```'
@@ -53,3 +75,4 @@ hw="$(uname -m)-$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -s)"
 } >> BENCHMARKS.md
 
 echo "appended to BENCHMARKS.md"
+exit "$gate_status"

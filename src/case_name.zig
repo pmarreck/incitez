@@ -352,8 +352,9 @@ pub fn findCaseName(
             const plaintiff_trimmed = std.mem.trim(u8, plaintiff_part, " \t\r\n,(");
             const no_lower = try removeLowercaseWords(alloc, plaintiff_trimmed);
             defer alloc.free(no_lower);
-            const p = try stripStopWords(alloc, no_lower);
-            if (p.len > 0) result.plaintiff = p else alloc.free(p);
+            // eyecite assigns plaintiff unconditionally — an empty-after-
+            // cleaning plaintiff stays "" (observable in dumps), not null
+            result.plaintiff = try stripStopWords(alloc, no_lower);
         }
     }
 

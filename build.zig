@@ -139,15 +139,41 @@ pub fn build(b: *std.Build) void {
     });
     const run_acceptance = b.addRunArtifact(acceptance_tests);
 
-    const test_step = b.step("test", "Run unit + acceptance tests");
+    // -- Mutation suite (citation-domain shotgun, dual-engine verified) --
+    const mutation_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/mutation.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "incitez", .module = core_test_mod }},
+        }),
+        .use_llvm = true,
+    });
+    const run_mutation = b.addRunArtifact(mutation_tests);
+
+    const test_step = b.step("test", "Run unit + acceptance + mutation tests");
     test_step.dependOn(&run_tests.step);
     test_step.dependOn(&run_acceptance.step);
+    test_step.dependOn(&run_mutation.step);
 
     // Compile tests without running them — lets CI patchelf the binaries
     // before execution inside the Nix sandbox on Linux.
     const test_compile = b.step("test-compile", "Compile tests without running");
     test_compile.dependOn(&tests.step);
     test_compile.dependOn(&acceptance_tests.step);
+    test_compile.dependOn(&mutation_tests.step);
+
+    // -- Differential dump tool (gate vs live eyecite) --
+    const diffdump = b.addExecutable(.{
+        .name = "incitez-diffdump",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/diffdump.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "incitez", .module = core_test_mod }},
+        }),
+    });
+    b.installArtifact(diffdump);
 
     // -- Engine benchmark tool (driven by ./bm via hyperfine) --
     const bench = b.addExecutable(.{
