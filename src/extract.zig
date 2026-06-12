@@ -1927,3 +1927,49 @@ test "law citation: and-subsection pin, double section, chapter form" {
     try testing.expectEqualStrings("(a)(2)", e[0].pin_cite.?);
     try testing.expectEqualStrings("repealed", e[0].parenthetical.?);
 }
+
+// ── Seam / adjacency characterization (documented intentional divergence) ──
+// When citations with the SAME reporter are packed back-to-back separated by
+// a SINGLE boundary char, finditer-style engines (eyecite, and our literal
+// PCRE2 path) consume the trailing boundary of one match, starving the next
+// match's leading boundary, and drop it. The VM resumes after the citation
+// core, keeps the separator available, and finds ALL of them — arguably more
+// correct (every one is a real citation). This only arises in synthetic
+// concatenation; real prose separates citations with more than one char.
+// These tests PIN that behavior so it is a tested invariant, not a surprise.
+// See docs/architecture.md "Honest edges".
+
+test "seam: VM finds all adjacent same-reporter cites; pcre2 drops the starved middle" {
+    // three "1 Minn. L. Rev. 1" packed by single newlines
+    const text = "1 Minn. L. Rev. 1\n1 Minn. L. Rev. 1, 2-3\n1 Minn. L. Rev. 1";
+    const vm = try extractWithEngine(testing.allocator, text, .vm);
+    defer freeCitations(testing.allocator, vm);
+    const p2 = try extractWithEngine(testing.allocator, text, .pcre2);
+    defer freeCitations(testing.allocator, p2);
+    // VM recovers the boundary-starved middle citation; pcre2 (finditer) does not
+    try testing.expectEqual(@as(usize, 3), vm.len);
+    try testing.expectEqual(@as(usize, 2), p2.len);
+    // all three VM hits are the same journal edition
+    for (vm) |c| try testing.expectEqual(Kind.full_journal, c.kind);
+}
+
+test "seam: normal two-char separation — both engines agree (no divergence in real prose)" {
+    const text = "1 Minn. L. Rev. 1; 1 Minn. L. Rev. 2; 1 Minn. L. Rev. 3";
+    const vm = try extractWithEngine(testing.allocator, text, .vm);
+    defer freeCitations(testing.allocator, vm);
+    const p2 = try extractWithEngine(testing.allocator, text, .pcre2);
+    defer freeCitations(testing.allocator, p2);
+    try testing.expectEqual(@as(usize, 3), vm.len);
+    try testing.expectEqual(vm.len, p2.len);
+}
+
+test "seam: different reporters never interfere (separate extractor passes)" {
+    // distinct editions => distinct extractors => no shared-finditer starving
+    const text = "1 U.S. 1\n2 F.2d 3";
+    const vm = try extractWithEngine(testing.allocator, text, .vm);
+    defer freeCitations(testing.allocator, vm);
+    const p2 = try extractWithEngine(testing.allocator, text, .pcre2);
+    defer freeCitations(testing.allocator, p2);
+    try testing.expectEqual(@as(usize, 2), vm.len);
+    try testing.expectEqual(@as(usize, 2), p2.len);
+}
