@@ -262,3 +262,90 @@ fn optEq(a: ?[]const u8, b: ?[]const u8) bool {
     if (a == null or b == null) return false;
     return std.mem.eql(u8, a.?, b.?);
 }
+
+const resolve_corpus_json = @embedFile("corpus/eyecite_resolve_corpus.json");
+
+/// Resolution-corpus ratchets (cases replicate eyecite checkResolution:
+/// one cite per row text, combined list resolved, cluster indices compared).
+const RESOLVE_EXPECTED_ATTEMPTED: usize = 23;
+const RESOLVE_EXPECTED_PASSES: usize = 19; // 4 gaps: law/journal/§ cites not yet extracted
+
+test "resolution corpus: cluster assignments vs eyecite ResolveTest" {
+    const allocator = std.testing.allocator;
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, resolve_corpus_json, .{});
+    defer parsed.deinit();
+
+    var attempted: usize = 0;
+    var passed: usize = 0;
+    var methods_it = parsed.value.object.get("methods").?.object.iterator();
+    while (methods_it.next()) |method| {
+        for (method.value_ptr.array.items) |case_val| {
+            attempted += 1;
+            const rows = case_val.object.get("rows").?.array.items;
+
+            var cites: std.ArrayListUnmanaged(incitez.extraction.Citation) = .empty;
+            defer {
+                for (cites.items) |*c| {
+                    if (c.plaintiff) |p| allocator.free(p);
+                    if (c.defendant) |d| allocator.free(d);
+                    if (c.antecedent_guess) |a| allocator.free(a);
+                }
+                cites.deinit(allocator);
+            }
+            var extraction_ok = true;
+            for (rows) |row| {
+                const text = jsonStr(row.array.items[1]).?;
+                const found = try incitez.extraction.extract(allocator, text);
+                defer allocator.free(found);
+                if (found.len != 1) {
+                    extraction_ok = false;
+                    for (found) |*c| {
+                        if (c.plaintiff) |p| allocator.free(p);
+                        if (c.defendant) |d| allocator.free(d);
+                        if (c.antecedent_guess) |a| allocator.free(a);
+                    }
+                    break;
+                }
+                try cites.append(allocator, found[0]);
+            }
+            if (!extraction_ok) {
+                std.debug.print("RESOLVE: extraction failed in {s}\n", .{method.key_ptr.*});
+                continue;
+            }
+
+            const assignment = try incitez.resolution.resolve(allocator, cites.items);
+            defer allocator.free(assignment);
+
+            // expected cluster index -> anchor citation index
+            var anchors: [32]?u32 = @splat(null);
+            var ok = true;
+            for (rows, 0..) |row, i| {
+                const exp = row.array.items[0];
+                const want: ?u32 = switch (exp) {
+                    .integer => |n| blk: {
+                        const cl: usize = @intCast(n);
+                        if (anchors[cl] == null) anchors[cl] = @intCast(i);
+                        break :blk anchors[cl];
+                    },
+                    else => null,
+                };
+                if (want != assignment[i]) {
+                    if (ok) std.debug.print(
+                        "RESOLVE MISMATCH [{s}] row {d}: want={?d} got={?d}\n",
+                        .{ method.key_ptr.*, i, want, assignment[i] },
+                    );
+                    ok = false;
+                }
+            }
+            if (ok) passed += 1;
+        }
+    }
+
+    if (attempted != RESOLVE_EXPECTED_ATTEMPTED or passed != RESOLVE_EXPECTED_PASSES) {
+        std.debug.print(
+            "\nresolution corpus: {d}/{d} pass (ratchet expects {d}/{d})\n",
+            .{ passed, attempted, RESOLVE_EXPECTED_PASSES, RESOLVE_EXPECTED_ATTEMPTED },
+        );
+        return error.RatchetMismatch;
+    }
+}

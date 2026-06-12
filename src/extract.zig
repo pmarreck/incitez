@@ -432,21 +432,29 @@ fn supraAntecedent(
             }
             break :blk word.len > 0;
         };
+        // optional-space / optional-comma combos (regex backtracking:
+        // `\ ?` must be able to yield its space to the required final `\ `)
+        const combos = [_][2]bool{
+            .{ true, true }, .{ true, false }, .{ false, true }, .{ false, false },
+        };
         // alt 1: antecedent ` ?,? ` volume `\ `$
-        {
+        for (combos) |combo| {
             var r = q;
-            if (r < win.len and win[r] == ' ') r += 1;
-            if (r < win.len and win[r] == ',') r += 1;
-            if (r < win.len and win[r] == ' ') {
-                r += 1;
-                var v = r;
-                while (v < win.len and isDigit(win[v])) v += 1;
-                if (v > r and v < win.len and win[v] == ' ' and v + 1 == win.len) {
-                    c.antecedent_guess = try allocator.dupe(u8, word);
-                    c.supra_volume = win[r..v];
-                    c.full_span_start = @intCast(p);
-                    return;
-                }
+            if (combo[0]) {
+                if (r < win.len and win[r] == ' ') r += 1 else continue;
+            }
+            if (combo[1]) {
+                if (r < win.len and win[r] == ',') r += 1 else continue;
+            }
+            if (r >= win.len or win[r] != ' ') continue;
+            r += 1;
+            var v = r;
+            while (v < win.len and isDigit(win[v])) v += 1;
+            if (v > r and v < win.len and win[v] == ' ' and v + 1 == win.len) {
+                c.antecedent_guess = try allocator.dupe(u8, word);
+                c.supra_volume = win[r..v];
+                c.full_span_start = @intCast(p);
+                return;
             }
         }
         // alt 2: bare volume `\ `$
@@ -456,10 +464,14 @@ fn supraAntecedent(
             return;
         }
         // alt 3: antecedent ` ?,?` `\ `$
-        {
+        for (combos) |combo| {
             var r = q;
-            if (r < win.len and win[r] == ' ') r += 1;
-            if (r < win.len and win[r] == ',') r += 1;
+            if (combo[0]) {
+                if (r < win.len and win[r] == ' ') r += 1 else continue;
+            }
+            if (combo[1]) {
+                if (r < win.len and win[r] == ',') r += 1 else continue;
+            }
             if (r < win.len and win[r] == ' ' and r + 1 == win.len) {
                 c.antecedent_guess = try allocator.dupe(u8, word);
                 c.full_span_start = @intCast(p);

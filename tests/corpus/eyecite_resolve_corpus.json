@@ -1,0 +1,424 @@
+{
+ "_extractor": "tools/extract_resolve_corpus.py",
+ "_eyecite_version": "2.7.6",
+ "_license": "BSD-2-Clause — see THIRD_PARTY_LICENSES",
+ "_source": "eyecite tests/test_ResolveTest.py (Free Law Project)",
+ "methods": {
+  "test_ambigous_short_cite": [
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      1,
+      "See Foo, 1 U.S. 2."
+     ],
+     [
+      null,
+      "Foo, 1 U.S., at 2."
+     ]
+    ]
+   }
+  ],
+  "test_complex_resolution": [
+   {
+    "rows": [
+     [
+      0,
+      "Blah blah Foo v. Bar 1 U.S. 1, 77 blah blah."
+     ],
+     [
+      1,
+      "Asdf asdf Qwerty v. Uiop 2 F.3d 500, 555."
+     ],
+     [
+      0,
+      "Also check out Foo, 1 U.S. at 99."
+     ],
+     [
+      1,
+      "Then let's cite Qwerty, supra, at 567."
+     ],
+     [
+      0,
+      "See also Foo, supra, at 101 as well."
+     ],
+     [
+      2,
+      "Another full citation is Lorem v. Ipsum 1 U. S. 50."
+     ],
+     [
+      1,
+      "Quoting Qwerty, “something something”, 2 F.3d 500, at 559."
+     ],
+     [
+      null,
+      "This case is similar to Fake, supra,"
+     ],
+     [
+      1,
+      "and Qwerty supra, as well."
+     ],
+     [
+      1,
+      "This should resolve to the foregoing. Ibid."
+     ],
+     [
+      1,
+      "This should also convert appropriately, see Id. at 567."
+     ],
+     [
+      null,
+      "But this fails because the pin cite is too low, see Id. at 400."
+     ],
+     [
+      null,
+      "This should fail to resolve because the reporter and citation is ambiguous, 1 U. S., at 51."
+     ],
+     [
+      2,
+      "However, this should succeed, Lorem, 1 U.S., at 52."
+     ]
+    ]
+   }
+  ],
+  "test_full_resolution": [
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. ____."
+     ],
+     [
+      1,
+      "Foo v. Bar, 1 U.S. ____."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      1,
+      "Smith v. Jones, 1 F.2d 1."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Foo, 1 U.S., at 2."
+     ],
+     [
+      0,
+      "Foo, supra at 2."
+     ]
+    ]
+   }
+  ],
+  "test_id_resolution": [
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Id."
+     ],
+     [
+      0,
+      "Id. at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      null,
+      "2 F.2d, at 2."
+     ],
+     [
+      null,
+      "Id. at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      null,
+      "Blah § 2."
+     ],
+     [
+      null,
+      "Id. at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      null,
+      "Id. at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 100."
+     ],
+     [
+      null,
+      "Id. at 500."
+     ],
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 100."
+     ],
+     [
+      null,
+      "Id. at 50."
+     ],
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 100."
+     ],
+     [
+      null,
+      "Id. at ¶ 100."
+     ],
+     [
+      1,
+      "Ala. Code § 92"
+     ],
+     [
+      1,
+      "Id. at 2000"
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. ___"
+     ],
+     [
+      null,
+      "Id. at 100."
+     ]
+    ]
+   }
+  ],
+  "test_issue_167": [
+   {
+    "rows": [
+     [
+      0,
+      "25 Texas L.Rev. 199"
+     ]
+    ]
+   }
+  ],
+  "test_non_case_resolution": [
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Id. at 2."
+     ],
+     [
+      1,
+      "Mass. Gen. Laws ch. 1, § 2"
+     ],
+     [
+      1,
+      "Id."
+     ],
+     [
+      0,
+      "Foo, supra, at 2."
+     ],
+     [
+      2,
+      "1 Minn. L. Rev. 1."
+     ],
+     [
+      2,
+      "Id. at 2."
+     ],
+     [
+      0,
+      "Foo, 1 U.S., at 2."
+     ]
+    ]
+   }
+  ],
+  "test_short_resolution": [
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "1 U.S., at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Foo, 1 U.S., at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      1,
+      "Wrong v. Wrong, 1 U.S. 2."
+     ],
+     [
+      0,
+      "Foo, 1 U.S., at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      1,
+      "Boo v. Far, 1 U.S. 2."
+     ],
+     [
+      null,
+      "1 U.S., at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      1,
+      "Foo v. Bar, 1 U.S. 2."
+     ],
+     [
+      null,
+      "Foo, 1 U.S., at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      null,
+      "2 F.2d, at 2."
+     ]
+    ]
+   }
+  ],
+  "test_supra_resolution": [
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      0,
+      "Foo, supra, at 2."
+     ]
+    ]
+   },
+   {
+    "rows": [
+     [
+      0,
+      "Foo v. Bar, 1 U.S. 1."
+     ],
+     [
+      1,
+      "Foo v. Bar, 1 U.S. 2."
+     ],
+     [
+      null,
+      "Foo, supra, at 2."
+     ]
+    ]
+   }
+  ]
+ }
+}

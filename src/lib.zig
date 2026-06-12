@@ -8,6 +8,7 @@ pub const version = "0.1.0";
 
 pub const reporters = @import("reporters.zig");
 pub const extraction = @import("extract.zig");
+pub const resolution = @import("resolve.zig");
 
 // ── C FFI exports ───────────────────────────────────────────────────
 
@@ -26,4 +27,5 @@ test "version export returns the semver string" {
 test {
     _ = reporters;
     _ = extraction;
+    _ = resolution;
 }
