@@ -11,8 +11,11 @@ const incitez = @import("incitez");
 const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
-const RATCHET_EXPECTED_PASSES: usize = 88;
-const RATCHET_PCRE2_EXPECTED_PASSES: usize = 88;
+const RATCHET_EXPECTED_PASSES: usize = 113;
+const RATCHET_PCRE2_EXPECTED_PASSES: usize = 113;
+/// Eligible-case count must ALSO match exactly — without this, newly
+/// eligible cases that all fail leave the pass count unchanged and slip by.
+const RATCHET_EXPECTED_ATTEMPTED: usize = 113;
 const EXPECTED_ENGINE_DIVERGENCES: usize = 0;
 
 const CaseResult = struct {
@@ -36,7 +39,11 @@ fn caseEligible(case: std.json.ObjectMap) bool {
     const cites = case.get("cites").?.array.items;
     for (cites) |cite| {
         const t = jsonStr(cite.object.get("type").?).?;
-        if (!std.mem.eql(u8, t, "FullCaseCitation") and !std.mem.eql(u8, t, "ShortCaseCitation")) return false;
+        const supported = std.mem.eql(u8, t, "FullCaseCitation") or
+            std.mem.eql(u8, t, "ShortCaseCitation") or
+            std.mem.eql(u8, t, "SupraCitation") or
+            std.mem.eql(u8, t, "IdCitation");
+        if (!supported) return false;
     }
     return true;
 }
@@ -60,15 +67,28 @@ fn charSpanToBytes(text: []const u8, char_start: i64, char_end: i64) [2]u32 {
     return out;
 }
 
+fn kindMatches(type_name: []const u8, kind: incitez.extraction.Kind) bool {
+    const expected_kind: incitez.extraction.Kind =
+        if (std.mem.eql(u8, type_name, "FullCaseCitation")) .full_case
+        else if (std.mem.eql(u8, type_name, "ShortCaseCitation")) .short_case
+        else if (std.mem.eql(u8, type_name, "SupraCitation")) .supra
+        else if (std.mem.eql(u8, type_name, "IdCitation")) .id
+        else return false;
+    return kind == expected_kind;
+}
+
 fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.extraction.Citation) bool {
+    if (!kindMatches(jsonStr(expected.get("type").?).?, actual.kind)) return false;
     // span
     const span = expected.get("span").?.array.items;
     const exp_bytes = charSpanToBytes(text, span[0].integer, span[1].integer);
     if (actual.span_start != exp_bytes[0] or actual.span_end != exp_bytes[1]) return false;
     // groups: volume, reporter, page (may be null/absent)
     const groups = expected.get("groups").?.object;
+    const is_token = actual.kind == .supra or actual.kind == .id;
+    const actual_reporter: ?[]const u8 = if (is_token) null else actual.reporter;
     if (!optFieldMatches(groups.get("volume"), actual.volume)) return false;
-    if (!optFieldMatches(groups.get("reporter"), actual.reporter)) return false;
+    if (!optFieldMatches(groups.get("reporter"), actual_reporter)) return false;
     if (!optFieldMatches(groups.get("page"), actual.page)) return false;
     // corrected reporter
     if (expected.get("corrected_reporter")) |cr| {
@@ -154,6 +174,13 @@ fn runCorpus(
         }
     }
 
+    if (result.attempted != RATCHET_EXPECTED_ATTEMPTED) {
+        std.debug.print(
+            "\n{s}: {d} eligible cases attempted (expected exactly {d})\n",
+            .{ label, result.attempted, RATCHET_EXPECTED_ATTEMPTED },
+        );
+        return error.RatchetMismatch;
+    }
     if (result.passed != ratchet) {
         std.debug.print(
             "\n{s} ratchet: {d}/{d} eligible cases pass (ratchet expects exactly {d})\n",

@@ -62,6 +62,12 @@ pub const Citation = struct {
     defendant: ?[]const u8 = null,
     /// Short-form antecedent ("Foo" in "Foo, 1 U.S., at 5"). ALLOCATED.
     antecedent_guess: ?[]const u8 = null,
+    /// Volume before a supra token ("123" in "asdf, 123 supra"). Slice.
+    supra_volume: ?[]const u8 = null,
+    /// Full extent including case name/antecedent (eyecite full_span);
+    /// defaults to the core span when nothing extends it.
+    full_span_start: u32 = 0,
+    full_span_end: u32 = 0,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
@@ -100,7 +106,25 @@ pub fn extractWithEngine(
         .vm => try vmScan(allocator, text, &cites),
         .pcre2 => try pcre2Scan(allocator, text, &cites),
     }
+    try tokenScan(allocator, text, &cites);
+    // merge engine candidates and id/supra tokens: earliest start, longest
+    std.mem.sort(Citation, cites.items, {}, citeLessThan);
+    var n: usize = 0;
+    var last_end: u32 = 0;
+    for (cites.items) |c| {
+        if (n == 0 or c.span_start >= last_end) {
+            cites.items[n] = c;
+            last_end = c.span_end;
+            n += 1;
+        }
+    }
+    cites.shrinkRetainingCapacity(n);
+    for (cites.items) |*c| {
+        c.full_span_start = c.span_start;
+        c.full_span_end = c.span_end;
+    }
     for (cites.items, 0..) |*c, i| try finishCitation(allocator, text, cites.items, i, c);
+    filterCitations(allocator, text, &cites);
     return cites.toOwnedSlice(allocator);
 }
 
@@ -157,6 +181,130 @@ fn pcre2Scan(
     }
 }
 
+fn citeLessThan(_: void, a: Citation, b: Citation) bool {
+    if (a.span_start != b.span_start) return a.span_start < b.span_start;
+    return a.span_end > b.span_end;
+}
+
+/// eyecite filter_citations: dedupe by span (last wins), order by full_span,
+/// then resolve overlaps — a supra overlapping a preceding short cite's full
+/// span is dropped; a citation named inside the previous parenthetical is
+/// kept; everything else coexists (parallel cites).
+fn filterCitations(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    cites: *std.ArrayListUnmanaged(Citation),
+) void {
+    const items = cites.items;
+    if (items.len == 0) return;
+    // dedupe by exact span, last occurrence wins (Python dict semantics)
+    var n: usize = 0;
+    for (items, 0..) |c, i| {
+        var dup_later = false;
+        for (items[i + 1 ..]) |later| {
+            if (later.span_start == c.span_start and later.span_end == c.span_end) {
+                dup_later = true;
+                break;
+            }
+        }
+        if (dup_later) {
+            freeCitationStrings(allocator, c);
+        } else {
+            items[n] = c;
+            n += 1;
+        }
+    }
+    cites.shrinkRetainingCapacity(n);
+
+    std.mem.sort(Citation, cites.items, {}, fullSpanLessThan);
+
+    var kept: usize = 0;
+    for (cites.items) |c| {
+        if (kept > 0) {
+            const last = cites.items[kept - 1];
+            const overlapping = @max(c.full_span_start, last.full_span_start) <
+                @min(c.full_span_end, last.full_span_end);
+            if (overlapping) {
+                if (c.kind == .supra and last.kind == .short_case) {
+                    freeCitationStrings(allocator, c);
+                    continue;
+                }
+            }
+        }
+        cites.items[kept] = c;
+        kept += 1;
+    }
+    _ = text;
+    cites.shrinkRetainingCapacity(kept);
+}
+
+fn fullSpanLessThan(_: void, a: Citation, b: Citation) bool {
+    if (a.full_span_start != b.full_span_start) return a.full_span_start < b.full_span_start;
+    return a.full_span_end < b.full_span_end;
+}
+
+fn freeCitationStrings(allocator: std.mem.Allocator, c: Citation) void {
+    if (c.plaintiff) |p| allocator.free(p);
+    if (c.defendant) |d| allocator.free(d);
+    if (c.antecedent_guess) |a| allocator.free(a);
+}
+
+/// Scans for id./ibid. and supra tokens (space-bounded, case-insensitive,
+/// punctuation shells included in the span — eyecite ID_REGEX/SUPRA_REGEX).
+fn tokenScan(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    cites: *std.ArrayListUnmanaged(Citation),
+) !void {
+    var i: usize = 0;
+    while (i < text.len) {
+        // word start at text start or after whitespace
+        if (std.ascii.isWhitespace(text[i])) {
+            i += 1;
+            continue;
+        }
+        var we = i;
+        while (we < text.len and !std.ascii.isWhitespace(text[we])) we += 1;
+        const word = text[i..we];
+        defer i = we;
+
+        // ID_REGEX: (id\.,?|ibid\.) — token must end at a \s|$ boundary
+        if (std.ascii.startsWithIgnoreCase(word, "ibid.")) {
+            if (word.len == 5) {
+                try cites.append(allocator, tokenCitation(.id, i, i + 5, text));
+                continue;
+            }
+        } else if (std.ascii.startsWithIgnoreCase(word, "id.")) {
+            const tok_len: usize = if (word.len >= 4 and word[3] == ',') 4 else 3;
+            if (word.len == tok_len) {
+                try cites.append(allocator, tokenCitation(.id, i, i + tok_len, text));
+                continue;
+            }
+        }
+        // SUPRA_REGEX: punct* supra punct* spanning the whole word
+        var cs: usize = 0;
+        while (cs < word.len and !std.ascii.isAlphanumeric(word[cs])) cs += 1;
+        var ce = word.len;
+        while (ce > cs and !std.ascii.isAlphanumeric(word[ce - 1])) ce -= 1;
+        if (std.ascii.eqlIgnoreCase(word[cs..ce], "supra")) {
+            try cites.append(allocator, tokenCitation(.supra, i, we, text));
+        }
+    }
+}
+
+fn tokenCitation(kind: Kind, start: usize, end: usize, text: []const u8) Citation {
+    return .{
+        .kind = kind,
+        .span_start = @intCast(start),
+        .span_end = @intCast(end),
+        .volume = null,
+        .reporter = text[start..end],
+        .page = null,
+        .edition = 0, // meaningless for non-case tokens; never exposed
+        .is_variant = false,
+    };
+}
+
 /// Shared post-candidate metadata: pin cite, court/date paren, court
 /// resolution, scotus guess, case names + pre-citation year. Both engines
 /// converge here.
@@ -184,13 +332,6 @@ fn finishCitation(
         else => {},
     }
 
-    // eyecite guess_court: SCOTUS reporters imply the court
-    if (c.court == null and tables.editions[c.edition].is_scotus) {
-        c.court = "scotus";
-    }
-
-    // case names (find_case_name backward scan); other citations' spans act
-    // as the CitationTokens of eyecite's word list
     var spans_buf: [32]case_name.CiteSpan = undefined;
     var n_spans: usize = 0;
     for (all, 0..) |other, oi| {
@@ -198,6 +339,22 @@ fn finishCitation(
         spans_buf[n_spans] = .{ .start = other.span_start, .end = other.span_end };
         n_spans += 1;
     }
+
+    if (c.kind == .id or c.kind == .supra) {
+        finishToken(text, c, all);
+        if (c.kind == .supra) {
+            try supraAntecedent(allocator, text, c, spans_buf[0..n_spans]);
+        }
+        return;
+    }
+
+    // eyecite guess_court: SCOTUS reporters imply the court
+    if (c.court == null and tables.editions[c.edition].is_scotus) {
+        c.court = "scotus";
+    }
+
+    // case names (find_case_name backward scan); other citations' spans act
+    // as the CitationTokens of eyecite's word list
     const names = try case_name.findCaseName(
         allocator,
         text,
@@ -208,6 +365,7 @@ fn finishCitation(
     c.plaintiff = names.plaintiff;
     c.defendant = names.defendant;
     c.antecedent_guess = names.antecedent;
+    if (names.full_span_start) |fs| c.full_span_start = fs;
     if (c.year == null) {
         if (names.year_text) |yt| {
             c.year_text = yt;
@@ -220,6 +378,99 @@ fn finishCitation(
     if (c.kind == .full_case and c.plaintiff == null and c.defendant == null) {
         try preCiteAntecedent(allocator, text, c, spans_buf[0..n_spans]);
     }
+}
+
+/// eyecite extract_pin_cite for id/supra tokens: pin + parenthetical in a
+/// strings-only forward window; the pin tail extends the span.
+fn finishToken(text: []const u8, c: *Citation, all: []const Citation) void {
+    var wend = @min(text.len, c.span_end + MAX_MATCH_CHARS);
+    if (std.mem.indexOfScalarPos(u8, text, c.span_end, '\n')) |nl| wend = @min(wend, nl);
+    for (all) |other| {
+        if (other.span_start >= c.span_end and other.span_start < wend and
+            other.kind != .id and other.kind != .supra)
+        {
+            wend = other.span_start;
+        }
+    }
+    const win = text[0..wend];
+    if (parsePinCite(win, c.span_end)) |pin| {
+        c.pin_cite = pin.cleaned;
+        const stripped = std.mem.trimEnd(u8, win[c.span_end..pin.end], ", ");
+        c.span_end += @intCast(stripped.len);
+        c.full_span_end = @max(c.full_span_end, c.span_end);
+    } else {
+        c.parenthetical = parseParenthetical(win, c.span_end);
+        return;
+    }
+    c.parenthetical = parseParenthetical(win, c.span_end + (if (win.len > c.span_end and win[c.span_end] == ',') @as(usize, 1) else 0));
+}
+
+/// eyecite SUPRA_ANTECEDENT_REGEX, matched backward (anchored at the supra
+/// token) in a strings-only window:
+/// `(word ,? vol | vol | word ,?) ` — leftmost alternative per position.
+fn supraAntecedent(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    c: *Citation,
+    other_spans: []const case_name.CiteSpan,
+) !void {
+    const wstart = case_name.preCiteWindowStart(
+        text,
+        .{ .start = c.span_start, .end = c.span_end },
+        other_spans,
+    );
+    const win = text[0..c.span_start];
+    var p = wstart;
+    while (p < win.len) : (p += 1) {
+        if (!supraWordChar(win[p])) continue;
+        var q = p;
+        while (q < win.len and supraWordChar(win[q])) q += 1;
+        const word = win[p..q];
+        const all_digits = blk: {
+            for (word) |ch| {
+                if (!isDigit(ch)) break :blk false;
+            }
+            break :blk word.len > 0;
+        };
+        // alt 1: antecedent ` ?,? ` volume `\ `$
+        {
+            var r = q;
+            if (r < win.len and win[r] == ' ') r += 1;
+            if (r < win.len and win[r] == ',') r += 1;
+            if (r < win.len and win[r] == ' ') {
+                r += 1;
+                var v = r;
+                while (v < win.len and isDigit(win[v])) v += 1;
+                if (v > r and v < win.len and win[v] == ' ' and v + 1 == win.len) {
+                    c.antecedent_guess = try allocator.dupe(u8, word);
+                    c.supra_volume = win[r..v];
+                    c.full_span_start = @intCast(p);
+                    return;
+                }
+            }
+        }
+        // alt 2: bare volume `\ `$
+        if (all_digits and q < win.len and win[q] == ' ' and q + 1 == win.len) {
+            c.supra_volume = word;
+            c.full_span_start = @intCast(p);
+            return;
+        }
+        // alt 3: antecedent ` ?,?` `\ `$
+        {
+            var r = q;
+            if (r < win.len and win[r] == ' ') r += 1;
+            if (r < win.len and win[r] == ',') r += 1;
+            if (r < win.len and win[r] == ' ' and r + 1 == win.len) {
+                c.antecedent_guess = try allocator.dupe(u8, word);
+                c.full_span_start = @intCast(p);
+                return;
+            }
+        }
+    }
+}
+
+fn supraWordChar(ch: u8) bool {
+    return std.ascii.isAlphanumeric(ch) or ch == '_' or ch == '-' or ch == '.';
 }
 
 /// eyecite add_pre_citation / PRE_FULL_CITATION_REGEX:
@@ -294,6 +545,7 @@ fn finishShortCitation(text: []const u8, c: *Citation) void {
         // eyecite quirk: pinless shorts shrink span_end by the page length
         c.span_end -= @intCast(page.len);
     }
+    c.full_span_end = @max(c.full_span_end, c.span_end);
 }
 
 fn makeCitation(
@@ -1288,6 +1540,79 @@ test "short cite gets scotus guess and no year" {
     try testing.expectEqualStrings("scotus", cites[0].court.?);
     try testing.expectEqual(@as(?u16, null), cites[0].year);
     try testing.expectEqualStrings("overruling xyz", cites[0].parenthetical.?);
+}
+
+test "id citation: Ibid. bare" {
+    const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12. asdf. Ibid. foo bar lorem ipsum.");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqual(Kind.id, cites[1].kind);
+    try testing.expectEqual(@as(u32, 28), cites[1].span_start);
+    try testing.expectEqual(@as(u32, 33), cites[1].span_end);
+    try testing.expectEqual(@as(?[]const u8, null), cites[1].pin_cite);
+}
+
+test "id citation: Id., at 123 with pin extending span" {
+    const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id., at 123. foo bar");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqual(Kind.id, cites[1].kind);
+    try testing.expectEqual(@as(u32, 37), cites[1].span_start);
+    try testing.expectEqual(@as(u32, 48), cites[1].span_end);
+    try testing.expectEqualStrings("at 123", cites[1].pin_cite.?);
+}
+
+test "id citation: paragraph-sign pin" {
+    const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. \xc2\xb6 34. foo bar");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqualStrings("\xc2\xb6 34", cites[1].pin_cite.?);
+}
+
+test "id citation: comma-list pin with labels" {
+    const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12, 347-348. asdf. Id. at pp. 45, 64. f");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 2), cites.len);
+    try testing.expectEqualStrings("at pp. 45, 64", cites[1].pin_cite.?);
+}
+
+test "supra: antecedent and pin" {
+    const cites = try extract(testing.allocator, "before asdf, supra, at 2");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(Kind.supra, cites[0].kind);
+    try testing.expectEqual(@as(u32, 13), cites[0].span_start);
+    try testing.expectEqual(@as(u32, 24), cites[0].span_end);
+    try testing.expectEqualStrings("at 2", cites[0].pin_cite.?);
+    try testing.expectEqualStrings("asdf", cites[0].antecedent_guess.?);
+}
+
+test "supra: with volume before" {
+    const cites = try extract(testing.allocator, "before asdf, 123 supra, at 2");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(u32, 17), cites[0].span_start);
+    try testing.expectEqual(@as(u32, 28), cites[0].span_end);
+    try testing.expectEqualStrings("asdf", cites[0].antecedent_guess.?);
+}
+
+test "supra: punctuation shell in token span, no pin" {
+    const cites = try extract(testing.allocator, "before Asdf, supra. foo bar");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(u32, 13), cites[0].span_start);
+    try testing.expectEqual(@as(u32, 19), cites[0].span_end);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].pin_cite);
+    try testing.expectEqualStrings("Asdf", cites[0].antecedent_guess.?);
+}
+
+test "supra: parenthetical without pin" {
+    const cites = try extract(testing.allocator, "Foo, supra (overruling ...) (ignore this)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(u32, 10), cites[0].span_end);
+    try testing.expectEqualStrings("overruling ...", cites[0].parenthetical.?);
+    try testing.expectEqualStrings("Foo", cites[0].antecedent_guess.?);
 }
 
 test "pcre2 engine agrees with vm engine on representative citations" {

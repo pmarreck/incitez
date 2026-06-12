@@ -211,8 +211,10 @@ pub fn findCaseName(
     var title_end: usize = self_span.start;
     if (w.prev(self_span.start)) |e| title_end = e.start;
 
+    const title_end0 = title_end;
     var v_seen = false;
     var start_byte: ?usize = null;
+    var elem_start_byte: ?usize = null; // pre-trim element start (full_span)
     var has_candidate = false;
     var pre_cite_year: ?[]const u8 = null;
     var case_name_length: usize = 0;
@@ -264,6 +266,7 @@ pub fn findCaseName(
             if (word.len == 1 or (word.len > 1 and word[1] >= 'a' and word[1] <= 'z')) {
                 start_byte = afterElement(text, elem.end);
             }
+            elem_start_byte = start_byte;
             has_candidate = true;
             break;
         }
@@ -271,8 +274,9 @@ pub fn findCaseName(
         // lowercase word after "v"
         if (v_seen and !startsUpper(word) and !isArticle(word)) {
             start_byte = afterElement(text, elem.end);
+            elem_start_byte = start_byte;
             has_candidate = true;
-            // strip leading article + space from the candidate
+            // strip leading article + space from the candidate (name only)
             start_byte = stripLeadingArticle(text, start_byte.?, title_end, true);
             break;
         }
@@ -285,6 +289,7 @@ pub fn findCaseName(
         if (elem.kind == .stop_word and elem.is_v) {
             v_seen = true;
             start_byte = twoElementsBack(&w, elem.start);
+            elem_start_byte = start_byte;
             has_candidate = start_byte != null;
             continue;
         }
@@ -294,6 +299,7 @@ pub fn findCaseName(
             std.mem.endsWith(u8, word, ".") and plaintiff_length > 1;
         if (cap_abbrev or elem.kind == .stop_word) {
             start_byte = afterElement(text, elem.end);
+            elem_start_byte = start_byte;
             has_candidate = true;
             break;
         }
@@ -308,6 +314,7 @@ pub fn findCaseName(
                 continue;
             }
             const sb = afterElement(text, elem.end);
+            elem_start_byte = sb;
             // keep from the first capitalized word, else no candidate
             if (firstCapitalAt(text, sb, title_end)) |cap_at| {
                 start_byte = cap_at;
@@ -320,6 +327,7 @@ pub fn findCaseName(
 
         if (elem.start == 0) {
             start_byte = stripLeadingArticle(text, 0, title_end, false);
+            elem_start_byte = 0;
             has_candidate = true;
             // drop if the candidate ends in a standalone number
             if (endsWithBareNumber(text[start_byte.?..title_end])) has_candidate = false;
@@ -352,7 +360,11 @@ pub fn findCaseName(
     const d = try stripStopWords(alloc, defendant_part);
     if (d.len > 0) {
         if (short) result.antecedent = d else result.defendant = d;
-        result.full_span_start = @intCast(start_byte.?);
+        // offset = len(join(words[start_index : index-1])) + 1, from the
+        // RAW element start (candidate trimming does not move full_span)
+        const es = elem_start_byte orelse start_byte.?;
+        const join_len = title_end0 -| es;
+        result.full_span_start = @intCast(self_span.start -| (join_len + 1));
     } else {
         alloc.free(d);
     }

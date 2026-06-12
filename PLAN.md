@@ -26,13 +26,14 @@ anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
   - Curiosity poke: reporters.json has nested variant/edition structures — flatten how? Measure comptime-parse vs codegen-step compile cost before choosing.
 - [ ] M2: Port eyecite test corpus (full citations first) — attribution header in each ported file
 - [ ] M2: TDD full-citation matcher (tokenizer → volume/reporter/page → pin/court/year metadata)
-- [ ] M3: Short/supra/id/ibid matchers + resolution pass
+- [ ] M3 remaining: resolution pass (resolve.py port; extract ResolveTest corpus first)
 - [ ] M4: Differential CI gate vs pinned eyecite (nix Python, test-time only) + mutation suite + two-sided ±10% benchmark gate (history committed, hardware-keyed)
 - [ ] M5: C FFI (flat structs, arena ownership) + CLI `incitez extract file.txt --json`; notify Einstein via LLMsend
 - [ ] M6: docscan integration + legal_ai harness wiring (planned with Einstein after M5)
 - [ ] M7: WASM build target (Peter-ratified) — browser demo, **Elm UI** (Peter+Einstein decision 2026-06-11): nothing leaves the browser, fast, and no runtime exceptions. Note: in-browser the VM engine advantage WIDENS — wasm has no executable pages, so PCRE2 would run interpreted there; the VM needs no JIT at all.
 
 ## Completed
+- [x] M3: short/supra/id/ibid + filter_citations — 113/113 both engines (2026-06-12 ~02:30 EST)
 - [x] M2: case names — find_case_name port (element walker over words/spaces/citations/placeholders/stop-words, all scan branches, _process_case_name v-split + strip_stop_words two-pass, Python negative-slice quirk mirrored); driver compares plaintiff+defendant; 64/64 both engines, 0/193 divergences, leak-free (2026-06-12 ~00:30 EST)
 - [x] M2: pin_cite + parenthetical + extra metadata — full POST_FULL_CITATION_REGEX branch parity; driver compares all three; 64/64 both engines, 0/193 divergences (2026-06-11 ~20:30 EST)
 - [x] PCRE2 dual-engine harness (Peter-directed): pcre2 fork as flake input (static+JIT), eyecite-literal extractors emitted by codegen, Engine enum, per-engine corpus ratchets (64/64 BOTH), cross-engine differential 0/193, ./bm engine benchmark — vm 17.35× faster wall-clock than JIT'd PCRE2 on 1.7MB (449ms vs 7.8s steady-state; one-shot 0.90s vs 15.7s) (2026-06-11 ~19:30 EST)
