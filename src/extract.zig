@@ -1101,6 +1101,19 @@ fn parsePinLabel(text: []const u8, start: usize) ?usize {
     return null;
 }
 
+/// Byte length of a pin-cite range separator at `i`: hyphen-minus (1) or
+/// en-dash U+2013 / em-dash U+2014 (3), else 0. Real opinions use en/em-
+/// dashes for page ranges ("241\u{2013}242"); eyecite's regex only accepts
+/// hyphen-minus and silently drops these pins — incitez accepts all three
+/// (a principled surpass; see docs/principled_divergences.md section 3).
+fn pinDashLen(text: []const u8, i: usize) usize {
+    if (i >= text.len) return 0;
+    if (text[i] == '-') return 1;
+    if (i + 3 <= text.len and text[i] == 0xe2 and text[i + 1] == 0x80 and
+        (text[i + 2] == 0x93 or text[i + 2] == 0x94)) return 3;
+    return 0;
+}
+
 fn digitRun(text: []const u8, start: usize) usize {
     var p = start;
     while (p < text.len and isDigit(text[p])) p += 1;
@@ -1114,9 +1127,10 @@ fn parsePinNumber(text: []const u8, start: usize) ?usize {
         const d2 = digitRun(text, d1 + 1);
         if (d2 > d1 + 1) {
             var e = d2;
-            if (e < text.len and text[e] == '-') {
-                const d3 = digitRun(text, e + 1);
-                if (d3 > e + 1) {
+            if (pinDashLen(text, e) > 0) {
+                const dl = pinDashLen(text, e);
+                const d3 = digitRun(text, e + dl);
+                if (d3 > e + dl) {
                     e = d3;
                     if (e < text.len and text[e] == ':') {
                         const d4 = digitRun(text, e + 1);
@@ -1133,9 +1147,10 @@ fn parsePinNumber(text: []const u8, start: usize) ?usize {
     const e1 = digitRun(text, q);
     if (e1 == q) return null;
     var e = e1;
-    if (e < text.len and text[e] == '-') {
-        const e2 = digitRun(text, e + 1);
-        if (e2 > e + 1) e = e2;
+    const dl = pinDashLen(text, e);
+    if (dl > 0) {
+        const e2 = digitRun(text, e + dl);
+        if (e2 > e + dl) e = e2;
     }
     return e;
 }
@@ -2146,4 +2161,22 @@ test "reference: only fires after the full cite, requires a pin" {
     const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12, 347-348. Later Foo did something.");
     defer freeCitations(testing.allocator, cites);
     for (cites) |c| try testing.expect(c.kind != .reference);
+}
+
+test "pin cite: en-dash and em-dash ranges (surpass — eyecite accepts only hyphen)" {
+    // real opinions use en-dashes for page ranges; eyecite drops these pins
+    const a = try extract(testing.allocator, "Harris Trust v. Salomon, 530 U. S. 238, 241\xe2\x80\x93242 (2000)");
+    defer freeCitations(testing.allocator, a);
+    try testing.expectEqual(@as(usize, 1), a.len);
+    try testing.expectEqualStrings("241\xe2\x80\x93242", a[0].pin_cite.?);
+    // em-dash too
+    const b = try extract(testing.allocator, "1 U.S. 37, 44\xe2\x80\x9445 (1948)");
+    defer freeCitations(testing.allocator, b);
+    try testing.expectEqual(@as(usize, 1), b.len);
+    try testing.expectEqualStrings("44\xe2\x80\x9445", b[0].pin_cite.?);
+    // plain hyphen still works (no regression)
+    const c = try extract(testing.allocator, "1 U.S. 12, 347-348 (1982)");
+    defer freeCitations(testing.allocator, c);
+    try testing.expectEqual(@as(usize, 1), c.len);
+    try testing.expectEqualStrings("347-348", c[0].pin_cite.?);
 }

@@ -1,0 +1,17 @@
+Congress enacted ERISA to "protect . . . the interests of participants in employee benefit plans and their beneficiaries." §1001(b).
+ERISA subjects plan fiduciaries to certain fiduciary duties derived from the common law of trusts. See §1104(a); Central States, Southeast & Southwest Areas Pension Fund v. Central Transport, Inc., 472 U. S. 559, 570 (1985).
+Section 1106 "supplements the fiduciary's general duty of loyalty to the plan's beneficiaries . . . by categorically barring certain transactions deemed 'likely to injure the pension plan.' " Harris Trust and Sav. Bank v. Salomon Smith Barney Inc., 530 U. S. 238, 241–242 (2000).
+There is a well-settled "general rule of statutory construction that the burden of proving justification or exemption under a special exception to the prohibitions of a statute generally rests on one who claims its benefits." FTC v. Morton Salt Co., 334 U. S. 37, 44–45 (1948).
+When a statute has "exemptions laid out apart from the prohibitions," the exemptions ordinarily constitute "affirmative defense[s]" that are "entirely the responsibility of the party raising" them. Meacham v. Knolls Atomic Power Laboratory, 554 U. S. 84, 91, 95 (2008).
+At issue there were the Age Discrimination in Employment Act's general prohibitions on age discrimination, which "are subject to a separate provision." 554 U. S., at 91.
+Like the exemptions at issue in Meacham, the §1108 exemptions are "writ[ten] in the orthodox format of an affirmative defense." Id., at 102.
+Understood as affirmative defenses, the §1108 exemptions must be pleaded and proved by the defendant who seeks to benefit from them. See Taylor v. Sturgell, 553 U. S. 880, 907 (2008).
+An "affirmative defense" is "not something the plaintiff must anticipate and negate in her pleading." Perry v. Merit Systems Protection Bd., 582 U. S. 420, 435, n. 9 (2017).
+Congress wrote the §1108 exemptions "in the orthodox format of an affirmative defense." Meacham, 554 U. S., at 91, 102.
+This Court has held that "the burden of persuasion as to certain elements of a plaintiff 's claim may be shifted to defendants." Schaffer v. Weast, 546 U. S. 49, 57 (2005).
+Congress intended for §1106(a) to create "per se prohibitions on transacting with a party in interest." Harris Trust, 530 U. S., at 252.
+Respondents rely on this Court's decision in United States v. Cook, 17 Wall. 168 (1872), to support their construction.
+This Court has said Cook created "a rule of criminal pleading" for indictments. United States v. Reese, 92 U. S. 214, 232 (1876).
+Even in the criminal context, it remains a settled rule. Dixon v. United States, 548 U. S. 1, 13 (2006).
+District courts must also dismiss suits that fail to identify an injury. Cf. Thole v. U. S. Bank N. A., 590 U. S. 538, 544 (2020).
+I join all of the opinion of the Court for the simple reason that 29 U. S. C. §1108 sets out affirmative defenses. See Taylor v. Sturgell, 553 U. S. 880, 907 (2008).

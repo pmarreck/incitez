@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Real-world validation: run incitez (VM) and pinned eyecite over real
+# judicial-opinion fixtures (tests/realworld/*.txt), report per-doc citation
+# counts and agreement, and flag where incitez SURPASSES eyecite (finds a
+# pin/cite eyecite drops). Complements the curated differential gate — this
+# is the "does it hold on messy real text?" check.
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.." || exit 1
+
+run() {
+	"$@" || {
+		echo "FAILED: $*" >&2
+		exit 1
+	}
+}
+
+run nix build .#eyecite-env -o .eyecite-env
+PY=./.eyecite-env/bin/python
+if [[ ! -x zig-out/bin/incitez ]]; then
+	run nix develop -c zig build
+fi
+
+shopt -s nullglob
+docs=(tests/realworld/*.txt)
+if (( ${#docs[@]} == 0 )); then
+	echo "no fixtures in tests/realworld/" >&2
+	exit 1
+fi
+
+for doc in "${docs[@]}"; do
+	name=$(basename "$doc")
+	ic=$(./zig-out/bin/incitez extract "$doc" 2>/dev/null | grep -c . || true)
+	ey=$($PY -c "
+from eyecite import get_citations
+print(len(get_citations(open('$doc').read())))
+" 2>/dev/null)
+	# count incitez citations carrying a pin that eyecite would drop (en/em-dash range)
+	surpass=$(./zig-out/bin/incitez extract "$doc" --json 2>/dev/null |
+		nix run 'nixpkgs#jq' -- -r '[.[] | select(.pin_cite != null and (.pin_cite|test("–|—")))] | length')
+	verdict="agree"
+	[[ "$ic" != "$ey" ]] && verdict="DIFFER (review)"
+	printf '%-40s incitez=%s eyecite=%s  %s  (en/em-dash pins recovered: %s)\n' \
+		"$name" "$ic" "$ey" "$verdict" "${surpass:-0}"
+done

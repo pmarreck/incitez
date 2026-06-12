@@ -92,3 +92,25 @@ and are matched deliberately (the differential gate validates each):
 
 If a future eyecite quirk is found to produce *wrong* output, it goes in
 section 1's style (diverge + document), never silently cloned.
+
+---
+
+## 3. En-dash / em-dash page ranges in pin cites — incitez is MORE correct (we surpass)
+
+**eyecite:** `PIN_CITE_REGEX` accepts only hyphen-minus (`-`) in a page range,
+so a pin like `241–242` written with an **en-dash** (or `44—45` with an
+em-dash) is silently dropped — the citation is found but loses its pin cite.
+
+**incitez:** accepts hyphen-minus, en-dash (U+2013), and em-dash (U+2014) as
+range separators (`pinDashLen` in `src/extract.zig`), recovering the pin.
+
+**Verdict: incitez is more correct.** Real judicial opinions routinely
+typeset page ranges with en/em-dashes; the dropped pin is real information.
+
+**How it was found:** real-world validation on *Cunningham v. Cornell Univ.*,
+No. 23-1007 (U.S. 2025) — see `tests/realworld/` and `scripts/validate-realworld`.
+On that opinion incitez and eyecite otherwise agree 23/23 (identical types,
+reporters, pages, years, antecedents); the only difference was the two
+en-dash pins, which incitez now recovers. eyecite's own corpus uses
+hyphen-minus throughout, so the differential gate stays **215/215, 0 fenced**
+— a strict improvement on real text with no cost to the meet bar.

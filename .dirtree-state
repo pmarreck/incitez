@@ -8,12 +8,13 @@ annotate=[
 	cli/main.c = C CLI shell over the FFI: --about/--help; all I/O lives here
 	docs/architecture.md = VM raison d'etre + M.O.: reporter-anchored pattern VM vs literal PCRE2 oracle; first-byte gate, sorted-table anchor, local-verify; trie prior art
 	docs/incitez_design.md = THE SPEC: design brief from legal_ai (licensing, MFIC test strategy, perf targets, milestones)
-	docs/principled_divergences.md = Where incitez intentionally diverges from (or reasons-to-match) eyecite: seam=more-correct, AG-names=match-effective; meet-and-surpass doctrine
+	docs/principled_divergences.md = Where incitez diverges-to-surpass or reasons-to-match eyecite: seam, AG-names, en/em-dash pins
 	flake.nix = Zig 0.16.0 pin via zig-overlay; eyecite/reporters-db/courts-db pinned non-flake inputs; packages.{default,debug}, checks.test, devShell
 	scripts/differential = Differential gate runner (local); CI twin = .#checks.differential
 	scripts/extract-corpus = Wrapper: build .#eyecite-env and run corpus extractor
 	scripts/link-deps = Symlinks flake-pinned eyecite/reporters-db/courts-db store paths into deps/ for analysis
 	scripts/revendor = Re-vendor reporters-db/courts-db JSON + licenses + provenance from flake pins
+	scripts/validate-realworld = Real-world validation: incitez vs eyecite over tests/realworld/*.txt; reports agreement + incitez surpasses
 	src/extract.zig = Citation extractor: reporter-anchored pattern VM + token scan + reference scan + filter_citations; metadata + resolution
 	src/ffi.zig = C FFI exports: incitez_extract/result_count/result_get/result_free — flat structs, arena ownership
 	src/lib.zig = Pure Zig core (no I/O) + C FFI exports; currently version export only
@@ -24,6 +25,7 @@ annotate=[
 	tests/corpus/eyecite_corpus.json = Oracle-verified acceptance corpus: 193 cases from eyecite 2.7.6 FindTest (BSD-2-Clause)
 	tests/expected_divergences.json = Fenced-divergence ledger: 26 entries (law/journal/section/reference gaps) with reasons
 	tests/mutation.zig = Mutation shotgun: seeded corruption operators + dual-engine agreement on mutants
+	tests/realworld/cunningham_v_cornell_2025.txt = Real 2025 SCOTUS opinion fixture (public domain); 23/23 eyecite agreement validated
 	tools/bench.zig = Engine benchmark exe (vm|pcre2, refuses Debug builds)
 	tools/bench_eyecite.py = eyecite-side benchmark (oracle env): steady-state + cold-start timing of get_citations() for the vs-eyecite comparison
 	tools/diff_oracle.py = Differential oracle+comparator (eyecite env, test-time): build-texts / compare with fence ledger
