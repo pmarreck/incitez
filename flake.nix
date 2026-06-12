@@ -156,6 +156,29 @@
         # Exposed for direct builds/debugging of the engine dependency
         packages.pcre2 = pcre2;
 
+        # WASM artifact for the browser consumer (incitez_web). VM-only — the
+        # output contains NO PCRE2; -Dpcre2-prefix is passed only to satisfy
+        # build.zig's eager option eval (the wasm step never links it).
+        packages.wasm = pkgs.stdenv.mkDerivation {
+          pname = "incitez-wasm";
+          version = "0.1.0";
+          src = self;
+          nativeBuildInputs = [ zig ] ++ darwinInputs;
+          dontConfigure = true;
+          buildPhase = ''
+            export HOME="$TMPDIR"
+            export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
+            mkdir -p $ZIG_GLOBAL_CACHE_DIR
+            ${darwinIncludeHook}
+            zig build wasm -Dpcre2-prefix=${pcre2}
+          '';
+          installPhase = ''
+            mkdir -p $out
+            cp zig-out/wasm/incitez.wasm $out/incitez.wasm
+          '';
+          dontFixup = true;
+        };
+
         checks.test = pkgs.stdenv.mkDerivation {
           pname = "incitez-test";
           version = "0.1.0";

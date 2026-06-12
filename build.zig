@@ -184,6 +184,24 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(diffdump);
 
+    // -- WASM artifact (browser consumer; VM-only, PCRE2 comptime-excluded) --
+    const wasm_target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .freestanding });
+    const wasm_opts = b.addOptions();
+    wasm_opts.addOption(bool, "enable_pcre2", false);
+    const wasm_mod = b.createModule(.{
+        .root_source_file = b.path("src/wasm.zig"),
+        .target = wasm_target,
+        .optimize = .ReleaseSmall, // browser download size; data tables dominate
+        .imports = &.{ tables_import, courts_import },
+    });
+    wasm_mod.addOptions("build_options", wasm_opts);
+    const wasm = b.addExecutable(.{ .name = "incitez", .root_module = wasm_mod });
+    wasm.entry = .disabled; // reactor module: exports, no _start
+    wasm.rdynamic = true; // retain the `export fn`s
+    const wasm_step = b.step("wasm", "Build the WASM artifact");
+    const wasm_install = b.addInstallArtifact(wasm, .{ .dest_dir = .{ .override = .{ .custom = "wasm" } } });
+    wasm_step.dependOn(&wasm_install.step);
+
     // -- Engine benchmark tool (driven by ./bm via hyperfine) --
     const bench = b.addExecutable(.{
         .name = "incitez-bench",

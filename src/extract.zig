@@ -168,29 +168,32 @@ fn pcre2Scan(
     text: []const u8,
     cites: *std.ArrayListUnmanaged(Citation),
 ) !void {
-    if (!enable_pcre2) unreachable;
-    const cands = try pcre2_engine.scan(allocator, text);
-    defer allocator.free(cands);
-    for (cands) |cand| {
-        var c = makeCitation(
-            text,
-            cand.start,
-            cand.end,
-            cand.volume,
-            cand.reporter,
-            cand.page,
-            cand.edition,
-            cand.is_variant,
-        );
-        if (cand.short) {
-            c.kind = .short_case;
-        } else c.kind = switch (tables.editions[cand.edition].source) {
-            .reporters => .full_case,
-            .journals => .full_journal,
-            .laws => .full_law,
-        };
-        try cites.append(allocator, c);
-    }
+    // comptime-gated: when enable_pcre2 is false (e.g. the WASM target) this
+    // body is not analyzed, so the empty pcre2_engine stub is never touched.
+    if (enable_pcre2) {
+        const cands = try pcre2_engine.scan(allocator, text);
+        defer allocator.free(cands);
+        for (cands) |cand| {
+            var c = makeCitation(
+                text,
+                cand.start,
+                cand.end,
+                cand.volume,
+                cand.reporter,
+                cand.page,
+                cand.edition,
+                cand.is_variant,
+            );
+            if (cand.short) {
+                c.kind = .short_case;
+            } else c.kind = switch (tables.editions[cand.edition].source) {
+                .reporters => .full_case,
+                .journals => .full_journal,
+                .laws => .full_law,
+            };
+            try cites.append(allocator, c);
+        }
+    } else unreachable;
 }
 
 /// eyecite extract_pincited_reference_citations: for each FullCaseCitation,
