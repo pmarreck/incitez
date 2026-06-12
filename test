@@ -42,6 +42,15 @@ else
 fi
 
 echo ""
+echo "=== WASM ABI smoke (nix build, node consumer) ==="
+if nix build ".#checks.${system}.wasm" 2>&1; then
+	echo "PASS: wasm smoke"
+else
+	echo "FAIL: wasm smoke"
+	((FAILURES++))
+fi
+
+echo ""
 if [[ "$FAILURES" -gt 0 ]]; then
 	echo "FAILED: $FAILURES suite(s)"
 	exit "$FAILURES"

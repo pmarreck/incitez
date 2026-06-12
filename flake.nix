@@ -262,6 +262,26 @@
           '';
         };
 
+        # WASM smoke gate: an independent (non-Zig) JS consumer instantiates the
+        # artifact with zero imports and exercises the full ABI — selftest plus
+        # extract round-trips — the same boundary incitez_web uses. Depends on
+        # packages.wasm so CI rebuilds and re-verifies the .wasm on every change.
+        checks.wasm = pkgs.stdenv.mkDerivation {
+          pname = "incitez-wasm-smoke";
+          version = "0.1.0";
+          src = self;
+          nativeBuildInputs = [ pkgs.nodejs ];
+          dontConfigure = true;
+          buildPhase = ''
+            node tests/wasm/smoke.mjs ${self.packages.${system}.wasm}/incitez.wasm
+          '';
+          installPhase = ''
+            mkdir -p $out
+            echo "wasm smoke passed" > $out/result
+          '';
+          dontFixup = true;
+        };
+
         devShells.default = pkgs.mkShell {
           buildInputs = [
             zig
