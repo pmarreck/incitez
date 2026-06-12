@@ -23,7 +23,8 @@ item** (profile-first, two-sided bm gate).
 
 ## Next increment (awaiting Peter's opt-in)
 - [x] References (ReferenceCitation) DONE (2026-06-12) — last 6 fences healed; **FULL eyecite type parity**, differential ledger EMPTY (215/215 agree, 0 fenced, 0 unfenced).
-- [ ] Post-parity optimization pass (Aho-Corasick anchor scan, case-name walk, allocation reduction) under the live two-sided bm gate. Current vm baseline ~1.29s/1.7MB citation-dense.
+- [x] Optimization pass #4 DONE (2026-06-12 ~16:00 EST) — NOT the expected Aho-Corasick: per-function profiling (the matching loop was never the bottleneck) exposed **four O(n²)-on-citation-density quadratics** the whole-pipeline number hid. Fixed referenceScan (unique-name cache), filterCitations (span→last-index map — the dominant one), resolve full² (resource-key map), finishCitation (bounded span scan). **1.7MB citation-dense doc: 60s → 2.6s (23×).** Differential 215/215, ./test green. Controls added: per-key-function microbench + gate (CLAUDE.md L32), and the machine-independent **scaling-ratio gate** (`tests/scaling`, ./bm Section 4, flake `checks.scaling`) — fails any phase growing ≥2.8×/doubling; it caught the finishCitation quadratic itself.
+  - Residual: resolve exact-duplication O(dups²) in resolveShort/supra (report-only in the gate, ~3% runtime, real docs fine) — tracked (task #17).
 - [ ] LLM-as-case-name-adjudicator idea (M4 differential referee; NOT extraction path).
 
 ## Design notes (M2 matcher, from reading eyecite internals)
