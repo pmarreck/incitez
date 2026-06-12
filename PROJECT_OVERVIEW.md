@@ -18,7 +18,13 @@ House hexagonal pattern:
 C CLI (cli/main.c, all I/O) ──► C FFI (include/incitez.h) ──► Zig core (src/, pure, no I/O)
 ```
 
-- The C FFI is the real public API; the CLI dogfoods it.
+- The C FFI is the public API for non-Zig consumers; the C CLI dogfoods it
+  (the CLI MUST keep going through `include/incitez.h` — it IS the dogfood
+  that validates the FFI boundary). Because the C CLI already exercises the
+  FFI, **sibling-Zig consumers (e.g. docscan, future Zig dependents) may
+  import the Zig module directly** rather than routing through the C ABI —
+  no double-marshalling required. The WASM ABI is the contract for the
+  browser consumer (incitez_web); see `docs/wasm_abi.md`.
 - ReleaseFast by default; flake.nix + Garnix CI; Zig pinned to 0.16.0
   via zig-overlay.
 - All deps are flake-local (no globally-installed tooling): eyecite,
