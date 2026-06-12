@@ -199,6 +199,46 @@
           '';
         };
 
+        # Differential gate vs the pinned eyecite oracle, in CI. No network:
+        # eyecitePython and the corpora are all store paths / src files.
+        checks.differential = pkgs.stdenv.mkDerivation {
+          pname = "incitez-differential";
+          version = "0.1.0";
+          src = self;
+
+          nativeBuildInputs = [ zig eyecitePython ]
+            ++ darwinInputs
+            ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.patchelf ];
+
+          dontConfigure = true;
+
+          buildPhase = ''
+            export HOME="$TMPDIR"
+            export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
+            mkdir -p $ZIG_GLOBAL_CACHE_DIR
+            ${darwinIncludeHook}
+            zig build -Doptimize=ReleaseFast -Dpcre2-prefix=${pcre2}
+            ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              DL="$(cat ${pkgs.stdenv.cc}/nix-support/dynamic-linker)"
+              for f in $(find zig-out -type f -perm -u+x); do
+                patchelf --set-interpreter "$DL" "$f" 2>/dev/null || true
+              done
+            ''}
+            python tools/diff_oracle.py build-texts \
+              tests/corpus/eyecite_corpus.json \
+              tests/corpus/eyecite_resolve_corpus.json \
+              $TMPDIR/texts.json
+            zig-out/bin/incitez-diffdump $TMPDIR/texts.json > $TMPDIR/dump.json
+            python tools/diff_oracle.py compare \
+              $TMPDIR/texts.json $TMPDIR/dump.json tests/expected_divergences.json
+          '';
+
+          installPhase = ''
+            mkdir -p $out
+            echo "differential gate passed" > $out/result
+          '';
+        };
+
         devShells.default = pkgs.mkShell {
           buildInputs = [
             zig
