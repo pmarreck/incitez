@@ -9,10 +9,12 @@ settled — the VM-WASM argument (no JIT needed in-browser) carried it.
 Priority: correctness/parity slices first (metadata, short forms), THEN the
 anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
 
-## Status (2026-06-12) — full parity achieved
+## Status (2026-06-12) — full parity + WASM shipped
 Peter opted into: docs (VM architecture.md), seam characterization test,
-references, optimization pass — executing in that order. Docs + seam +
-references DONE. Optimization pass IN PROGRESS (profile-first).
+references, optimization pass. All DONE except the optimization pass. The WASM
+artifact (M7) jumped the queue (Einstein order — it unblocked the incitez_web
+team) and is now COMPLETE + pushed. **Optimization pass #4 is the active next
+item** (profile-first, two-sided bm gate).
 
 ## Status snapshot (2026-06-12 ~07:40 EST)
 - M1–M5 complete. Fence-closing campaign: journals, sections, laws done.
@@ -39,8 +41,7 @@ references DONE. Optimization pass IN PROGRESS (profile-first).
 - [ ] Post-parity optimization pass (Peter-ordered AFTER correctness): Aho-Corasick anchor scan, case-name walk efficiency, allocation reduction — under the now-live bm gate (current vm baseline 1287ms/1.7MB incl. all features)
 ## (M5 done — see Completed)
 - [ ] M6: docscan integration + legal_ai harness wiring (planned with Einstein after M5)
-- [ ] M7: WASM build target (Peter-ratified) — browser demo, **Elm UI** (Peter+Einstein decision 2026-06-11): nothing leaves the browser, fast, and no runtime exceptions. Note: in-browser the VM engine advantage WIDENS — wasm has no executable pages, so PCRE2 would run interpreted there; the VM needs no JIT at all.
-
+- [x] M7 COMPLETE: WASM build target (Peter-ratified) — browser demo for **incitez_web** (Elm UI). `packages.<system>.wasm` → `$out/incitez.wasm` (wasm32-freestanding, ReleaseSmall, ~515KB, PCRE2 comptime-excluded). `src/wasm.zig` ABI (alloc/extract/free + selftest 6/6 + version), output byte-identical to CLI `--json` via shared `src/json_out.zig`. `checks.wasm` = node `tests/wasm/smoke.mjs` MFIC gate (zero-import instantiate + full ABI), also in `./test`. Consumer contract: `docs/wasm_abi.md`. incitez_web pinged + unblocked for M2 (2026-06-12 ~11:40 EST). In-browser the VM advantage WIDENS — wasm has no executable pages, so PCRE2 would run interpreted; the VM needs no JIT.
 ## Completed
 - [x] M5 COMPLETE: C FFI (flat structs, arena ownership, resolution indices) + CLI `incitez extract <file|-|@stdin> [--json] [--engine vm|pcre2]` with INCITEZ_ENGINE env, JSON output, spaces-in-paths + exit-code CLI tests (13 assertions); FFI dogfooded by the C CLI and by Zig-side export tests (2026-06-12 ~07:30 EST)
 - [x] M4 COMPLETE: mutation suite (162/162 reporter kills, 0 engine disagreements on mutants), differential gate vs LIVE eyecite (189/215 agree, 26 fenced w/ reasons, 0 unfenced; CI check .#checks.differential green), bm gate fired +186% -> investigated, explained (feature growth), annotated + accepted (2026-06-12 ~06:00 EST)
