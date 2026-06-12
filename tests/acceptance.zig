@@ -11,8 +11,8 @@ const incitez = @import("incitez");
 const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
-const RATCHET_EXPECTED_PASSES: usize = 64;
-const RATCHET_PCRE2_EXPECTED_PASSES: usize = 64;
+const RATCHET_EXPECTED_PASSES: usize = 88;
+const RATCHET_PCRE2_EXPECTED_PASSES: usize = 88;
 const EXPECTED_ENGINE_DIVERGENCES: usize = 0;
 
 const CaseResult = struct {
@@ -36,7 +36,7 @@ fn caseEligible(case: std.json.ObjectMap) bool {
     const cites = case.get("cites").?.array.items;
     for (cites) |cite| {
         const t = jsonStr(cite.object.get("type").?).?;
-        if (!std.mem.eql(u8, t, "FullCaseCitation")) return false;
+        if (!std.mem.eql(u8, t, "FullCaseCitation") and !std.mem.eql(u8, t, "ShortCaseCitation")) return false;
     }
     return true;
 }
@@ -84,6 +84,7 @@ fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.e
         if (!optFieldMatches(md.object.get("extra"), actual.extra)) return false;
         if (!optFieldMatches(md.object.get("plaintiff"), actual.plaintiff)) return false;
         if (!optFieldMatches(md.object.get("defendant"), actual.defendant)) return false;
+        if (!optFieldMatches(md.object.get("antecedent_guess"), actual.antecedent_guess)) return false;
     }
     // year (validated integer; null when absent or out of range)
     if (expected.get("year")) |y| {

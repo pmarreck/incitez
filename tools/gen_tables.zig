@@ -433,7 +433,21 @@ const Compiled = struct {
     pre_min: u32,
     pre_max: u32,
     anchored: bool,
+    short: bool = false,
 };
+
+/// eyecite short_cite_re: turn a full-cite regex into its short form by
+/// prefixing the page group with `at ?(p(.|age)?)? `. Null when the regex
+/// has no page group.
+fn shortify(arena: std.mem.Allocator, expanded: []const u8) !?[]const u8 {
+    const needle = "(?P<page>";
+    if (std.mem.indexOf(u8, expanded, needle) == null) return null;
+    const replacement = "at\\s?(p(\\.|age)?)? (?P<page>";
+    const n = std.mem.replacementSize(u8, expanded, needle, replacement);
+    const out = try arena.alloc(u8, n);
+    _ = std.mem.replace(u8, expanded, needle, replacement, out);
+    return out;
+}
 
 const Insn = union(enum) {
     lit: []const u8,
@@ -716,25 +730,30 @@ pub fn main(init: std.process.Init) !void {
                     }
                     break :blk &.{};
                 };
-                if (templates.len == 0) {
-                    const expanded = try recursiveSubstitute(arena, "$full_cite", &vars);
+                const raw_templates: []const []const u8 = if (templates.len == 0)
+                    &.{"$full_cite"}
+                else blk: {
+                    var list: std.ArrayListUnmanaged([]const u8) = .empty;
+                    for (templates) |t| try list.append(arena, t.string);
+                    break :blk list.items;
+                };
+                for (raw_templates) |t| {
+                    const expanded = try recursiveSubstitute(arena, t, &vars);
                     try expanded_list.append(arena, expanded);
                     try ids.append(arena, try internProgram(
                         arena,
-                        "$full_cite",
-                        &vars,
+                        expanded,
+                        false,
                         &programs,
                         &program_ids,
                         &unanchored_count,
                     ));
-                } else {
-                    for (templates) |t| {
-                        const expanded = try recursiveSubstitute(arena, t.string, &vars);
-                        try expanded_list.append(arena, expanded);
+                    // derived short form (eyecite short_cite_re)
+                    if (try shortify(arena, expanded)) |short_rx| {
                         try ids.append(arena, try internProgram(
                             arena,
-                            t.string,
-                            &vars,
+                            short_rx,
+                            true,
                             &programs,
                             &program_ids,
                             &unanchored_count,
@@ -782,15 +801,29 @@ pub fn main(init: std.process.Init) !void {
             // variations (mirrors eyecite _add_regexes)
             for (entry_eds.items) |ee| {
                 for (ee.expanded) |expanded| {
+                    const short_rx = try shortify(arena, expanded);
                     try internPcre2Extractor(
                         arena,
                         expanded,
                         &.{ee.abbrev},
                         ee.local,
                         false,
+                        false,
                         &pcre2_extractors,
                         &pcre2_seen,
                     );
+                    if (short_rx) |srx| {
+                        try internPcre2Extractor(
+                            arena,
+                            srx,
+                            &.{ee.abbrev},
+                            ee.local,
+                            false,
+                            true,
+                            &pcre2_extractors,
+                            &pcre2_seen,
+                        );
+                    }
                     if (var_keys.get(ee.local)) |vk| {
                         try internPcre2Extractor(
                             arena,
@@ -798,9 +831,22 @@ pub fn main(init: std.process.Init) !void {
                             vk.items,
                             ee.local,
                             true,
+                            false,
                             &pcre2_extractors,
                             &pcre2_seen,
                         );
+                        if (short_rx) |srx| {
+                            try internPcre2Extractor(
+                                arena,
+                                srx,
+                                vk.items,
+                                ee.local,
+                                true,
+                                true,
+                                &pcre2_extractors,
+                                &pcre2_seen,
+                            );
+                        }
                     }
                 }
             }
@@ -850,6 +896,8 @@ pub fn main(init: std.process.Init) !void {
         \\    post: []const Insn,
         \\    pre_min: u32,
         \\    pre_max: u32,
+        \\    /// derived short-cite form ("at page") — eyecite short_cite_re
+        \\    short: bool,
         \\}};
         \\
         \\pub const Edition = struct {{
@@ -886,12 +934,12 @@ pub fn main(init: std.process.Init) !void {
     for (programs.items, 0..) |prog, pi| {
         if (prog.anchored) {
             try w.print(
-                "    .{{ .pre = &p{d}_pre, .post = &p{d}_post, .pre_min = {d}, .pre_max = {d} }},\n",
-                .{ pi, pi, prog.pre_min, prog.pre_max },
+                "    .{{ .pre = &p{d}_pre, .post = &p{d}_post, .pre_min = {d}, .pre_max = {d}, .short = {} }},\n",
+                .{ pi, pi, prog.pre_min, prog.pre_max, prog.short },
             );
         } else {
             // placeholder keeps ids stable; runtime never executes it
-            try w.writeAll("    .{ .pre = &.{}, .post = &.{}, .pre_min = 1, .pre_max = 0 },\n");
+            try w.writeAll("    .{ .pre = &.{}, .post = &.{}, .pre_min = 1, .pre_max = 0, .short = false },\n");
         }
     }
     try w.print(
@@ -962,6 +1010,7 @@ pub fn main(init: std.process.Init) !void {
         \\    regex: [:0]const u8,
         \\    edition: u32,
         \\    is_variant: bool,
+        \\    short: bool,
         \\};
         \\
         \\pub const pcre2_extractors: []const Pcre2Extractor = &.{
@@ -970,7 +1019,10 @@ pub fn main(init: std.process.Init) !void {
     for (pcre2_extractors.items) |ex| {
         try w.writeAll("    .{ .regex = ");
         try writeZigString(w, ex.regex);
-        try w.print(", .edition = {d}, .is_variant = {} }},\n", .{ ex.edition, ex.is_variant });
+        try w.print(
+            ", .edition = {d}, .is_variant = {}, .short = {} }},\n",
+            .{ ex.edition, ex.is_variant, ex.short },
+        );
     }
     try w.writeAll("};\n");
 
@@ -981,15 +1033,15 @@ pub fn main(init: std.process.Init) !void {
 
 fn internProgram(
     arena: std.mem.Allocator,
-    template: []const u8,
-    vars: *const std.StringArrayHashMapUnmanaged([]const u8),
+    expanded: []const u8,
+    short: bool,
     programs: *std.ArrayListUnmanaged(Compiled),
     program_ids: *std.StringArrayHashMapUnmanaged(u32),
     unanchored_count: *usize,
 ) !u32 {
-    const expanded = try recursiveSubstitute(arena, template, vars);
     if (program_ids.get(expanded)) |id| return id;
-    const compiled = try compileRegex(arena, expanded);
+    var compiled = try compileRegex(arena, expanded);
+    compiled.short = short;
     if (!compiled.anchored) unanchored_count.* += 1;
     const id: u32 = @intCast(programs.items.len);
     try programs.append(arena, compiled);
@@ -1016,6 +1068,7 @@ const Pcre2Extractor = struct {
     regex: []const u8,
     edition: u32,
     is_variant: bool,
+    short: bool,
 };
 
 /// eyecite-literal extractor regex: $edition replaced by an alternation of
@@ -1029,6 +1082,7 @@ fn internPcre2Extractor(
     names: []const []const u8,
     edition: u32,
     is_variant: bool,
+    short: bool,
     extractors: *std.ArrayListUnmanaged(Pcre2Extractor),
     seen: *std.StringArrayHashMapUnmanaged(void),
 ) !void {
@@ -1059,6 +1113,7 @@ fn internPcre2Extractor(
         .regex = wrapped,
         .edition = edition,
         .is_variant = is_variant,
+        .short = short,
     });
 }
 

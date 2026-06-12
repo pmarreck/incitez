@@ -12,6 +12,7 @@ const reporters = @import("reporters.zig");
 pub const CaseName = struct {
     plaintiff: ?[]u8 = null, // allocated; null when absent/empty
     defendant: ?[]u8 = null, // allocated
+    antecedent: ?[]u8 = null, // allocated; short-form citations only
     year_text: ?[]const u8 = null, // pre-citation "(YYYY)" year, slice
     full_span_start: ?u32 = null,
 };
@@ -26,7 +27,7 @@ const STOP_WORDS = [_][]const u8{
     "see",    "granted", "dismissed", "Cf",
 };
 
-const ElementKind = enum { word, space, citation, placeholder, stop_word, supra };
+const ElementKind = enum { word, space, citation, placeholder, stop_word, supra, paragraph };
 
 const Element = struct {
     kind: ElementKind,
@@ -48,6 +49,7 @@ const Walker = struct {
             if (s.end == pos) return .{ .kind = s.kind, .start = s.start, .end = pos };
         }
         if (w.text[pos - 1] == ' ') return .{ .kind = .space, .start = pos - 1, .end = pos };
+        if (w.text[pos - 1] == '\n') return .{ .kind = .paragraph, .start = pos - 1, .end = pos };
         var start = pos;
         while (start > 0 and w.text[start - 1] != ' ' and w.text[start - 1] != '\n') {
             var crosses = false;
@@ -191,6 +193,7 @@ pub fn findCaseName(
     text: []const u8,
     self_span: CiteSpan,
     other_spans: []const CiteSpan,
+    short: bool,
 ) !CaseName {
     var tokens_buf: [48]TokenSpan = undefined;
     var n_tokens: usize = 0;
@@ -337,16 +340,18 @@ pub fn findCaseName(
             plaintiff_part = candidate[0..sp.before_end];
             defendant_part = candidate[sp.after_start..];
         }
-        const plaintiff_trimmed = std.mem.trim(u8, plaintiff_part, " \t\r\n,(");
-        const no_lower = try removeLowercaseWords(alloc, plaintiff_trimmed);
-        defer alloc.free(no_lower);
-        const p = try stripStopWords(alloc, no_lower);
-        if (p.len > 0) result.plaintiff = p else alloc.free(p);
+        if (!short) {
+            const plaintiff_trimmed = std.mem.trim(u8, plaintiff_part, " \t\r\n,(");
+            const no_lower = try removeLowercaseWords(alloc, plaintiff_trimmed);
+            defer alloc.free(no_lower);
+            const p = try stripStopWords(alloc, no_lower);
+            if (p.len > 0) result.plaintiff = p else alloc.free(p);
+        }
     }
 
     const d = try stripStopWords(alloc, defendant_part);
     if (d.len > 0) {
-        result.defendant = d;
+        if (short) result.antecedent = d else result.defendant = d;
         result.full_span_start = @intCast(start_byte.?);
     } else {
         alloc.free(d);
@@ -567,4 +572,34 @@ fn subStopWords(alloc: std.mem.Allocator, s: []const u8, case_insensitive: bool)
 fn matchWord(a: []const u8, b: []const u8, case_insensitive: bool) bool {
     if (case_insensitive) return std.ascii.eqlIgnoreCase(a, b);
     return std.mem.eql(u8, a, b);
+}
+
+/// match_on_tokens(..., forward=False, strings_only=True) window: the text
+/// region before the citation bounded by the nearest token (citation,
+/// placeholder, stop word, supra, paragraph break) or MAX_MATCH_CHARS.
+pub fn preCiteWindowStart(
+    text: []const u8,
+    self_span: CiteSpan,
+    other_spans: []const CiteSpan,
+) usize {
+    var tokens_buf: [48]TokenSpan = undefined;
+    var n_tokens: usize = 0;
+    for (other_spans) |s| {
+        if (n_tokens == tokens_buf.len) break;
+        tokens_buf[n_tokens] = .{ .start = s.start, .end = s.end, .kind = .citation };
+        n_tokens += 1;
+    }
+    n_tokens += scanPlaceholders(text, self_span.start, tokens_buf[n_tokens..]);
+    const w: Walker = .{ .text = text, .tokens = tokens_buf[0..n_tokens] };
+
+    const floor = self_span.start -| 300;
+    var pos: usize = self_span.start;
+    while (pos > floor) {
+        const elem = w.prev(pos) orelse break;
+        switch (elem.kind) {
+            .word, .space => pos = elem.start,
+            else => return elem.end,
+        }
+    }
+    return @max(pos, floor);
 }

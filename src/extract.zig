@@ -60,6 +60,8 @@ pub const Citation = struct {
     /// via freeCitations, not allocator.free on the slice alone.
     plaintiff: ?[]const u8 = null,
     defendant: ?[]const u8 = null,
+    /// Short-form antecedent ("Foo" in "Foo, 1 U.S., at 5"). ALLOCATED.
+    antecedent_guess: ?[]const u8 = null,
 
     /// Canonical reporter spelling (eyecite's corrected_reporter).
     pub fn correctedReporter(self: Citation) []const u8 {
@@ -107,6 +109,7 @@ pub fn freeCitations(allocator: std.mem.Allocator, cites: []Citation) void {
     for (cites) |c| {
         if (c.plaintiff) |p| allocator.free(p);
         if (c.defendant) |d| allocator.free(d);
+        if (c.antecedent_guess) |a| allocator.free(a);
     }
     allocator.free(cites);
 }
@@ -139,7 +142,7 @@ fn pcre2Scan(
     const cands = try pcre2_engine.scan(allocator, text);
     defer allocator.free(cands);
     for (cands) |cand| {
-        try cites.append(allocator, makeCitation(
+        var c = makeCitation(
             text,
             cand.start,
             cand.end,
@@ -148,7 +151,9 @@ fn pcre2Scan(
             cand.page,
             cand.edition,
             cand.is_variant,
-        ));
+        );
+        if (cand.short) c.kind = .short_case;
+        try cites.append(allocator, c);
     }
 }
 
@@ -162,16 +167,23 @@ fn finishCitation(
     self_idx: usize,
     c: *Citation,
 ) !void {
-    const post = parsePostCitation(text, c.span_end);
-    c.year_text = post.year_text;
-    c.year = post.year;
-    c.court_paren = post.court;
-    c.pin_cite = post.pin_cite;
-    c.parenthetical = post.parenthetical;
-    c.extra = post.extra;
-    if (post.court) |paren_court| {
-        c.court = resolveCourtByParen(paren_court);
+    switch (c.kind) {
+        .full_case => {
+            const post = parsePostCitation(text, c.span_end);
+            c.year_text = post.year_text;
+            c.year = post.year;
+            c.court_paren = post.court;
+            c.pin_cite = post.pin_cite;
+            c.parenthetical = post.parenthetical;
+            c.extra = post.extra;
+            if (post.court) |paren_court| {
+                c.court = resolveCourtByParen(paren_court);
+            }
+        },
+        .short_case => finishShortCitation(text, c),
+        else => {},
     }
+
     // eyecite guess_court: SCOTUS reporters imply the court
     if (c.court == null and tables.editions[c.edition].is_scotus) {
         c.court = "scotus";
@@ -191,14 +203,96 @@ fn finishCitation(
         text,
         .{ .start = c.span_start, .end = c.span_end },
         spans_buf[0..n_spans],
+        c.kind == .short_case,
     );
     c.plaintiff = names.plaintiff;
     c.defendant = names.defendant;
+    c.antecedent_guess = names.antecedent;
     if (c.year == null) {
         if (names.year_text) |yt| {
             c.year_text = yt;
             c.year = std.fmt.parseInt(u16, yt, 10) catch unreachable;
         }
+    }
+
+    // add_pre_citation: party-less full cites get an antecedent guess from
+    // the text immediately before ("Bar, 1 U.S. 1" → "Bar")
+    if (c.kind == .full_case and c.plaintiff == null and c.defendant == null) {
+        try preCiteAntecedent(allocator, text, c, spans_buf[0..n_spans]);
+    }
+}
+
+/// eyecite add_pre_citation / PRE_FULL_CITATION_REGEX:
+/// `(?P<antecedent>[A-Z][a-z\-.]+) ?,? PIN_CITE? ,? ?` matched backward
+/// (anchored at the citation start) within a strings-only token window.
+/// The pin assignment intentionally overwrites (faithful to upstream).
+fn preCiteAntecedent(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    c: *Citation,
+    other_spans: []const case_name.CiteSpan,
+) !void {
+    const wstart = case_name.preCiteWindowStart(
+        text,
+        .{ .start = c.span_start, .end = c.span_end },
+        other_spans,
+    );
+    const win = text[0..c.span_start];
+    var p = wstart;
+    while (p < win.len) : (p += 1) {
+        if (win[p] < 'A' or win[p] > 'Z') continue;
+        var q = p + 1;
+        while (q < win.len and ((win[q] >= 'a' and win[q] <= 'z') or win[q] == '-' or win[q] == '.')) q += 1;
+        if (q == p + 1) continue; // [a-z\-.]+ requires at least one
+        var r = q;
+        if (r < win.len and win[r] == ' ') r += 1;
+        if (r < win.len and win[r] == ',') r += 1;
+        // try with pin, then without (regex backtracking on PIN_CITE?)
+        var attempt: usize = 0;
+        while (attempt < 2) : (attempt += 1) {
+            var r2 = r;
+            var pin: ?[]const u8 = null;
+            if (attempt == 0) {
+                if (parsePinCite(win, r)) |pc| {
+                    pin = pc.cleaned;
+                    r2 = pc.end;
+                } else continue;
+            }
+            var r3 = r2;
+            if (r3 < win.len and win[r3] == ',') r3 += 1;
+            if (r3 < win.len and win[r3] == ' ') r3 += 1;
+            if (r3 == win.len) {
+                c.antecedent_guess = try allocator.dupe(u8, win[p..q]);
+                c.pin_cite = pin;
+                return;
+            }
+        }
+    }
+}
+
+/// eyecite _extract_shortform_citation: the pin cite is re-derived with the
+/// citation's own PAGE as prefix (so "at 20-25" yields pin "20-25" and the
+/// span extends over the pin tail), followed by an optional parenthetical.
+/// No year/court paren for shorts.
+fn finishShortCitation(text: []const u8, c: *Citation) void {
+    const page = c.page orelse {
+        const nl = std.mem.indexOfScalarPos(u8, text, c.span_end, '\n') orelse text.len;
+        const win = text[0..@min(nl, c.span_end + MAX_MATCH_CHARS)];
+        c.parenthetical = parseParenthetical(win, c.span_end);
+        return;
+    };
+    const page_start = @intFromPtr(page.ptr) - @intFromPtr(text.ptr);
+    const nl = std.mem.indexOfScalarPos(u8, text, page_start, '\n') orelse text.len;
+    const win = text[0..@min(nl, page_start + MAX_MATCH_CHARS)];
+    if (parsePinCite(win, page_start)) |pin| {
+        c.pin_cite = pin.cleaned;
+        // span_end = token.end + len(rstrip(pin, ", ")) - len(page)
+        const stripped = std.mem.trimEnd(u8, win[page_start..pin.end], ", ");
+        c.span_end = @intCast(page_start + stripped.len);
+        c.parenthetical = parseParenthetical(win, pin.end);
+    } else {
+        // eyecite quirk: pinless shorts shrink span_end by the page length
+        c.span_end -= @intCast(page.len);
     }
 }
 
@@ -616,6 +710,7 @@ fn bestMatchAt(text: []const u8, i: usize) ?Citation {
                             entry.edition,
                             entry.is_variant,
                         );
+                        if (prog.short) best.?.kind = .short_case;
                     }
                 }
             }
@@ -1140,6 +1235,59 @@ test "case name: pre-citation year still applies with case name" {
     defer freeCitations(testing.allocator, cites);
     try testing.expectEqual(@as(usize, 1), cites.len);
     try testing.expectEqual(@as(?u16, 2009), cites[0].year);
+}
+
+test "short cite: bare '1 So.2d at 1'" {
+    const cites = try extract(testing.allocator, "1 So.2d at 1");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    const c = cites[0];
+    try testing.expectEqual(Kind.short_case, c.kind);
+    try testing.expectEqual(@as(u32, 0), c.span_start);
+    try testing.expectEqual(@as(u32, 12), c.span_end);
+    try testing.expectEqualStrings("1", c.volume.?);
+    try testing.expectEqualStrings("So.2d", c.reporter);
+    try testing.expectEqualStrings("1", c.page.?);
+    try testing.expectEqualStrings("1", c.pin_cite.?);
+}
+
+test "short cite: antecedent guess and pin range extends span" {
+    const cites = try extract(testing.allocator, "before Foo, 1 U. S., at 20-25");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    const c = cites[0];
+    try testing.expectEqual(Kind.short_case, c.kind);
+    try testing.expectEqual(@as(u32, 12), c.span_start);
+    try testing.expectEqual(@as(u32, 29), c.span_end);
+    try testing.expectEqualStrings("20", c.page.?);
+    try testing.expectEqualStrings("20-25", c.pin_cite.?);
+    try testing.expectEqualStrings("Foo", c.antecedent_guess.?);
+}
+
+test "short cite: 'at p. 651' label form" {
+    const cites = try extract(testing.allocator, "174 Cal.App.2d at p. 651");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(Kind.short_case, cites[0].kind);
+    try testing.expectEqual(@as(u32, 24), cites[0].span_end);
+    try testing.expectEqualStrings("651", cites[0].page.?);
+    try testing.expectEqualStrings("651", cites[0].pin_cite.?);
+}
+
+test "short cite: terminal quote blocks antecedent" {
+    const cites = try extract(testing.allocator, "before Foo,\xe2\x80\x9d 1 U. S., at 2");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].antecedent_guess);
+}
+
+test "short cite gets scotus guess and no year" {
+    const cites = try extract(testing.allocator, "before Foo, 1 U. S., at 2 (overruling xyz)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("scotus", cites[0].court.?);
+    try testing.expectEqual(@as(?u16, null), cites[0].year);
+    try testing.expectEqualStrings("overruling xyz", cites[0].parenthetical.?);
 }
 
 test "pcre2 engine agrees with vm engine on representative citations" {

@@ -52,6 +52,7 @@ const Extractor = struct {
     page: c_int,
     edition: u32,
     is_variant: bool,
+    short: bool,
 };
 
 // One-shot lazy init (std.once is gone in 0.16; 3-state atomic instead).
@@ -84,6 +85,7 @@ fn ensureInit() void {
             .page = pcre2_substring_number_from_name_8(code, "page"),
             .edition = ex.edition,
             .is_variant = ex.is_variant,
+            .short = ex.short,
         };
     }
 }
@@ -96,6 +98,7 @@ pub const Candidate = struct {
     page: ?[]const u8,
     edition: u32,
     is_variant: bool,
+    short: bool,
 };
 
 /// Runs every extractor over the text (finditer semantics: scan resumes at
@@ -127,6 +130,7 @@ pub fn scan(allocator: std.mem.Allocator, text: []const u8) ![]Candidate {
                     .page = groupSlice(text, ov, ex.page),
                     .edition = ex.edition,
                     .is_variant = ex.is_variant,
+                    .short = ex.short,
                 });
             }
             offset = next_offset;
