@@ -22,10 +22,6 @@
       "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
     },
     {
-      "text": "Blah § 2.",
-      "reason": "UnknownCitation (section token) extraction not yet ported"
-    },
-    {
       "text": "Fla. Stat. § 120.68 (2007)",
       "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
     },
@@ -48,10 +44,6 @@
     {
       "text": "Kan. Stat. Ann. § 21-3516(a)(2) (repealed) (ignore this)",
       "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "lorem ipsum see §99 of the U.S. code.",
-      "reason": "UnknownCitation (section token) extraction not yet ported"
     },
     {
       "text": "Mass. Gen. Laws ch. 1, § 2",

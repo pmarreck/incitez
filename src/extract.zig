@@ -287,6 +287,12 @@ fn tokenScan(
                 continue;
             }
         }
+        // SECTION_REGEX (\S*[section-sign]\S*): any word containing a
+        // section sign becomes an UnknownCitation token (SectionToken)
+        if (std.mem.indexOf(u8, word, "\xc2\xa7") != null) {
+            try cites.append(allocator, tokenCitation(.unknown, i, we, text));
+            continue;
+        }
         // SUPRA_REGEX: punct* supra punct* spanning the whole word
         var cs: usize = 0;
         while (cs < word.len and !std.ascii.isAlphanumeric(word[cs])) cs += 1;
@@ -350,6 +356,7 @@ fn finishCitation(
         n_spans += 1;
     }
 
+    if (c.kind == .unknown) return; // SectionTokens carry no metadata
     if (c.kind == .id or c.kind == .supra) {
         finishToken(text, c, all);
         if (c.kind == .supra) {
@@ -1738,4 +1745,13 @@ test "journal citation: no case names, no court" {
     try testing.expectEqual(@as(?[]const u8, null), cites[0].plaintiff);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].defendant);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].court);
+}
+
+test "section token becomes an unknown citation" {
+    const cites = try extract(testing.allocator, "lorem ipsum see \xc2\xa799 of the U.S. code.");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(Kind.unknown, cites[0].kind);
+    try testing.expectEqual(@as(u32, 16), cites[0].span_start);
+    try testing.expectEqual(@as(u32, 20), cites[0].span_end);
 }

@@ -93,7 +93,7 @@ export fn incitez_extract(
         return null;
     };
     for (cites, assignment, out) |c, res, *o| {
-        const is_token = c.kind == .supra or c.kind == .id;
+        const is_token = c.kind == .supra or c.kind == .id or c.kind == .unknown;
         o.* = .{
             .kind = kindName(c.kind),
             .span_start = c.span_start,
