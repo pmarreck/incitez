@@ -9,18 +9,18 @@ settled — the VM-WASM argument (no JIT needed in-browser) carried it.
 Priority: correctness/parity slices first (metadata, short forms), THEN the
 anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
 
-## HELD at milestone boundary (Einstein policy change 2026-06-12 ~07:40 EST)
-Autonomous "work the list" order RESCINDED — fleet spend discipline: agents
-stop at milestone boundaries, Peter opts in per slice. NOT started: references
-slice, optimization pass. Repo clean + pushed at `43067753` (laws).
+## Status (2026-06-12) — full parity achieved
+Peter opted into: docs (VM architecture.md), seam characterization test,
+references, optimization pass — executing in that order. Docs + seam +
+references DONE. Optimization pass IN PROGRESS (profile-first).
 
 ## Status snapshot (2026-06-12 ~07:40 EST)
 - M1–M5 complete. Fence-closing campaign: journals, sections, laws done.
-- Find corpus: **130/130** both engines. Resolution: **23/23** (full ResolveTest parity). Cross-engine: 0 divergences. Mutation: 179 texts / 176 reporter-kills. Differential gate: **209/215 agree, 6 fenced, 0 unfenced**.
-- The 6 remaining fences are ALL the single ReferenceCitation type — the last slice.
+- Find corpus: **130/130** both engines. Resolution: **23/23** (full ResolveTest parity). Cross-engine: 0 divergences. Mutation: 179 texts / 176 reporter-kills. Differential gate: **215/215 agree, 0 fenced, 0 unfenced** — 100% agreement with the live eyecite oracle across ALL citation types.
+- ALL citation types ported: case/short/supra/id/journal/law/section/reference. Find corpus 136/136 both engines, resolution 23/23.
 
 ## Next increment (awaiting Peter's opt-in)
-- [ ] References (ReferenceCitation) — closes the final 6 fences. Design mapped: per full CASE cite, build `\b(plaintiff|defendant|resolved_case_name_short|resolved_case_name)\s+PIN_CITE` from valid name fields (is_valid_name), finditer over text after the cite; filter_citations already drops ref-vs-short overlaps. Needs a second extraction phase (refs depend on already-found full cites' metadata).
+- [x] References (ReferenceCitation) DONE (2026-06-12) — last 6 fences healed; **FULL eyecite type parity**, differential ledger EMPTY (215/215 agree, 0 fenced, 0 unfenced).
 - [ ] Post-parity optimization pass (Aho-Corasick anchor scan, case-name walk, allocation reduction) under the live two-sided bm gate. Current vm baseline ~1.29s/1.7MB citation-dense.
 - [ ] LLM-as-case-name-adjudicator idea (M4 differential referee; NOT extraction path).
 
