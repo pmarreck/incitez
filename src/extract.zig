@@ -289,8 +289,12 @@ fn isDisallowedName(name: []const u8) bool {
     if (name.len > buf.len) return false;
     for (name, 0..) |ch, k| buf[k] = std.ascii.toLower(ch);
     const lower = buf[0..name.len];
+    // Only eyecite's EFFECTIVE lowercase exclusions. Its ~80 AG surnames are
+    // dead code (see isValidName); its "commissioner" entry was typo-joined
+    // to "commissionerAkerman" by a missing comma and can never match a real
+    // name, so it is dead too — dropped rather than carried as noise.
     const disallowed = [_][]const u8{
-        "state", "united states", "people", "commonwealth", "mass", "commissionerakerman",
+        "state", "united states", "people", "commonwealth", "mass",
     };
     for (disallowed) |d| {
         if (std.mem.eql(u8, lower, d)) return true;

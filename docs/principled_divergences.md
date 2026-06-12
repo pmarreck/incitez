@@ -72,9 +72,9 @@ the AG surnames — but as a *reasoned* choice, not blind replication:
 **Verdict: here the obvious bug accidentally produces the more-correct
 output (extract the reference); eyecite's intent is the worse behavior.** So
 being more correct means *matching* eyecite's effective output, not diverging
-from it. We implement only the working lowercase set (plus the inert
-`commissionerakerman` concatenation artifact, which can never match a real
-name and is harmless to include). See `isDisallowedName` in `src/extract.zig`.
+from it. We implement only the working lowercase set (the inert
+`commissionerakerman` concatenation artifact can never match a real
+name, so it is dropped rather than carried as noise). See `isDisallowedName` in `src/extract.zig`.
 
 ---
 
