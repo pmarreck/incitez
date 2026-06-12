@@ -22,6 +22,17 @@ pub fn resolve(allocator: std.mem.Allocator, cites: []const Citation) ![]?u32 {
 
     var resolved_fulls: std.ArrayListUnmanaged(u32) = .empty;
     defer resolved_fulls.deinit(allocator);
+    // O(1) cluster lookup: resource key -> the anchoring full's resolution.
+    // Was a linear scan of every prior full per full (O(fulls²), quadratic on
+    // citation-dense input). Key strings are allocator-owned. complexity: O(n)
+    var resource_map: std.StringHashMapUnmanaged(u32) = .empty;
+    defer {
+        // free the allocPrint'd keys the map owns (found-existing keys are
+        // freed inline); harmless no-op under an arena, required under GPA.
+        var kit = resource_map.keyIterator();
+        while (kit.next()) |k| allocator.free(k.*);
+        resource_map.deinit(allocator);
+    }
 
     var last_resolution: ?u32 = null;
     for (cites, 0..) |c, i| {
@@ -29,10 +40,16 @@ pub fn resolve(allocator: std.mem.Allocator, cites: []const Citation) ![]?u32 {
         switch (c.kind) {
             .full_case, .full_journal, .full_law => {
                 res = @intCast(i);
-                for (resolved_fulls.items) |fi| {
-                    if (sameResourceKey(cites[fi], c)) {
-                        res = assignment[fi];
-                        break;
+                // page == null never shares a resource key (placeholder cites
+                // get identity hashes "for safety") — so it anchors its own.
+                if (c.page != null) {
+                    const key = try keyFor(allocator, c);
+                    const gop = try resource_map.getOrPut(allocator, key);
+                    if (gop.found_existing) {
+                        res = gop.value_ptr.*;
+                        allocator.free(key);
+                    } else {
+                        gop.value_ptr.* = @intCast(i);
                     }
                 }
                 try resolved_fulls.append(allocator, @intCast(i));
@@ -59,6 +76,19 @@ fn sameResourceKey(a: Citation, b: Citation) bool {
         std.mem.eql(u8, a.page.?, b.page.?);
 }
 
+/// Composite resource key over sameResourceKey's fields (kind, volume,
+/// corrected reporter, page) for O(1) cluster lookup. \x00 separates fields;
+/// null volume becomes \x01 (neither appears in numeric volumes / citation
+/// text, so keys can't collide). Only called when page != null; caller owns
+/// the returned bytes.
+fn keyFor(allocator: std.mem.Allocator, c: Citation) ![]u8 {
+    return std.fmt.allocPrint(allocator, "{d}\x00{s}\x00{s}\x00{s}", .{
+        @intFromEnum(c.kind),
+        c.volume orelse "\x01",
+        c.correctedReporter(),
+        c.page.?,
+    });
+}
 fn optEq(a: ?[]const u8, b: ?[]const u8) bool {
     if (a == null and b == null) return true;
     if (a == null or b == null) return false;

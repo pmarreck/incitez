@@ -114,7 +114,7 @@ pub fn extractWithEngine(
     mergeCites(&cites);
     for (cites.items, 0..) |*c, i| try finishCitation(allocator, text, cites.items, i, c);
     try referenceScan(allocator, text, &cites);
-    filterCitations(allocator, text, &cites);
+    try filterCitations(allocator, text, &cites);
     return cites.toOwnedSlice(allocator);
 }
 
@@ -249,7 +249,7 @@ pub fn benchPhases(io: std.Io, allocator: std.mem.Allocator, text: []const u8, i
             work.clearRetainingCapacity();
             work.appendSliceAssumeCapacity(ref_snap);
             const s = std.Io.Timestamp.now(io, .awake);
-            filterCitations(allocator, text, &work);
+            try filterCitations(allocator, text, &work);
             const e = std.Io.Timestamp.now(io, .awake);
             acc += @intCast(e.nanoseconds - s.nanoseconds);
         }
@@ -311,18 +311,51 @@ fn pcre2Scan(
     } else unreachable;
 }
 
+const RefHit = struct { pos: u32, end: u32, pin: ?[]const u8 };
+
+/// Every position where `name` occurs at a word boundary immediately followed
+/// by whitespace + a valid pin cite — i.e. every place `name` could anchor a
+/// pincited reference. Scanned ONCE per unique name (memchr-speed indexOf) and
+/// shared across all citations bearing it. Returned slice is allocator-owned.
+fn buildRefHits(allocator: std.mem.Allocator, text: []const u8, name: []const u8) ![]const RefHit {
+    var hits: std.ArrayListUnmanaged(RefHit) = .empty;
+    var pos: usize = 0;
+    while (std.mem.indexOfPos(u8, text, pos, name)) |occ| {
+        pos = occ + 1;
+        if (occ != 0 and isWordChar(text[occ - 1])) continue; // \b before name
+        var q = occ + name.len;
+        if (q >= text.len or !std.ascii.isWhitespace(text[q])) continue; // \s+
+        while (q < text.len and std.ascii.isWhitespace(text[q])) q += 1;
+        const pin = parsePinCite(text, q) orelse continue;
+        try hits.append(allocator, .{ .pos = @intCast(occ), .end = @intCast(pin.end), .pin = pin.cleaned });
+    }
+    return hits.toOwnedSlice(allocator);
+}
+
 /// eyecite extract_pincited_reference_citations: for each FullCaseCitation,
-/// scan the text AFTER it for `\b<party name>\s+PIN_CITE`, where the party
-/// name is a valid plaintiff/defendant of that citation. Emits a
-/// ReferenceCitation per match (the name's role — plaintiff or defendant —
-/// is recorded). References depend on already-computed case-name metadata,
-/// so this runs after finishCitation.
+/// emit a ReferenceCitation wherever a valid party name recurs ahead of it
+/// followed by a pin cite. SURPASS over eyecite's (and our old) per-citation
+/// full-text rescan: each unique name's valid-hit positions are scanned ONCE
+/// and cached, so cost is O(unique_names × text) instead of
+/// O(full_case_cites × text) — no longer quadratic on repetition-heavy input
+/// (treatises, the perf corpus). Output is byte-identical to referenceScanRef
+/// (guarded by the equivalence test below).
 fn referenceScan(
     allocator: std.mem.Allocator,
     text: []const u8,
     cites: *std.ArrayListUnmanaged(Citation),
 ) !void {
     const original_len = cites.items.len;
+    if (original_len == 0) return;
+    var cache: std.StringHashMapUnmanaged([]const RefHit) = .empty;
+    defer {
+        // free the per-name hit slices the map owns (keys are borrowed name
+        // slices, not freed here); no-op cost under an arena, required under GPA.
+        var vit = cache.valueIterator();
+        while (vit.next()) |v| allocator.free(v.*);
+        cache.deinit(allocator);
+    }
+
     var i: usize = 0;
     while (i < original_len) : (i += 1) {
         const c = cites.items[i];
@@ -345,16 +378,91 @@ fn referenceScan(
         }
         if (n_names == 0) continue;
 
+        // Fetch/build each name's cached valid-hit list (dedup across citations).
+        var lists: [2][]const RefHit = .{ &.{}, &.{} };
+        for (names[0..n_names], 0..) |nr, k| {
+            const gop = try cache.getOrPut(allocator, nr.name);
+            if (!gop.found_existing) gop.value_ptr.* = try buildRefHits(allocator, text, nr.name);
+            lists[k] = gop.value_ptr.*;
+        }
+
+        // Greedy left-to-right merge of the names' hits at positions ≥ span_end,
+        // plaintiff-priority on a tie, jumping past each emitted reference —
+        // byte-identical to the old per-position forward scan.
+        var cursor: u32 = c.span_end;
+        var idx: [2]usize = .{ 0, 0 };
+        while (true) {
+            var best_k: ?usize = null;
+            var best_pos: u32 = std.math.maxInt(u32);
+            for (0..n_names) |k| {
+                while (idx[k] < lists[k].len and lists[k][idx[k]].pos < cursor) idx[k] += 1;
+                if (idx[k] < lists[k].len and lists[k][idx[k]].pos < best_pos) {
+                    best_pos = lists[k][idx[k]].pos;
+                    best_k = k;
+                }
+            }
+            const k = best_k orelse break;
+            const hit = lists[k][idx[k]];
+            const nr = names[k];
+            try cites.append(allocator, .{
+                .kind = .reference,
+                .span_start = hit.pos,
+                .span_end = hit.end,
+                .volume = null,
+                .reporter = text[hit.pos..hit.end],
+                .page = null,
+                .edition = 0,
+                .is_variant = false,
+                .pin_cite = hit.pin,
+                .plaintiff = if (nr.is_plaintiff) try allocator.dupe(u8, nr.name) else null,
+                .defendant = if (nr.is_plaintiff) null else try allocator.dupe(u8, nr.name),
+                .full_span_start = hit.pos,
+                .full_span_end = hit.end,
+            });
+            cursor = hit.end;
+        }
+    }
+}
+
+/// Reference implementation of referenceScan: the original per-citation
+/// full-text scan (O(cites × text)). Kept ONLY as the independent oracle for
+/// the equivalence test — the cached referenceScan must match it
+/// append-for-append.
+fn referenceScanRef(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    cites: *std.ArrayListUnmanaged(Citation),
+) !void {
+    const original_len = cites.items.len;
+    var i: usize = 0;
+    while (i < original_len) : (i += 1) {
+        const c = cites.items[i];
+        if (c.kind != .full_case) continue;
+        const NameRole = struct { name: []const u8, is_plaintiff: bool };
+        var names: [2]NameRole = undefined;
+        var n_names: usize = 0;
+        if (c.plaintiff) |p| {
+            if (isValidName(p)) {
+                names[n_names] = .{ .name = p, .is_plaintiff = true };
+                n_names += 1;
+            }
+        }
+        if (c.defendant) |d| {
+            if (isValidName(d)) {
+                names[n_names] = .{ .name = d, .is_plaintiff = false };
+                n_names += 1;
+            }
+        }
+        if (n_names == 0) continue;
+
         var pos: usize = c.span_end;
         while (pos < text.len) {
-            // \b before the name: previous char must be a non-word char
             const at_boundary = pos == 0 or !isWordChar(text[pos - 1]);
             if (at_boundary) {
                 var matched = false;
                 for (names[0..n_names]) |nr| {
                     if (!std.mem.startsWith(u8, text[pos..], nr.name)) continue;
                     var q = pos + nr.name.len;
-                    // \s+ (at least one whitespace) after the name
                     if (q >= text.len or !std.ascii.isWhitespace(text[q])) continue;
                     while (q < text.len and std.ascii.isWhitespace(text[q])) q += 1;
                     const pin = parsePinCite(text, q) orelse continue;
@@ -381,6 +489,42 @@ fn referenceScan(
             }
             pos += 1;
         }
+    }
+}
+
+test "referenceScan (cached) matches the per-citation oracle on repeated names" {
+    // Arena: the surpass and the oracle each dupe reference name strings; we
+    // only care about output equality here, not leak-freedom (tested elsewhere).
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // Repeated party names with later pin-cite references — the path the cache
+    // changes (eyecite-distinct-corpus tests never exercise name recurrence).
+    const text =
+        "Smith v. Jones, 1 U.S. 1 (1990). Smith at 5; Jones at 9. " ++
+        "Smith v. Jones, 2 U.S. 2 (1991). Smith at 7. Jones at 3. " ++
+        "Brown v. Board, 3 U.S. 3 (1992). Brown at 11. Smith at 99. Board at 2.";
+    var base: std.ArrayListUnmanaged(Citation) = .empty;
+    try vmScan(a, text, &base);
+    try tokenScan(a, text, &base);
+    mergeCites(&base);
+    for (base.items, 0..) |*c, i| try finishCitation(a, text, base.items, i, c);
+    const base_len = base.items.len;
+
+    var la = try base.clone(a);
+    var lb = try base.clone(a);
+    try referenceScanRef(a, text, &la);
+    try referenceScan(a, text, &lb);
+
+    try std.testing.expectEqual(la.items.len, lb.items.len);
+    // there must actually BE references (otherwise the test is vacuous)
+    try std.testing.expect(la.items.len > base_len);
+    for (la.items[base_len..], lb.items[base_len..]) |ra, rb| {
+        try std.testing.expectEqual(ra.span_start, rb.span_start);
+        try std.testing.expectEqual(ra.span_end, rb.span_end);
+        try std.testing.expectEqualStrings(ra.pin_cite orelse "", rb.pin_cite orelse "");
+        try std.testing.expectEqualStrings(ra.plaintiff orelse "", rb.plaintiff orelse "");
+        try std.testing.expectEqualStrings(ra.defendant orelse "", rb.defendant orelse "");
     }
 }
 
@@ -435,24 +579,26 @@ fn filterCitations(
     allocator: std.mem.Allocator,
     text: []const u8,
     cites: *std.ArrayListUnmanaged(Citation),
-) void {
+) !void {
     const items = cites.items;
     if (items.len == 0) return;
-    // dedupe by exact span, last occurrence wins (Python dict semantics)
+    // dedupe by exact span, last occurrence wins (Python dict semantics).
+    // O(n) via a span -> last-index map; the old pairwise scan was O(n²) and
+    // dominated runtime on citation-dense input. complexity: O(n)
+    var last_idx: std.AutoHashMapUnmanaged(u64, usize) = .empty;
+    defer last_idx.deinit(allocator);
+    for (items, 0..) |c, i| {
+        const key = (@as(u64, c.span_start) << 32) | @as(u64, c.span_end);
+        try last_idx.put(allocator, key, i); // last write wins → max index per span
+    }
     var n: usize = 0;
     for (items, 0..) |c, i| {
-        var dup_later = false;
-        for (items[i + 1 ..]) |later| {
-            if (later.span_start == c.span_start and later.span_end == c.span_end) {
-                dup_later = true;
-                break;
-            }
-        }
-        if (dup_later) {
-            freeCitationStrings(allocator, c);
-        } else {
+        const key = (@as(u64, c.span_start) << 32) | @as(u64, c.span_end);
+        if (last_idx.get(key).? == i) {
             items[n] = c;
             n += 1;
+        } else {
+            freeCitationStrings(allocator, c);
         }
     }
     cites.shrinkRetainingCapacity(n);
