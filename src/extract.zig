@@ -111,22 +111,7 @@ pub fn extractWithEngine(
         .pcre2 => if (enable_pcre2) try pcre2Scan(allocator, text, &cites) else return error.Pcre2Disabled,
     }
     try tokenScan(allocator, text, &cites);
-    // merge engine candidates and id/supra tokens: earliest start, longest
-    std.mem.sort(Citation, cites.items, {}, citeLessThan);
-    var n: usize = 0;
-    var last_end: u32 = 0;
-    for (cites.items) |c| {
-        if (n == 0 or c.span_start >= last_end) {
-            cites.items[n] = c;
-            last_end = c.span_end;
-            n += 1;
-        }
-    }
-    cites.shrinkRetainingCapacity(n);
-    for (cites.items) |*c| {
-        c.full_span_start = c.span_start;
-        c.full_span_end = c.span_end;
-    }
+    mergeCites(&cites);
     for (cites.items, 0..) |*c, i| try finishCitation(allocator, text, cites.items, i, c);
     try referenceScan(allocator, text, &cites);
     filterCitations(allocator, text, &cites);
@@ -143,6 +128,136 @@ pub fn freeCitations(allocator: std.mem.Allocator, cites: []Citation) void {
     allocator.free(cites);
 }
 
+/// Merge engine candidates and id/supra tokens into the canonical list: sort
+/// by (earliest start, longest end), drop overlaps, seed full_span = span.
+/// Factored out of extractWithEngine so the per-phase benchmark reproduces the
+/// exact same candidate-merge step.
+fn mergeCites(cites: *std.ArrayListUnmanaged(Citation)) void {
+    std.mem.sort(Citation, cites.items, {}, citeLessThan);
+    var n: usize = 0;
+    var last_end: u32 = 0;
+    for (cites.items) |c| {
+        if (n == 0 or c.span_start >= last_end) {
+            cites.items[n] = c;
+            last_end = c.span_end;
+            n += 1;
+        }
+    }
+    cites.shrinkRetainingCapacity(n);
+    for (cites.items) |*c| {
+        c.full_span_start = c.span_start;
+        c.full_span_end = c.span_end;
+    }
+}
+
+/// Per-key-function wall-clock timings (ns/iter) for the extraction pipeline.
+/// CLAUDE.md mandates benchmarking "over key functions" and flagging sudden
+/// deltas — a single end-to-end number hid the referenceScan O(cites×text)
+/// quadratic until it dominated. Each phase is timed in isolation with its
+/// input reset every iteration (the reset is untimed). resolve + end-to-end
+/// total are timed by the bench harness (resolve lives downstream of here).
+pub const PhaseNs = struct {
+    match: u64, // vmScan + tokenScan + merge — reporter-anchor candidate finding
+    finish: u64, // finishCitation loop — case-name backward walk + metadata
+    reference: u64, // referenceScan — pincited-reference scan (the guarded phase)
+    filter: u64, // filterCitations — overlap/containment dedup
+};
+
+/// Times each extraction phase in isolation `iters` times; see PhaseNs.
+pub fn benchPhases(io: std.Io, allocator: std.mem.Allocator, text: []const u8, iters: usize) !PhaseNs {
+    const List = std.ArrayListUnmanaged(Citation);
+    var r: PhaseNs = .{ .match = 0, .finish = 0, .reference = 0, .filter = 0 };
+
+    // ---- match: fresh candidate list each iteration ----
+    {
+        var acc: u64 = 0;
+        for (0..iters) |_| {
+            var cites: List = .empty;
+            defer cites.deinit(allocator);
+            const s = std.Io.Timestamp.now(io, .awake);
+            try vmScan(allocator, text, &cites);
+            try tokenScan(allocator, text, &cites);
+            mergeCites(&cites);
+            const e = std.Io.Timestamp.now(io, .awake);
+            acc += @intCast(e.nanoseconds - s.nanoseconds);
+            std.mem.doNotOptimizeAway(cites.items.len);
+        }
+        r.match = acc / iters;
+    }
+
+    // Snapshot the post-merge state (input to finishCitation).
+    var merged: List = .empty;
+    defer merged.deinit(allocator);
+    try vmScan(allocator, text, &merged);
+    try tokenScan(allocator, text, &merged);
+    mergeCites(&merged);
+    const merge_snap = try allocator.dupe(Citation, merged.items);
+    defer allocator.free(merge_snap);
+
+    // Reusable work list; reset (untimed) from a snapshot before each phase run.
+    var work: List = .empty;
+    defer work.deinit(allocator);
+    try work.ensureTotalCapacity(allocator, merge_snap.len + 1);
+
+    // ---- finish: post-merge snapshot → finishCitation loop ----
+    {
+        var acc: u64 = 0;
+        for (0..iters) |_| {
+            work.clearRetainingCapacity();
+            work.appendSliceAssumeCapacity(merge_snap);
+            const s = std.Io.Timestamp.now(io, .awake);
+            for (work.items, 0..) |*c, i| try finishCitation(allocator, text, work.items, i, c);
+            const e = std.Io.Timestamp.now(io, .awake);
+            acc += @intCast(e.nanoseconds - s.nanoseconds);
+        }
+        r.finish = acc / iters;
+    }
+
+    // Snapshot the post-finish state (input to referenceScan / filter).
+    work.clearRetainingCapacity();
+    work.appendSliceAssumeCapacity(merge_snap);
+    for (work.items, 0..) |*c, i| try finishCitation(allocator, text, work.items, i, c);
+    const finish_snap = try allocator.dupe(Citation, work.items);
+    defer allocator.free(finish_snap);
+
+    // ---- reference: post-finish snapshot → referenceScan (it appends) ----
+    {
+        var acc: u64 = 0;
+        for (0..iters) |_| {
+            work.clearRetainingCapacity();
+            work.appendSliceAssumeCapacity(finish_snap);
+            const s = std.Io.Timestamp.now(io, .awake);
+            try referenceScan(allocator, text, &work);
+            const e = std.Io.Timestamp.now(io, .awake);
+            acc += @intCast(e.nanoseconds - s.nanoseconds);
+        }
+        r.reference = acc / iters;
+    }
+
+    // Snapshot the post-reference state (input to filter).
+    work.clearRetainingCapacity();
+    work.appendSliceAssumeCapacity(finish_snap);
+    try referenceScan(allocator, text, &work);
+    const ref_snap = try allocator.dupe(Citation, work.items);
+    defer allocator.free(ref_snap);
+    try work.ensureTotalCapacity(allocator, ref_snap.len + 1);
+
+    // ---- filter: post-reference snapshot → filterCitations ----
+    {
+        var acc: u64 = 0;
+        for (0..iters) |_| {
+            work.clearRetainingCapacity();
+            work.appendSliceAssumeCapacity(ref_snap);
+            const s = std.Io.Timestamp.now(io, .awake);
+            filterCitations(allocator, text, &work);
+            const e = std.Io.Timestamp.now(io, .awake);
+            acc += @intCast(e.nanoseconds - s.nanoseconds);
+        }
+        r.filter = acc / iters;
+    }
+
+    return r;
+}
 fn vmScan(
     allocator: std.mem.Allocator,
     text: []const u8,

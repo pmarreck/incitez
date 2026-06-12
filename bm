@@ -129,6 +129,56 @@ if (( with_eyecite )); then
 	fi
 fi
 
+# -- Section 3: per-key-function microbench (CLAUDE.md L32 — log over key
+# functions, LOUDLY flag deltas). A single end-to-end number once hid a
+# referenceScan O(cites×text) quadratic until it dominated; per-function
+# history catches such regressions at the function boundary. Two-sided gate
+# vs the most recent MICROBENCHMARKS.md entry for this hardware.
+micro_doc="$workdir/incitez-micro.txt"
+: > "$micro_doc"
+for _ in $(seq 1 10); do cat "$base" >> "$micro_doc"; done
+micro_bytes=$(wc -c < "$micro_doc" | tr -d ' ')
+
+echo ""
+echo "=== per-key-function microbench (${micro_bytes} bytes, 20 iters) ==="
+micro_out=$(./zig-out/bin/incitez-bench micro "$micro_doc" 20)
+echo "$micro_out"
+
+MICRO_TOL=25
+prev_micro() {  # $1 = phase name -> most recent committed ns for this hw
+	awk -v hw="$hw" -v ph="$1" '
+		/^## / { keep = index($0, hw) > 0 }
+		keep && $1 == ph":" { val = $2 }
+		END { print val }
+	' MICROBENCHMARKS.md 2>/dev/null
+}
+
+micro_block=""
+while IFS= read -r line; do
+	[[ "$line" == *"ns/iter"* ]] || continue
+	phase=${line%%:*}
+	ns=$(printf '%s' "$line" | gsed -n 's/.*: \([0-9]*\) ns\/iter.*/\1/p')
+	[[ -z "$ns" ]] && continue
+	micro_block+="${phase}: ${ns}"$'\n'
+	prev=$(prev_micro "$phase")
+	if [[ -n "$prev" && "$prev" -gt 0 ]]; then
+		d=$(( (ns - prev) * 100 / prev ))
+		if (( d > MICRO_TOL || d < -MICRO_TOL )); then
+			printf '\033[1;31mMICRO GATE: %s %s%% vs baseline (%s -> %s ns/iter) -- outside ±%s%%!\033[0m\n' \
+				"$phase" "$d" "$prev" "$ns" "$MICRO_TOL"
+			gate_status=1
+		else
+			echo "  micro gate: ${phase} ${d}% (within ±${MICRO_TOL}%)"
+		fi
+	fi
+done <<< "$micro_out"
+
+{
+	echo "## $(date '+%Y-%m-%d %H:%M') -- $hw -- ${micro_bytes} bytes input"
+	printf '%s' "$micro_block"
+	echo
+} >> MICROBENCHMARKS.md
+echo "appended to MICROBENCHMARKS.md"
 # -- Record --
 {
 	echo "## $(date '+%Y-%m-%d %H:%M') -- $hw -- ${big_bytes} bytes input"
