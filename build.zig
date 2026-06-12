@@ -28,6 +28,11 @@ pub fn build(b: *std.Build) void {
         .cwd_relative = b.fmt("{s}/lib/libpcre2-8.a", .{pcre2_prefix}),
     };
 
+    // Build options: the PCRE2 oracle path is comptime-excludable (e.g. for
+    // the WASM target, which is VM-only). Native builds keep it enabled.
+    const native_opts = b.addOptions();
+    native_opts.addOption(bool, "enable_pcre2", true);
+
     // -- Build-time table codegen: reporters-db JSON → Zig source module --
     // The generator is a host tool; ReleaseSafe keeps it on the LLVM backend
     // (the self-hosted x86_64 Debug backend is still crash-prone in 0.16).
@@ -76,6 +81,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
         .imports = &.{ tables_import, courts_import },
     });
+    lib_mod.addOptions("build_options", native_opts);
     lib_mod.addIncludePath(pcre2_include);
     lib_mod.addObjectFile(pcre2_lib);
     const lib = b.addLibrary(.{
@@ -121,6 +127,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true, // pcre2 needs libc
         .imports = &.{ tables_import, courts_import },
     });
+    core_test_mod.addOptions("build_options", native_opts);
     core_test_mod.addIncludePath(pcre2_include);
     core_test_mod.addObjectFile(pcre2_lib);
     const tests = b.addTest(.{

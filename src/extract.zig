@@ -2,7 +2,8 @@ const std = @import("std");
 const reporters = @import("reporters.zig");
 const tables = @import("reporters_tables");
 const courts = @import("courts_tables");
-const pcre2_engine = @import("pcre2_engine.zig");
+const enable_pcre2 = @import("build_options").enable_pcre2;
+const pcre2_engine = if (enable_pcre2) @import("pcre2_engine.zig") else struct {};
 const case_name = @import("case_name.zig");
 
 /// Which candidate-finding implementation to use. `.vm` is incitez's
@@ -107,7 +108,7 @@ pub fn extractWithEngine(
     errdefer cites.deinit(allocator);
     switch (engine) {
         .vm => try vmScan(allocator, text, &cites),
-        .pcre2 => try pcre2Scan(allocator, text, &cites),
+        .pcre2 => if (enable_pcre2) try pcre2Scan(allocator, text, &cites) else return error.Pcre2Disabled,
     }
     try tokenScan(allocator, text, &cites);
     // merge engine candidates and id/supra tokens: earliest start, longest
@@ -167,6 +168,7 @@ fn pcre2Scan(
     text: []const u8,
     cites: *std.ArrayListUnmanaged(Citation),
 ) !void {
+    if (!enable_pcre2) unreachable;
     const cands = try pcre2_engine.scan(allocator, text);
     defer allocator.free(cands);
     for (cands) |cand| {

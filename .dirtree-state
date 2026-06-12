@@ -17,6 +17,7 @@ annotate=[
 	scripts/validate-realworld = Real-world validation: incitez vs eyecite over tests/realworld/*.txt; reports agreement + incitez surpasses
 	src/extract.zig = Citation extractor: reporter-anchored pattern VM + token scan + reference scan + filter_citations; metadata + resolution
 	src/ffi.zig = C FFI exports: incitez_extract/result_count/result_get/result_free — flat structs, arena ownership
+	src/json_out.zig = Single source of truth for --json schema; shared by C CLI (via FFI) and WASM so output is byte-identical
 	src/lib.zig = Pure Zig core (no I/O) + C FFI exports; currently version export only
 	src/pcre2_engine.zig = PCRE2 engine path: eyecite-literal regexes via C API, lazy JIT compile, finditer-semantics scan
 	src/resolve.zig = Resolution pass: clusters citations to resources (resolve.py port)
