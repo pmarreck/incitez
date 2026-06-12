@@ -64,6 +64,9 @@ pub const Citation = struct {
     antecedent_guess: ?[]const u8 = null,
     /// Volume before a supra token ("123" in "asdf, 123 supra"). Slice.
     supra_volume: ?[]const u8 = null,
+    /// Law-citation publisher from the trailing paren ("West", "Lexis
+    /// Supp."). Slice.
+    publisher: ?[]const u8 = null,
     /// Full extent including case name/antecedent (eyecite full_span);
     /// defaults to the core span when nothing extends it.
     full_span_start: u32 = 0,
@@ -328,6 +331,10 @@ fn finishCitation(
     c: *Citation,
 ) !void {
     switch (c.kind) {
+        .full_law => {
+            finishLawCitation(text, c);
+            return;
+        },
         .full_journal => {
             finishJournalCitation(text, c);
             return;
@@ -395,6 +402,125 @@ fn finishCitation(
     if (c.kind == .full_case and c.plaintiff == null and c.defendant == null) {
         try preCiteAntecedent(allocator, text, c, spans_buf[0..n_spans]);
     }
+}
+
+/// eyecite add_law_metadata / POST_LAW_CITATION_REGEX:
+/// `LAW_PIN? \ ? (\(publisher? month? day? year?\))? \ ? PARENTHETICAL?`.
+/// LAW_PIN = subsections `(a)(2)`, optional ` and (d)`, optional ` et seq.`.
+fn finishLawCitation(text: []const u8, c: *Citation) void {
+    const nl = std.mem.indexOfScalarPos(u8, text, c.span_end, '\n') orelse text.len;
+    const win = text[0..@min(nl, c.span_end + MAX_MATCH_CHARS)];
+    var p: usize = c.span_end;
+
+    // LAW_PIN_CITE (may match empty; eyecite keeps null for empty)
+    const pin_start = p;
+    while (parseLawSubsection(win, p)) |e| p = e;
+    if (p > pin_start) {
+        // optional ` and (d)...`
+        if (std.mem.startsWith(u8, win[p..], " and ")) {
+            var q = p + 5;
+            var any = false;
+            while (parseLawSubsection(win, q)) |e| {
+                q = e;
+                any = true;
+            }
+            if (any) p = q;
+        }
+    }
+    if (std.mem.startsWith(u8, win[p..], " et seq.")) p += 8;
+    if (p > pin_start) {
+        c.pin_cite = std.mem.trim(u8, win[pin_start..p], ", ");
+        c.span_end = @intCast(p); // full_span per eyecite; span unchanged?
+        c.span_end = @intCast(pin_start); // span stays at the cite; pin extends full_span only
+        c.full_span_end = @max(c.full_span_end, @as(u32, @intCast(p)));
+    }
+
+    if (p < win.len and win[p] == ' ') p += 1;
+    // optional (publisher month day year) paren
+    if (p < win.len and win[p] == '(') {
+        const close = std.mem.indexOfScalarPos(u8, win, p + 1, ')') orelse win.len;
+        if (close < win.len) {
+            const inner = win[p + 1 .. close];
+            if (parseLawParen(inner)) |meta| {
+                c.publisher = meta.publisher;
+                if (meta.year_text) |yt| {
+                    c.year_text = yt;
+                    const y = std.fmt.parseInt(u16, yt, 10) catch unreachable;
+                    c.year = if (y >= 1600 and y <= default_max_valid_year) y else null;
+                }
+                p = close + 1;
+                c.full_span_end = @max(c.full_span_end, @as(u32, @intCast(p)));
+                if (p < win.len and win[p] == ' ') p += 1;
+            }
+        }
+    }
+    c.parenthetical = parseParenthetical(win, p -| 1);
+}
+
+/// One `\([0-9a-zA-Z]{1,4}\)` subsection; returns end offset.
+fn parseLawSubsection(win: []const u8, p: usize) ?usize {
+    if (p >= win.len or win[p] != '(') return null;
+    var q = p + 1;
+    var n: usize = 0;
+    while (q < win.len and n < 4 and std.ascii.isAlphanumeric(win[q])) {
+        q += 1;
+        n += 1;
+    }
+    if (n == 0 or q >= win.len or win[q] != ')') return null;
+    return q + 1;
+}
+
+const LawParen = struct {
+    publisher: ?[]const u8 = null,
+    year_text: ?[]const u8 = null,
+};
+
+/// Inside the law paren: `publisher? \ ? month? day? ,? \ ? year?` — at
+/// least one of publisher/year must be present for the paren to count.
+fn parseLawParen(inner: []const u8) ?LawParen {
+    var out: LawParen = .{};
+    var p: usize = 0;
+    // publisher: [A-Z][a-z]+\.? (\ Supp\.)?
+    if (p < inner.len and inner[p] >= 'A' and inner[p] <= 'Z') {
+        var q = p + 1;
+        while (q < inner.len and inner[q] >= 'a' and inner[q] <= 'z') q += 1;
+        if (q > p + 1) {
+            if (q < inner.len and inner[q] == '.') q += 1;
+            if (std.mem.startsWith(u8, inner[q..], " Supp.")) q += 6;
+            out.publisher = inner[p..q];
+            p = q;
+            if (p < inner.len and inner[p] == ' ') p += 1;
+        }
+    }
+    // month (reuse MONTHS table) + day
+    for (MONTHS) |m| {
+        if (std.mem.startsWith(u8, inner[p..], m)) {
+            p += m.len;
+            if (p < inner.len and inner[p] == ' ') p += 1;
+            break;
+        }
+    }
+    var d: usize = 0;
+    var dp = p;
+    while (dp < inner.len and d < 2 and isDigit(inner[dp]) and
+        !(dp + 4 <= inner.len and allDigits(inner[dp .. @min(dp + 4, inner.len)]))) : (d += 1) dp += 1;
+    if (d > 0 and d <= 2) {
+        p = dp;
+        if (p < inner.len and inner[p] == ',') p += 1;
+        if (p < inner.len and inner[p] == ' ') p += 1;
+    }
+    // year: \d{4}(-\d{2})?
+    if (p + 4 <= inner.len and allDigits(inner[p .. p + 4])) {
+        var e = p + 4;
+        if (e + 3 <= inner.len and inner[e] == '-' and isDigit(inner[e + 1]) and isDigit(inner[e + 2])) e += 3;
+        if (e == inner.len) {
+            out.year_text = inner[p .. p + 4];
+            return out;
+        }
+        return null; // trailing garbage after year: not a law paren
+    }
+    if (p == inner.len and out.publisher != null) return out;
+    return null;
 }
 
 /// eyecite add_journal_metadata / POST_JOURNAL_CITATION_REGEX:
@@ -1754,4 +1880,50 @@ test "section token becomes an unknown citation" {
     try testing.expectEqual(Kind.unknown, cites[0].kind);
     try testing.expectEqual(@as(u32, 16), cites[0].span_start);
     try testing.expectEqual(@as(u32, 20), cites[0].span_end);
+}
+
+test "law citation: statute with subsection pin, publisher year paren" {
+    const cites = try extract(testing.allocator, "Ohio Rev. Code Ann. \xc2\xa7 5739.02(B)(7) (Lexis Supp. 2010)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    const c = cites[0];
+    try testing.expectEqual(Kind.full_law, c.kind);
+    try testing.expectEqual(@as(u32, 0), c.span_start);
+    try testing.expectEqual(@as(u32, 30), c.span_end); // § is 2 bytes: char 29 -> byte 30
+    try testing.expectEqualStrings("(B)(7)", c.pin_cite.?);
+    try testing.expectEqual(@as(?u16, 2010), c.year);
+    try testing.expectEqualStrings("Lexis Supp.", c.publisher.?);
+}
+
+test "law citation: et seq pin with West year" {
+    const cites = try extract(testing.allocator, "Ariz. Rev. Stat. Ann. \xc2\xa7 36-3701 et seq. (West 2009)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqualStrings("et seq.", cites[0].pin_cite.?);
+    try testing.expectEqual(@as(?u16, 2009), cites[0].year);
+    try testing.expectEqualStrings("West", cites[0].publisher.?);
+}
+
+test "law citation: and-subsection pin, double section, chapter form" {
+    const a = try extract(testing.allocator, "Ark. Code Ann. \xc2\xa7 23-3-119(a)(2) and (d) (1987)");
+    defer freeCitations(testing.allocator, a);
+    try testing.expectEqual(@as(usize, 1), a.len);
+    try testing.expectEqualStrings("(a)(2) and (d)", a[0].pin_cite.?);
+    try testing.expectEqual(@as(?u16, 1987), a[0].year);
+
+    const b = try extract(testing.allocator, "Mass. Gen. Laws ch. 1, \xc2\xa7\xc2\xa7 2-3");
+    defer freeCitations(testing.allocator, b);
+    try testing.expectEqual(@as(usize, 1), b.len);
+    try testing.expectEqual(Kind.full_law, b[0].kind);
+
+    const d = try extract(testing.allocator, "1 Stat. 2");
+    defer freeCitations(testing.allocator, d);
+    try testing.expectEqual(@as(usize, 1), d.len);
+    try testing.expectEqual(Kind.full_law, d[0].kind);
+
+    const e = try extract(testing.allocator, "Kan. Stat. Ann. \xc2\xa7 21-3516(a)(2) (repealed) (ignore this)");
+    defer freeCitations(testing.allocator, e);
+    try testing.expectEqual(@as(usize, 1), e.len);
+    try testing.expectEqualStrings("(a)(2)", e[0].pin_cite.?);
+    try testing.expectEqualStrings("repealed", e[0].parenthetical.?);
 }

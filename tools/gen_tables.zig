@@ -18,14 +18,23 @@ const PAGE_OVERRIDE =
 const FULL_CITE_OVERRIDE = "$volume $reporter,? $page";
 
 const GROUP_NAMES = [_][]const u8{
-    "volume",             "page",     "year", "date_filed",
-    "volume_nominative",  "reporter_nominative", "supp", "jurisdiction",
+    "volume",            "page",                "year",    "date_filed",
+    "volume_nominative", "reporter_nominative", "supp",    "jurisdiction",
+    // laws.json vocabulary
+    "act",               "agency",              "article", "chapter",
+    "docket_number",     "issue",               "kind_code", "law",
+    "number",            "pamphlet",            "reg",     "rule",
+    "title",             "section",             "subject", "month",
+    "day",
 };
 
 const cite_types = [_][]const u8{
     "federal",         "neutral",        "scotus_early", "specialty",
     "specialty_lexis", "specialty_west", "state",        "state_regional",
     "journal",
+    // laws.json
+    "admin_compilation", "admin_docket", "admin_filing", "admin_register",
+    "leg_act",           "leg_session",  "leg_statute",  "municipal",
 };
 
 const Ed = struct {
@@ -149,8 +158,12 @@ const Parser = struct {
             },
             '^', '*', '+', '?', '{', '}' => return p.fail("unsupported metachar"),
             else => {
-                p.pos += 1;
-                return .{ .lit = p.src[p.pos - 1 .. p.pos] };
+                // consume a whole UTF-8 character so a following quantifier
+                // binds to the character, not just its trailing byte
+                const start = p.pos;
+                p.pos += utf8Len(c);
+                if (p.pos > p.src.len) p.pos = p.src.len;
+                return .{ .lit = p.src[start..p.pos] };
             },
         }
     }
@@ -257,7 +270,8 @@ const Parser = struct {
                 const spec = p.src[p.pos + 1 .. end];
                 p.pos = end + 1;
                 if (std.mem.indexOfScalar(u8, spec, ',')) |comma| {
-                    min = std.fmt.parseInt(u32, spec[0..comma], 10) catch
+                    // Python allows {,n} as {0,n}
+                    min = if (comma == 0) 0 else std.fmt.parseInt(u32, spec[0..comma], 10) catch
                         return p.fail("bad quantifier min");
                     max = if (comma + 1 == spec.len)
                         std.math.maxInt(u16)
@@ -280,11 +294,24 @@ const Parser = struct {
                 return p.fail("double quantifier");
             },
             .lit => |l| {
-                var bits: [4]u64 = .{ 0, 0, 0, 0 };
-                setBit(&bits, l[l.len - 1]);
-                const quant: Node = .{ .class = .{ .bits = bits, .min = min, .max = max } };
-                if (l.len == 1) return quant;
-                const head: Node = .{ .lit = l[0 .. l.len - 1] };
+                // the quantified atom is the last CHARACTER (UTF-8 sequence),
+                // not the last byte — "\xc2\xa7?" must quantify the whole sign
+                var tail_start = l.len - 1;
+                while (tail_start > 0 and (l[tail_start] & 0xC0) == 0x80) tail_start -= 1;
+                const tail = l[tail_start..];
+                var quant: Node = undefined;
+                if (tail.len == 1) {
+                    var bits: [4]u64 = .{ 0, 0, 0, 0 };
+                    setBit(&bits, tail[0]);
+                    quant = .{ .class = .{ .bits = bits, .min = min, .max = max } };
+                } else {
+                    if (min != 0 or max != 1) return p.fail("counted quantifier on multibyte literal");
+                    const boxed = try p.arena.create(Node);
+                    boxed.* = .{ .lit = tail };
+                    quant = .{ .opt = boxed };
+                }
+                if (tail_start == 0) return quant;
+                const head: Node = .{ .lit = l[0..tail_start] };
                 const pair = try p.arena.alloc(Node, 2);
                 pair[0] = head;
                 pair[1] = quant;
@@ -296,11 +323,43 @@ const Parser = struct {
                     boxed.* = atom;
                     return .{ .opt = boxed };
                 }
-                return p.fail("unsupported group quantifier");
+                // group repetition: unroll as `min` copies + nested optionals
+                // (greedy longest-first falls out of opt ordering). Unbounded
+                // +/* caps at 8 optional repetitions — beyond that real-world
+                // subsection chains do not go (documented divergence).
+                const opt_count: u32 = if (max >= std.math.maxInt(u16))
+                    8
+                else if (max > min)
+                    max - min
+                else
+                    0;
+                var node: ?Node = null;
+                var k: u32 = 0;
+                while (k < opt_count) : (k += 1) {
+                    var seq: std.ArrayListUnmanaged(Node) = .empty;
+                    try seq.append(p.arena, atom);
+                    if (node) |n| try seq.append(p.arena, n);
+                    const boxed = try p.arena.create(Node);
+                    boxed.* = .{ .seq = seq.items };
+                    node = .{ .opt = boxed };
+                }
+                var out: std.ArrayListUnmanaged(Node) = .empty;
+                var m: u32 = 0;
+                while (m < min) : (m += 1) try out.append(p.arena, atom);
+                if (node) |n| try out.append(p.arena, n);
+                if (out.items.len == 1) return out.items[0];
+                return .{ .seq = out.items };
             },
         }
     }
 };
+
+fn utf8Len(lead: u8) usize {
+    if (lead < 0x80) return 1;
+    if (lead < 0xE0) return 2;
+    if (lead < 0xF0) return 3;
+    return 4;
+}
 
 fn setBit(bits: *[4]u64, c: u8) void {
     bits[c >> 6] |= @as(u64, 1) << @intCast(c & 63);
@@ -648,8 +707,8 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
 
     const args = try init.minimal.args.toSlice(arena);
-    if (args.len != 5) {
-        std.debug.print("usage: {s} <reporters.json> <regexes.json> <journals.json> <out.zig>\n", .{args[0]});
+    if (args.len != 6) {
+        std.debug.print("usage: {s} <reporters.json> <regexes.json> <journals.json> <laws.json> <out.zig>\n", .{args[0]});
         return error.BadArgs;
     }
 
@@ -917,6 +976,80 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
+    // ---- laws.json: flat entries; templates get the eyecite multi-section
+    // transform (one section sign optionally doubled, optional space) ----
+    const laws_data = try std.Io.Dir.cwd().readFileAlloc(io, args[4], arena, .unlimited);
+    const laws_parsed = try std.json.parseFromSlice(std.json.Value, arena, laws_data, .{});
+    var l_it = laws_parsed.value.object.iterator();
+    while (l_it.next()) |lentry| {
+        for (lentry.value_ptr.array.items) |src_val| {
+            const lobj = src_val.object;
+            const name = lobj.get("name").?.string;
+            const cite_type = lobj.get("cite_type").?.string;
+            const known = for (cite_types) |ct| {
+                if (std.mem.eql(u8, ct, cite_type)) break true;
+            } else false;
+            if (!known) {
+                std.debug.print("unknown law cite_type '{s}' for '{s}'\n", .{ cite_type, name });
+                return error.UnknownCiteType;
+            }
+            const idx: u32 = @intCast(editions.items.len);
+
+            var ids: std.ArrayListUnmanaged(u32) = .empty;
+            var expanded_list: std.ArrayListUnmanaged([]const u8) = .empty;
+            const templates: []const std.json.Value = blk: {
+                if (lobj.get("regexes")) |r| {
+                    if (r == .array and r.array.items.len > 0) break :blk r.array.items;
+                }
+                break :blk &.{};
+            };
+            if (templates.len == 0) {
+                try expanded_list.append(arena, try recursiveSubstitute(arena, "$full_cite", &vars));
+            } else {
+                for (templates) |t| {
+                    // r.replace("\xc2\xa7 ", "\xc2\xa7\xc2\xa7? ?")
+                    const needle = "\xc2\xa7 ";
+                    const repl = "\xc2\xa7\xc2\xa7? ?";
+                    const n = std.mem.replacementSize(u8, t.string, needle, repl);
+                    const transformed = try arena.alloc(u8, n);
+                    _ = std.mem.replace(u8, t.string, needle, repl, transformed);
+                    try expanded_list.append(arena, try recursiveSubstitute(arena, transformed, &vars));
+                }
+            }
+            for (expanded_list.items) |expanded| {
+                try ids.append(arena, try internProgram(arena, expanded, false, &programs, &program_ids, &unanchored_count));
+                if (try shortify(arena, expanded)) |srx| {
+                    try ids.append(arena, try internProgram(arena, srx, true, &programs, &program_ids, &unanchored_count));
+                }
+            }
+            try editions.append(arena, .{
+                .abbrev = lentry.key_ptr.*,
+                .name = name,
+                .cite_type = cite_type,
+                .program_ids = ids.items,
+                .source = "laws",
+            });
+            try matches.append(arena, .{ .key = lentry.key_ptr.*, .edition = idx, .is_variant = false });
+
+            var var_names: std.ArrayListUnmanaged([]const u8) = .empty;
+            if (lobj.get("variations")) |vlist| {
+                for (vlist.array.items) |v| {
+                    try matches.append(arena, .{ .key = v.string, .edition = idx, .is_variant = true });
+                    try var_names.append(arena, v.string);
+                }
+            }
+            for (expanded_list.items) |expanded| {
+                const srx = try shortify(arena, expanded);
+                try internPcre2Extractor(arena, expanded, &.{lentry.key_ptr.*}, idx, false, false, &pcre2_extractors, &pcre2_seen);
+                if (srx) |s| try internPcre2Extractor(arena, s, &.{lentry.key_ptr.*}, idx, false, true, &pcre2_extractors, &pcre2_seen);
+                if (var_names.items.len > 0) {
+                    try internPcre2Extractor(arena, expanded, var_names.items, idx, true, false, &pcre2_extractors, &pcre2_seen);
+                    if (srx) |s| try internPcre2Extractor(arena, s, var_names.items, idx, true, true, &pcre2_extractors, &pcre2_seen);
+                }
+            }
+        }
+    }
+
     std.mem.sort(Match, matches.items, {}, matchLessThan);
 
     // ---- emit ----
@@ -1093,7 +1226,7 @@ pub fn main(init: std.process.Init) !void {
     }
     try w.writeAll("};\n");
 
-    const out = try std.Io.Dir.cwd().createFile(io, args[4], .{});
+    const out = try std.Io.Dir.cwd().createFile(io, args[5], .{});
     defer out.close(io);
     try out.writeStreamingAll(io, aw.written());
 }

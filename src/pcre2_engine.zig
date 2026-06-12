@@ -41,6 +41,7 @@ extern fn pcre2_substring_number_from_name_8(
     name: [*:0]const u8,
 ) c_int;
 
+const PCRE2_UTF: u32 = 0x00080000; // codepoint semantics (match Python re on str)
 const PCRE2_JIT_COMPLETE: u32 = 0x00000001;
 const PCRE2_UNSET = std.math.maxInt(usize);
 const PCRE2_ERROR_NOMATCH: c_int = -1;
@@ -70,7 +71,7 @@ fn ensureInit() void {
     for (tables.pcre2_extractors, 0..) |ex, i| {
         var errcode: c_int = 0;
         var erroff: usize = 0;
-        const code = pcre2_compile_8(ex.regex.ptr, ex.regex.len, 0, &errcode, &erroff, null) orelse {
+        const code = pcre2_compile_8(ex.regex.ptr, ex.regex.len, PCRE2_UTF, &errcode, &erroff, null) orelse {
             std.debug.panic(
                 "pcre2_compile failed (err {d} at byte {d}) for: {s}",
                 .{ errcode, erroff, ex.regex },

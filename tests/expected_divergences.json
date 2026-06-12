@@ -2,28 +2,8 @@
   "_doc": "Expected-divergence ledger for the differential gate. Every entry fences ONE exact text whose eyecite-vs-incitez divergence is understood and accepted. The gate fails on any UNFENCED divergence, on STALE fences (text now agrees), and on DEAD fences (text absent from the set) — fences must stay honest.",
   "divergences": [
     {
-      "text": "1 Stat. 2",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "Ala. Code § 92",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
       "text": "Angelopoulos v. Keystone Orthopedic Specialists, S.C., Wachn, LCC, 2015 WL 2375225, at p. *4. yadda yadda yadda... Angelopoulos p. *4;",
       "reason": "ReferenceCitation extraction not yet ported (plain-text references)"
-    },
-    {
-      "text": "Ariz. Rev. Stat. Ann. § 36-3701 et seq. (West 2009)",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "Ark. Code Ann. § 23-3-119(a)(2) and (d) (1987)",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "Fla. Stat. § 120.68 (2007)",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
     },
     {
       "text": "Foo v. Bar 1 U.S. 12, 347-348. something something, In Foo at 62, we see that",
@@ -42,28 +22,8 @@
       "reason": "ReferenceCitation extraction not yet ported (plain-text references)"
     },
     {
-      "text": "Kan. Stat. Ann. § 21-3516(a)(2) (repealed) (ignore this)",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "Mass. Gen. Laws ch. 1, § 2",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "Mass. Gen. Laws ch. 1, §§ 2-3",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
-      "text": "Ohio Rev. Code Ann. § 5739.02(B)(7) (Lexis Supp. 2010)",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
-    },
-    {
       "text": "we said in Morton v. Mancari, 417 U. S. 535, 552 (1974) “Literally every piece ....”. “asisovereign tribal entities . . . .” Id. In Mancari at 665",
       "reason": "ReferenceCitation extraction not yet ported (plain-text references)"
-    },
-    {
-      "text": "Wis. Stat. § 655.002(2)(c) (2005-06)",
-      "reason": "FullLawCitation extraction not yet ported (laws.json slice)"
     }
   ]
 }

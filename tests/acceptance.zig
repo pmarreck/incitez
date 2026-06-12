@@ -11,11 +11,11 @@ const incitez = @import("incitez");
 const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
-const RATCHET_EXPECTED_PASSES: usize = 120;
-const RATCHET_PCRE2_EXPECTED_PASSES: usize = 120;
+const RATCHET_EXPECTED_PASSES: usize = 130;
+const RATCHET_PCRE2_EXPECTED_PASSES: usize = 130;
 /// Eligible-case count must ALSO match exactly — without this, newly
 /// eligible cases that all fail leave the pass count unchanged and slip by.
-const RATCHET_EXPECTED_ATTEMPTED: usize = 120;
+const RATCHET_EXPECTED_ATTEMPTED: usize = 130;
 const EXPECTED_ENGINE_DIVERGENCES: usize = 0;
 
 const CaseResult = struct {
@@ -44,7 +44,8 @@ fn caseEligible(case: std.json.ObjectMap) bool {
             std.mem.eql(u8, t, "SupraCitation") or
             std.mem.eql(u8, t, "IdCitation") or
             std.mem.eql(u8, t, "FullJournalCitation") or
-            std.mem.eql(u8, t, "UnknownCitation");
+            std.mem.eql(u8, t, "UnknownCitation") or
+            std.mem.eql(u8, t, "FullLawCitation");
         if (!supported) return false;
     }
     return true;
@@ -77,6 +78,7 @@ fn kindMatches(type_name: []const u8, kind: incitez.extraction.Kind) bool {
         else if (std.mem.eql(u8, type_name, "IdCitation")) .id
         else if (std.mem.eql(u8, type_name, "FullJournalCitation")) .full_journal
         else if (std.mem.eql(u8, type_name, "UnknownCitation")) .unknown
+        else if (std.mem.eql(u8, type_name, "FullLawCitation")) .full_law
         else return false;
     return kind == expected_kind;
 }
@@ -272,7 +274,7 @@ const resolve_corpus_json = @embedFile("corpus/eyecite_resolve_corpus.json");
 /// Resolution-corpus ratchets (cases replicate eyecite checkResolution:
 /// one cite per row text, combined list resolved, cluster indices compared).
 const RESOLVE_EXPECTED_ATTEMPTED: usize = 23;
-const RESOLVE_EXPECTED_PASSES: usize = 21; // 2 gaps: law cites not yet extracted
+const RESOLVE_EXPECTED_PASSES: usize = 23; // full ResolveTest parity
 
 test "resolution corpus: cluster assignments vs eyecite ResolveTest" {
     const allocator = std.testing.allocator;
