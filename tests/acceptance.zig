@@ -308,10 +308,7 @@ test "resolution corpus: cluster assignments vs eyecite ResolveTest" {
                 }
                 try cites.append(allocator, found[0]);
             }
-            if (!extraction_ok) {
-                std.debug.print("RESOLVE: extraction failed in {s}\n", .{method.key_ptr.*});
-                continue;
-            }
+            if (!extraction_ok) continue; // known gaps (law/journal/section)
 
             const assignment = try incitez.resolution.resolve(allocator, cites.items);
             defer allocator.free(assignment);

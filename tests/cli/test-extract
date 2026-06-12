@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# CLI extract tests: file + stdin input, --json shape, engines, exit codes.
+# NO `set -e`: error paths are expected; the harness asserts exit codes.
+set -u
+
+BIN="${INCITEZ_BIN:-./zig-out/bin/incitez}"
+PASS=0
+FAIL=0
+
+pass() { PASS=$((PASS + 1)); }
+fail() {
+	echo "  FAIL: $1" >&2
+	FAIL=$((FAIL + 1))
+}
+
+workdir="${TMPDIR:-/tmp}"
+doc="$workdir/incitez-cli-test.txt"
+printf 'Foo v. Bar, 1 U.S. 1 (1982). Id. at 5.' > "$doc"
+
+# file input, human output
+out=$("$BIN" extract "$doc" 2>/dev/null)
+rc=$?
+[[ $rc -eq 0 ]] && pass || fail "extract exit code (got $rc)"
+case "$out" in
+	*FullCaseCitation*IdCitation*) pass ;;
+	*) fail "human output lists both citations (got: $out)" ;;
+esac
+
+# stderr metadata
+err=$("$BIN" extract "$doc" 2>&1 >/dev/null)
+case "$err" in
+	*"2 citations"*) pass ;;
+	*) fail "citation count on stderr (got: $err)" ;;
+esac
+
+# stdin via "-"
+out=$(printf '1 U.S. 1' | "$BIN" extract - 2>/dev/null)
+case "$out" in
+	*FullCaseCitation*) pass ;;
+	*) fail "stdin extract (got: $out)" ;;
+esac
+
+# stdin via "@stdin"
+out=$(printf '1 U.S. 1' | "$BIN" extract @stdin 2>/dev/null)
+case "$out" in
+	*FullCaseCitation*) pass ;;
+	*) fail "@stdin extract" ;;
+esac
+
+# --json: valid JSON with expected fields
+json=$("$BIN" extract "$doc" --json 2>/dev/null)
+echo "$json" | nix run 'nixpkgs#jq' -- -e '. | length == 2' > /dev/null 2>&1 && pass || fail "json is valid array of 2"
+echo "$json" | nix run 'nixpkgs#jq' -- -e '.[0].plaintiff == "Foo" and .[0].year == 1982 and .[0].court == "scotus"' > /dev/null 2>&1 && pass || fail "json fields"
+echo "$json" | nix run 'nixpkgs#jq' -- -e '.[1].kind == "IdCitation" and .[1].resolution == 0' > /dev/null 2>&1 && pass || fail "json resolution chain"
+
+# engine flag + env var
+out=$("$BIN" extract "$doc" --engine pcre2 2>/dev/null)
+case "$out" in
+	*FullCaseCitation*) pass ;;
+	*) fail "--engine pcre2" ;;
+esac
+out=$(INCITEZ_ENGINE=pcre2 "$BIN" extract "$doc" 2>/dev/null)
+case "$out" in
+	*FullCaseCitation*) pass ;;
+	*) fail "INCITEZ_ENGINE env" ;;
+esac
+"$BIN" extract "$doc" --engine bogus > /dev/null 2>&1 && fail "bogus engine should fail" || pass
+
+# path with spaces
+spacedoc="$workdir/incitez cli test.txt"
+printf '1 U.S. 1' > "$spacedoc"
+out=$("$BIN" extract "$spacedoc" 2>/dev/null)
+case "$out" in
+	*FullCaseCitation*) pass ;;
+	*) fail "path with spaces" ;;
+esac
+
+# missing file: nonzero + message to stderr
+"$BIN" extract /nonexistent-incitez 2>/dev/null && fail "missing file should fail" || pass
+
+rm -f "$doc" "$spacedoc"
+echo "  $PASS passed, $FAIL failed"
+exit "$FAIL"

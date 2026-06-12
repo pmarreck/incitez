@@ -28,11 +28,12 @@ anchor-scan optimization (Aho-Corasick) under M4 benchmark gates.
 - [ ] M2: TDD full-citation matcher (tokenizer → volume/reporter/page → pin/court/year metadata)
 - [ ] Future parity slice: law/journal/§ (UnknownCitation) extraction — unlocks the 4 ResolveTest gaps + 2 corpus methods
 - [ ] Post-parity optimization pass (Peter-ordered AFTER correctness): Aho-Corasick anchor scan, case-name walk efficiency, allocation reduction — under the now-live bm gate (current vm baseline 1287ms/1.7MB incl. all features)
-- [ ] M5: C FFI (flat structs, arena ownership) + CLI `incitez extract file.txt --json`; notify Einstein via LLMsend
+## (M5 done — see Completed)
 - [ ] M6: docscan integration + legal_ai harness wiring (planned with Einstein after M5)
 - [ ] M7: WASM build target (Peter-ratified) — browser demo, **Elm UI** (Peter+Einstein decision 2026-06-11): nothing leaves the browser, fast, and no runtime exceptions. Note: in-browser the VM engine advantage WIDENS — wasm has no executable pages, so PCRE2 would run interpreted there; the VM needs no JIT at all.
 
 ## Completed
+- [x] M5 COMPLETE: C FFI (flat structs, arena ownership, resolution indices) + CLI `incitez extract <file|-|@stdin> [--json] [--engine vm|pcre2]` with INCITEZ_ENGINE env, JSON output, spaces-in-paths + exit-code CLI tests (13 assertions); FFI dogfooded by the C CLI and by Zig-side export tests (2026-06-12 ~07:30 EST)
 - [x] M4 COMPLETE: mutation suite (162/162 reporter kills, 0 engine disagreements on mutants), differential gate vs LIVE eyecite (189/215 agree, 26 fenced w/ reasons, 0 unfenced; CI check .#checks.differential green), bm gate fired +186% -> investigated, explained (feature growth), annotated + accepted (2026-06-12 ~06:00 EST)
   - gate-found parity fixes: pre-cite year OVERRIDES post year; empty plaintiff stays ""
 - [x] M3 COMPLETE: resolution pass — resolve.py port, 19/23 ResolveTest corpus (4 = law/journal gaps) (2026-06-12 ~04:00 EST)

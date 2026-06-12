@@ -28,3 +28,11 @@ edits under test. Correct order with this setup: `jj commit` (or any jj
 command to snapshot) → `./test` → green ? push : (fix → `jj squash` →
 re-test). The known-good-commit invariant is preserved by squashing fixes
 before push, not by testing before commit.
+
+## 2026-06-12 — gsed range-delete ate a `continue` (caught by the sandbox suite)
+`gsed '/pattern/,+1d'` deleted the matched print AND the control-flow line
+after it, turning a guarded skip into fall-through onto invalid state — a
+SEGV that only the sandboxed nix suite caught (local zig-build run predated
+the edit). Lessons: (1) after ANY mechanical multi-line edit, grep the
+surrounding control flow, not just the target line; (2) the local-vs-sandbox
+duplication keeps catching what single-environment testing would miss.

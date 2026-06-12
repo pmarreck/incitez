@@ -9,6 +9,7 @@ pub const version = "0.1.0";
 pub const reporters = @import("reporters.zig");
 pub const extraction = @import("extract.zig");
 pub const resolution = @import("resolve.zig");
+pub const ffi = @import("ffi.zig");
 
 // ── C FFI exports ───────────────────────────────────────────────────
 
@@ -28,4 +29,11 @@ test {
     _ = reporters;
     _ = extraction;
     _ = resolution;
+    _ = ffi;
+}
+
+comptime {
+    // force analysis of ffi.zig so its `export fn`s are emitted into the
+    // static library (imports are lazy; exports in unreferenced files vanish)
+    _ = ffi;
 }
