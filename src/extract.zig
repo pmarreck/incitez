@@ -265,9 +265,13 @@ fn referenceScan(
 }
 
 /// eyecite is_valid_name: >2 chars, starts uppercase, not ending in '.', not
-/// all digits, and not a disallowed name. (eyecite's AG-surname disallow
-/// entries are dead code — stored capitalized, compared against .lower() —
-/// so only the lowercase set is effective; bug-matched here.)
+/// all digits, and not a disallowed name. We implement only the working
+/// lowercase disallow set — NOT eyecite's ~80 Attorney-General surnames,
+/// which are dead code there (capitalized entries vs a .lower() compare) and
+/// whose intent (exclude common surnames) would, if activated, drop REAL
+/// references like "Smith at 5" referring to "Smith v. Jones". This is a
+/// reasoned correctness choice, not bug-replication — see
+/// docs/principled_divergences.md section 2.
 fn isValidName(name: []const u8) bool {
     if (name.len <= 2) return false;
     if (!(name[0] >= 'A' and name[0] <= 'Z')) return false;

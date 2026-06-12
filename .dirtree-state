@@ -8,6 +8,7 @@ annotate=[
 	cli/main.c = C CLI shell over the FFI: --about/--help; all I/O lives here
 	docs/architecture.md = VM raison d'etre + M.O.: reporter-anchored pattern VM vs literal PCRE2 oracle; first-byte gate, sorted-table anchor, local-verify; trie prior art
 	docs/incitez_design.md = THE SPEC: design brief from legal_ai (licensing, MFIC test strategy, perf targets, milestones)
+	docs/principled_divergences.md = Where incitez intentionally diverges from (or reasons-to-match) eyecite: seam=more-correct, AG-names=match-effective; meet-and-surpass doctrine
 	flake.nix = Zig 0.16.0 pin via zig-overlay; eyecite/reporters-db/courts-db pinned non-flake inputs; packages.{default,debug}, checks.test, devShell
 	scripts/differential = Differential gate runner (local); CI twin = .#checks.differential
 	scripts/extract-corpus = Wrapper: build .#eyecite-env and run corpus extractor
