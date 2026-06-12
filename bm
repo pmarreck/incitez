@@ -191,4 +191,13 @@ echo "appended to MICROBENCHMARKS.md"
 } >> BENCHMARKS.md
 
 echo "appended to BENCHMARKS.md"
+
+# -- Section 4: scaling-ratio gate (machine-independent; the hard quadratic
+# tripwire). Runs each phase at N..8N and fails if a gated phase grows
+# super-linearly. No baseline file — ratios cancel the machine's speed.
+echo ""
+if ! ./tests/scaling zig-out/bin/incitez-bench; then
+	gate_status=1
+fi
+
 exit "$gate_status"

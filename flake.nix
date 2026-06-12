@@ -282,6 +282,38 @@
           dontFixup = true;
         };
 
+        # Scaling-ratio gate (the "Performance MVP gate"): runs each pipeline
+        # phase at N..8N and fails if a gated phase grows super-linearly. Ratios
+        # are machine-independent, so this holds in CI with no baseline file —
+        # it would have caught the referenceScan O(cites×text) quadratic.
+        checks.scaling = pkgs.stdenv.mkDerivation {
+          pname = "incitez-scaling";
+          version = "0.1.0";
+          src = self;
+          nativeBuildInputs = [ zig pkgs.jq pkgs.gnused pkgs.gawk pkgs.bash ]
+            ++ darwinInputs
+            ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.patchelf ];
+          dontConfigure = true;
+          buildPhase = ''
+            export HOME="$TMPDIR"
+            export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
+            mkdir -p $ZIG_GLOBAL_CACHE_DIR
+            ${darwinIncludeHook}
+            zig build -Doptimize=ReleaseFast -Dpcre2-prefix=${pcre2}
+            ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              DL="$(cat ${pkgs.stdenv.cc}/nix-support/dynamic-linker)"
+              for f in $(find zig-out -type f -perm -u+x); do
+                patchelf --set-interpreter "$DL" "$f" 2>/dev/null || true
+              done
+            ''}
+            bash tests/scaling zig-out/bin/incitez-bench
+          '';
+          installPhase = ''
+            mkdir -p $out
+            echo "scaling gate passed" > $out/result
+          '';
+          dontFixup = true;
+        };
         devShells.default = pkgs.mkShell {
           buildInputs = [
             zig

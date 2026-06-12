@@ -258,6 +258,9 @@ pub fn benchPhases(io: std.Io, allocator: std.mem.Allocator, text: []const u8, i
 
     return r;
 }
+/// Matcher candidate-scan: one left-to-right pass over the text; a first-byte
+/// bitset gate then a bounded per-anchor probe (prefix-narrowing match-table
+/// walk, see reporters.matchesAt). complexity: O(n)
 fn vmScan(
     allocator: std.mem.Allocator,
     text: []const u8,
@@ -746,7 +749,11 @@ fn finishCitation(
 
     var spans_buf: [32]case_name.CiteSpan = undefined;
     var n_spans: usize = 0;
-    for (all, 0..) |other, oi| {
+    // Only the first ≤33 citations can supply the first-32 non-self spans the
+    // case-name walk consumes, so bound the scan: identical result, but O(1)
+    // per call instead of O(n) (which made finishCitation O(n²) over the
+    // pipeline). complexity: O(1) per call
+    for (all[0..@min(all.len, spans_buf.len + 1)], 0..) |other, oi| {
         if (oi == self_idx or n_spans == spans_buf.len) continue;
         spans_buf[n_spans] = .{ .start = other.span_start, .end = other.span_end };
         n_spans += 1;

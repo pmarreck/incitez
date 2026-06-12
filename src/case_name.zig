@@ -187,7 +187,9 @@ fn isArticle(word: []const u8) bool {
     return false;
 }
 
-/// Port of _scan_for_case_boundaries + _process_case_name.
+/// Port of _scan_for_case_boundaries + _process_case_name. The backward token
+/// walk is bounded by BACKWARD_SEEK and a fixed token buffer, so it is
+/// complexity: O(1) per call (callers feed it only nearby spans).
 pub fn findCaseName(
     alloc: std.mem.Allocator,
     text: []const u8,

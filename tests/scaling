@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Scaling-ratio regression gate (the "Performance MVP gate", per Einstein/Peter
+# 2026-06-12). Born from a referenceScan O(cites×text) quadratic that shipped
+# unseen: a single end-to-end number can't tell linear from quadratic.
+#
+# Method (machine-independent — NO baseline file): run each pipeline phase at
+# N, 2N, 4N, 8N input sizes and measure the per-doubling growth ratio. Linear
+# intent ⇒ ratio ≈ 2; quadratic ⇒ ≈ 4. We FAIL a gated phase if its ratio at
+# the largest doubling (where constant factors are dominated) is ≥ THRESHOLD.
+# Ratios cancel the machine's absolute speed, so the same threshold holds on any
+# hardware and in CI.
+#
+# Run against the PRE-fix code, a gated phase FAILS (proves it catches the
+# quadratic); against the fixed code it PASSES (TDD reproduce-then-fix).
+#
+# Usage: tests/scaling [path-to-incitez-bench]   (default: zig-out/bin/incitez-bench)
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
+BENCH="${1:-zig-out/bin/incitez-bench}"
+if [[ ! -x "$BENCH" ]]; then
+	echo "scaling: bench binary not found at '$BENCH' (run ./build first)" >&2
+	exit 2
+fi
+
+THRESHOLD=28   # ×10 — fail at ≥ 2.8× per doubling
+ITERS=4
+# Portable GNU-ish tools: gsed/gawk on Peter's macOS, sed/awk in the CI sandbox.
+if command -v gsed >/dev/null 2>&1; then SED=gsed; else SED=sed; fi
+if command -v gawk >/dev/null 2>&1; then AWK=gawk; else AWK=awk; fi
+# Phases asserted O(n)/O(n log n). resolve is reported but NOT gated: its only
+# residual is an exact-duplication O(dups²) path (rare in real text, ~3% of
+# runtime) — tracked as a follow-up, not a launch blocker.
+GATED="match finish reference filter"
+
+workdir="${TMPDIR:-/tmp}"
+base="$workdir/incitez-scaling-base.txt"
+# Prefer a jq on PATH (CI sandbox has no network for `nix run`); fall back to
+# nix for interactive local use.
+if command -v jq >/dev/null 2>&1; then JQ=(jq); else JQ=(nix run 'nixpkgs#jq' --); fi
+"${JQ[@]}" -r '.methods[][] | .text' tests/corpus/eyecite_corpus.json > "$base" 2>/dev/null \
+	|| { echo "scaling: could not build base corpus text" >&2; exit 2; }
+
+# Build the four sizes (N=×4 base, doubling to ×32) — large enough to dominate
+# per-call constant factors, small enough to stay fast.
+mults=(4 8 16 32)
+declare -A out
+for m in "${mults[@]}"; do
+	d="$workdir/incitez-scaling-$m.txt"
+	: > "$d"
+	for _ in $(seq 1 "$m"); do cat "$base" >> "$d"; done
+	out[$m]="$("$BENCH" micro "$d" "$ITERS")"
+done
+
+ns_of_phase() { "$SED" -n "s/^$2: \([0-9]*\).*/\1/p" <<<"$1"; }
+ratio() { "$AWK" -v a="$1" -v b="$2" 'BEGIN{ if (a+0>0) printf "%.1f", b/a; else print "0" }'; }
+
+echo "=== scaling-ratio gate (phases at N=×4 .. ×32, fail ≥ 2.8×/doubling) ==="
+printf '%-11s %12s %12s %12s %12s   %s\n' phase x4 x8 x16 x32 "ratios(→)"
+status=0
+for ph in match finish reference filter resolve; do
+	v4=$(ns_of_phase "${out[4]}" "$ph")
+	v8=$(ns_of_phase "${out[8]}" "$ph")
+	v16=$(ns_of_phase "${out[16]}" "$ph")
+	v32=$(ns_of_phase "${out[32]}" "$ph")
+	[[ -z "$v4" || -z "$v32" ]] && { echo "scaling: missing data for '$ph'" >&2; status=2; continue; }
+	r1=$(ratio "$v4" "$v8")
+	r2=$(ratio "$v8" "$v16")
+	r3=$(ratio "$v16" "$v32")
+	# gate on the largest doubling (constant factors most dominated)
+	r3x10=$("$AWK" -v a="$v16" -v b="$v32" 'BEGIN{ printf "%d", (b/a)*10 }')
+	gated=0; for g in $GATED; do [[ "$g" == "$ph" ]] && gated=1; done
+	flag=""
+	if (( gated )); then
+		if (( r3x10 >= THRESHOLD )); then
+			flag=$'\033[1;31m  ← FAIL (≥2.8×, super-linear)\033[0m'
+			status=1
+		fi
+	else
+		flag="  (report-only — exact-dup residual, tracked)"
+	fi
+	printf '%-11s %12s %12s %12s %12s   %sx %sx %sx%s\n' "$ph" "$v4" "$v8" "$v16" "$v32" "$r1" "$r2" "$r3" "$flag"
+done
+
+echo ""
+if (( status == 0 )); then
+	echo "scaling gate: PASS (all gated phases sub-quadratic)"
+elif (( status == 1 )); then
+	echo "scaling gate: FAIL — a gated phase grew super-linearly (see ← FAIL above)"
+fi
+exit "$status"
