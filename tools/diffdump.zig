@@ -32,7 +32,8 @@ pub fn main(init: std.process.Init) !void {
             try w.print("\"type\": \"{s}\"", .{typeName(c.kind)});
             try w.print(", \"span\": [{d}, {d}]", .{ c.span_start, c.span_end });
             try jsonField(w, "volume", c.volume);
-            try jsonField(w, "reporter", if (c.kind == .supra or c.kind == .id or c.kind == .unknown) null else c.reporter);
+            const is_tok = c.kind == .supra or c.kind == .id or c.kind == .unknown or c.kind == .reference;
+            try jsonField(w, "reporter", if (is_tok) null else c.reporter);
             try jsonField(w, "page", c.page);
             try jsonField(w, "pin_cite", c.pin_cite);
             try jsonField(w, "court", c.court);

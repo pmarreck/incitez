@@ -11,11 +11,11 @@ const incitez = @import("incitez");
 const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
-const RATCHET_EXPECTED_PASSES: usize = 130;
-const RATCHET_PCRE2_EXPECTED_PASSES: usize = 130;
+const RATCHET_EXPECTED_PASSES: usize = 136;
+const RATCHET_PCRE2_EXPECTED_PASSES: usize = 136;
 /// Eligible-case count must ALSO match exactly — without this, newly
 /// eligible cases that all fail leave the pass count unchanged and slip by.
-const RATCHET_EXPECTED_ATTEMPTED: usize = 130;
+const RATCHET_EXPECTED_ATTEMPTED: usize = 136;
 const EXPECTED_ENGINE_DIVERGENCES: usize = 0;
 
 const CaseResult = struct {
@@ -45,7 +45,8 @@ fn caseEligible(case: std.json.ObjectMap) bool {
             std.mem.eql(u8, t, "IdCitation") or
             std.mem.eql(u8, t, "FullJournalCitation") or
             std.mem.eql(u8, t, "UnknownCitation") or
-            std.mem.eql(u8, t, "FullLawCitation");
+            std.mem.eql(u8, t, "FullLawCitation") or
+            std.mem.eql(u8, t, "ReferenceCitation");
         if (!supported) return false;
     }
     return true;
@@ -79,6 +80,7 @@ fn kindMatches(type_name: []const u8, kind: incitez.extraction.Kind) bool {
         else if (std.mem.eql(u8, type_name, "FullJournalCitation")) .full_journal
         else if (std.mem.eql(u8, type_name, "UnknownCitation")) .unknown
         else if (std.mem.eql(u8, type_name, "FullLawCitation")) .full_law
+        else if (std.mem.eql(u8, type_name, "ReferenceCitation")) .reference
         else return false;
     return kind == expected_kind;
 }
@@ -91,7 +93,7 @@ fn citeMatches(text: []const u8, expected: std.json.ObjectMap, actual: incitez.e
     if (actual.span_start != exp_bytes[0] or actual.span_end != exp_bytes[1]) return false;
     // groups: volume, reporter, page (may be null/absent)
     const groups = expected.get("groups").?.object;
-    const is_token = actual.kind == .supra or actual.kind == .id or actual.kind == .unknown;
+    const is_token = actual.kind == .supra or actual.kind == .id or actual.kind == .unknown or actual.kind == .reference;
     const actual_reporter: ?[]const u8 = if (is_token) null else actual.reporter;
     if (!optFieldMatches(groups.get("volume"), actual.volume)) return false;
     if (!optFieldMatches(groups.get("reporter"), actual_reporter)) return false;

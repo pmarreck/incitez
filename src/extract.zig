@@ -127,6 +127,7 @@ pub fn extractWithEngine(
         c.full_span_end = c.span_end;
     }
     for (cites.items, 0..) |*c, i| try finishCitation(allocator, text, cites.items, i, c);
+    try referenceScan(allocator, text, &cites);
     filterCitations(allocator, text, &cites);
     return cites.toOwnedSlice(allocator);
 }
@@ -190,6 +191,109 @@ fn pcre2Scan(
     }
 }
 
+/// eyecite extract_pincited_reference_citations: for each FullCaseCitation,
+/// scan the text AFTER it for `\b<party name>\s+PIN_CITE`, where the party
+/// name is a valid plaintiff/defendant of that citation. Emits a
+/// ReferenceCitation per match (the name's role — plaintiff or defendant —
+/// is recorded). References depend on already-computed case-name metadata,
+/// so this runs after finishCitation.
+fn referenceScan(
+    allocator: std.mem.Allocator,
+    text: []const u8,
+    cites: *std.ArrayListUnmanaged(Citation),
+) !void {
+    const original_len = cites.items.len;
+    var i: usize = 0;
+    while (i < original_len) : (i += 1) {
+        const c = cites.items[i];
+        if (c.kind != .full_case) continue;
+        // name_fields order: plaintiff, then defendant (resolved names unsupported)
+        const NameRole = struct { name: []const u8, is_plaintiff: bool };
+        var names: [2]NameRole = undefined;
+        var n_names: usize = 0;
+        if (c.plaintiff) |p| {
+            if (isValidName(p)) {
+                names[n_names] = .{ .name = p, .is_plaintiff = true };
+                n_names += 1;
+            }
+        }
+        if (c.defendant) |d| {
+            if (isValidName(d)) {
+                names[n_names] = .{ .name = d, .is_plaintiff = false };
+                n_names += 1;
+            }
+        }
+        if (n_names == 0) continue;
+
+        var pos: usize = c.span_end;
+        while (pos < text.len) {
+            // \b before the name: previous char must be a non-word char
+            const at_boundary = pos == 0 or !isWordChar(text[pos - 1]);
+            if (at_boundary) {
+                var matched = false;
+                for (names[0..n_names]) |nr| {
+                    if (!std.mem.startsWith(u8, text[pos..], nr.name)) continue;
+                    var q = pos + nr.name.len;
+                    // \s+ (at least one whitespace) after the name
+                    if (q >= text.len or !std.ascii.isWhitespace(text[q])) continue;
+                    while (q < text.len and std.ascii.isWhitespace(text[q])) q += 1;
+                    const pin = parsePinCite(text, q) orelse continue;
+                    try cites.append(allocator, .{
+                        .kind = .reference,
+                        .span_start = @intCast(pos),
+                        .span_end = @intCast(pin.end),
+                        .volume = null,
+                        .reporter = text[pos..pin.end],
+                        .page = null,
+                        .edition = 0,
+                        .is_variant = false,
+                        .pin_cite = pin.cleaned,
+                        .plaintiff = if (nr.is_plaintiff) try allocator.dupe(u8, nr.name) else null,
+                        .defendant = if (nr.is_plaintiff) null else try allocator.dupe(u8, nr.name),
+                        .full_span_start = @intCast(pos),
+                        .full_span_end = @intCast(pin.end),
+                    });
+                    pos = pin.end;
+                    matched = true;
+                    break;
+                }
+                if (matched) continue;
+            }
+            pos += 1;
+        }
+    }
+}
+
+/// eyecite is_valid_name: >2 chars, starts uppercase, not ending in '.', not
+/// all digits, and not a disallowed name. (eyecite's AG-surname disallow
+/// entries are dead code — stored capitalized, compared against .lower() —
+/// so only the lowercase set is effective; bug-matched here.)
+fn isValidName(name: []const u8) bool {
+    if (name.len <= 2) return false;
+    if (!(name[0] >= 'A' and name[0] <= 'Z')) return false;
+    if (name[name.len - 1] == '.') return false;
+    var all_digits = true;
+    for (name) |ch| {
+        if (!isDigit(ch)) all_digits = false;
+    }
+    if (all_digits) return false;
+    return !isDisallowedName(name);
+}
+
+fn isDisallowedName(name: []const u8) bool {
+    var buf: [64]u8 = undefined;
+    if (name.len > buf.len) return false;
+    for (name, 0..) |ch, k| buf[k] = std.ascii.toLower(ch);
+    const lower = buf[0..name.len];
+    const disallowed = [_][]const u8{
+        "state", "united states", "people", "commonwealth", "mass", "commissionerakerman",
+    };
+    for (disallowed) |d| {
+        if (std.mem.eql(u8, lower, d)) return true;
+    }
+    return false;
+}
+
 fn citeLessThan(_: void, a: Citation, b: Citation) bool {
     if (a.span_start != b.span_start) return a.span_start < b.span_start;
     return a.span_end > b.span_end;
@@ -234,6 +338,17 @@ fn filterCitations(
             const overlapping = @max(c.full_span_start, last.full_span_start) <
                 @min(c.full_span_end, last.full_span_end);
             if (overlapping) {
+                // eyecite filter_citations overlap order: prefer anything to
+                // a reference citation, then drop supra over short.
+                if (last.kind == .reference) {
+                    freeCitationStrings(allocator, last);
+                    cites.items[kept - 1] = c; // current replaces the dropped reference
+                    continue;
+                }
+                if (c.kind == .reference) {
+                    freeCitationStrings(allocator, c);
+                    continue;
+                }
                 if (c.kind == .supra and last.kind == .short_case) {
                     freeCitationStrings(allocator, c);
                     continue;
@@ -1112,6 +1227,10 @@ fn isDigit(c: u8) bool {
     return c >= '0' and c <= '9';
 }
 
+fn isWordChar(c: u8) bool {
+    return std.ascii.isAlphanumeric(c) or c == '_';
+}
+
 fn firstByteCandidate(c: u8) bool {
     return tables.key_first_bytes[c >> 6] & (@as(u64, 1) << @intCast(c & 63)) != 0;
 }
@@ -1972,4 +2091,51 @@ test "seam: different reporters never interfere (separate extractor passes)" {
     defer freeCitations(testing.allocator, p2);
     try testing.expectEqual(@as(usize, 2), vm.len);
     try testing.expectEqual(@as(usize, 2), p2.len);
+}
+
+test "reference: plaintiff name + pin after a full case cite" {
+    const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12, 347-348. something something, In Foo at 62, we see that");
+    defer freeCitations(testing.allocator, cites);
+    var refs: usize = 0;
+    for (cites) |c| {
+        if (c.kind != .reference) continue;
+        refs += 1;
+        try testing.expectEqual(@as(u32, 55), c.span_start);
+        try testing.expectEqual(@as(u32, 64), c.span_end);
+        try testing.expectEqualStrings("Foo", c.plaintiff.?);
+        try testing.expectEqual(@as(?[]const u8, null), c.defendant);
+    }
+    try testing.expectEqual(@as(usize, 1), refs);
+}
+
+test "reference: defendant name (in re) + pin" {
+    const cites = try extract(testing.allocator, "In re Foo 1 Mass. 12, 347-348. something something, in Foo at 62, we see that, ");
+    defer freeCitations(testing.allocator, cites);
+    var refs: usize = 0;
+    for (cites) |c| {
+        if (c.kind != .reference) continue;
+        refs += 1;
+        try testing.expectEqualStrings("Foo", c.defendant.?);
+        try testing.expectEqual(@as(?[]const u8, null), c.plaintiff);
+    }
+    try testing.expectEqual(@as(usize, 1), refs);
+}
+
+test "reference: disallowed name (United States) excluded; valid one kept" {
+    const cites = try extract(testing.allocator, "Foo v. United States 1 U.S. 12, 347-348. something something ... the United States at 1776 we see that and Foo at 62");
+    defer freeCitations(testing.allocator, cites);
+    var refs: usize = 0;
+    for (cites) |c| {
+        if (c.kind != .reference) continue;
+        refs += 1;
+        try testing.expectEqualStrings("Foo", c.plaintiff.?);
+    }
+    try testing.expectEqual(@as(usize, 1), refs); // "United States at 1776" excluded
+}
+
+test "reference: only fires after the full cite, requires a pin" {
+    // no pin after the name => no reference
+    const cites = try extract(testing.allocator, "Foo v. Bar 1 U.S. 12, 347-348. Later Foo did something.");
+    defer freeCitations(testing.allocator, cites);
+    for (cites) |c| try testing.expect(c.kind != .reference);
 }
