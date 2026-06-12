@@ -1,6 +1,7 @@
 # Dirtree: Stateful directory trees in the CLI for humans and LLMs. https://github.com/pmarreck/dirtree
 ver=1.2
 annotate=[
+	BENCHMARKS.md = Hardware-keyed perf log: VM regression gate (two-sided ±10%) + vs-eyecite speedup tracking
 	MISTAKES.md = Process mistakes log (pipe exit-code masking; jj+nix stale-tree race)
 	bm = Benchmark runner: synthetic doc from corpus, hyperfine one-shot + steady-state, appends BENCHMARKS.md
 	build.zig = Hexagonal build: static lib (C ABI) + C CLI dogfooding FFI + test/test-compile steps (use_llvm forced)
@@ -22,6 +23,7 @@ annotate=[
 	tests/expected_divergences.json = Fenced-divergence ledger: 26 entries (law/journal/section/reference gaps) with reasons
 	tests/mutation.zig = Mutation shotgun: seeded corruption operators + dual-engine agreement on mutants
 	tools/bench.zig = Engine benchmark exe (vm|pcre2, refuses Debug builds)
+	tools/bench_eyecite.py = eyecite-side benchmark (oracle env): steady-state + cold-start timing of get_citations() for the vs-eyecite comparison
 	tools/diff_oracle.py = Differential oracle+comparator (eyecite env, test-time): build-texts / compare with fence ledger
 	tools/diffdump.zig = Differential gate dump: texts JSON -> extraction JSON (VM engine)
 	tools/extract_corpus.py = Corpus extractor: AST-evals eyecite test_pairs in oracle env, integrity-gates, serializes (test-time Python exception)
