@@ -25,6 +25,7 @@ const GROUP_NAMES = [_][]const u8{
 const cite_types = [_][]const u8{
     "federal",         "neutral",        "scotus_early", "specialty",
     "specialty_lexis", "specialty_west", "state",        "state_regional",
+    "journal",
 };
 
 const Ed = struct {
@@ -32,6 +33,7 @@ const Ed = struct {
     name: []const u8,
     cite_type: []const u8,
     program_ids: []const u32,
+    source: []const u8, // "reporters" | "journals" (laws later)
 };
 
 const Match = struct {
@@ -646,8 +648,8 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
 
     const args = try init.minimal.args.toSlice(arena);
-    if (args.len != 4) {
-        std.debug.print("usage: {s} <reporters.json> <regexes.json> <out.zig>\n", .{args[0]});
+    if (args.len != 5) {
+        std.debug.print("usage: {s} <reporters.json> <regexes.json> <journals.json> <out.zig>\n", .{args[0]});
         return error.BadArgs;
     }
 
@@ -766,6 +768,7 @@ pub fn main(init: std.process.Init) !void {
                     .name = name,
                     .cite_type = cite_type,
                     .program_ids = ids.items,
+                    .source = "reporters",
                 });
                 try local.put(arena, ed.key_ptr.*, idx);
                 try entry_eds.append(arena, .{
@@ -853,6 +856,67 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
+    // ---- journals.json: flat entries, variations as arrays ----
+    const journals_data = try std.Io.Dir.cwd().readFileAlloc(io, args[3], arena, .unlimited);
+    const journals_parsed = try std.json.parseFromSlice(std.json.Value, arena, journals_data, .{});
+    var j_it = journals_parsed.value.object.iterator();
+    while (j_it.next()) |jentry| {
+        for (jentry.value_ptr.array.items) |src_val| {
+            const jobj = src_val.object;
+            const name = jobj.get("name").?.string;
+            const cite_type = jobj.get("cite_type").?.string;
+            const idx: u32 = @intCast(editions.items.len);
+
+            var ids: std.ArrayListUnmanaged(u32) = .empty;
+            var expanded_list: std.ArrayListUnmanaged([]const u8) = .empty;
+            const templates: []const std.json.Value = blk: {
+                if (jobj.get("regexes")) |r| {
+                    if (r == .array and r.array.items.len > 0) break :blk r.array.items;
+                }
+                break :blk &.{};
+            };
+            if (templates.len == 0) {
+                const expanded = try recursiveSubstitute(arena, "$full_cite", &vars);
+                try expanded_list.append(arena, expanded);
+            } else {
+                for (templates) |t| {
+                    try expanded_list.append(arena, try recursiveSubstitute(arena, t.string, &vars));
+                }
+            }
+            for (expanded_list.items) |expanded| {
+                try ids.append(arena, try internProgram(arena, expanded, false, &programs, &program_ids, &unanchored_count));
+                if (try shortify(arena, expanded)) |srx| {
+                    try ids.append(arena, try internProgram(arena, srx, true, &programs, &program_ids, &unanchored_count));
+                }
+            }
+            try editions.append(arena, .{
+                .abbrev = jentry.key_ptr.*,
+                .name = name,
+                .cite_type = cite_type,
+                .program_ids = ids.items,
+                .source = "journals",
+            });
+            try matches.append(arena, .{ .key = jentry.key_ptr.*, .edition = idx, .is_variant = false });
+
+            var var_names: std.ArrayListUnmanaged([]const u8) = .empty;
+            if (jobj.get("variations")) |vlist| {
+                for (vlist.array.items) |v| {
+                    try matches.append(arena, .{ .key = v.string, .edition = idx, .is_variant = true });
+                    try var_names.append(arena, v.string);
+                }
+            }
+            for (expanded_list.items) |expanded| {
+                const srx = try shortify(arena, expanded);
+                try internPcre2Extractor(arena, expanded, &.{jentry.key_ptr.*}, idx, false, false, &pcre2_extractors, &pcre2_seen);
+                if (srx) |s| try internPcre2Extractor(arena, s, &.{jentry.key_ptr.*}, idx, false, true, &pcre2_extractors, &pcre2_seen);
+                if (var_names.items.len > 0) {
+                    try internPcre2Extractor(arena, expanded, var_names.items, idx, true, false, &pcre2_extractors, &pcre2_seen);
+                    if (srx) |s| try internPcre2Extractor(arena, s, var_names.items, idx, true, true, &pcre2_extractors, &pcre2_seen);
+                }
+            }
+        }
+    }
+
     std.mem.sort(Match, matches.items, {}, matchLessThan);
 
     // ---- emit ----
@@ -900,11 +964,14 @@ pub fn main(init: std.process.Init) !void {
         \\    short: bool,
         \\}};
         \\
+        \\pub const Source = enum {{ reporters, journals, laws }};
+        \\
         \\pub const Edition = struct {{
         \\    abbrev: []const u8,
         \\    reporter_name: []const u8,
         \\    cite_type: CiteType,
         \\    programs: []const u16,
+        \\    source: Source,
         \\    /// eyecite Reporter.is_scotus: federal + "supreme" in name, or
         \\    /// a scotus_early cite_type (drives guess_court).
         \\    is_scotus: bool,
@@ -967,8 +1034,8 @@ pub fn main(init: std.process.Init) !void {
         try w.writeAll(", .reporter_name = ");
         try writeZigString(w, ed.name);
         try w.print(
-            ", .cite_type = .{s}, .programs = &ed{d}_progs, .is_scotus = {} }},\n",
-            .{ ed.cite_type, i, is_scotus },
+            ", .cite_type = .{s}, .programs = &ed{d}_progs, .source = .{s}, .is_scotus = {} }},\n",
+            .{ ed.cite_type, i, ed.source, is_scotus },
         );
     }
     try w.writeAll(
@@ -1026,7 +1093,7 @@ pub fn main(init: std.process.Init) !void {
     }
     try w.writeAll("};\n");
 
-    const out = try std.Io.Dir.cwd().createFile(io, args[3], .{});
+    const out = try std.Io.Dir.cwd().createFile(io, args[4], .{});
     defer out.close(io);
     try out.writeStreamingAll(io, aw.written());
 }

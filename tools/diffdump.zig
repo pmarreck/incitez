@@ -41,7 +41,7 @@ pub fn main(init: std.process.Init) !void {
             try jsonField(w, "plaintiff", c.plaintiff);
             try jsonField(w, "defendant", c.defendant);
             try jsonField(w, "antecedent_guess", c.antecedent_guess);
-            if (c.kind == .full_case or c.kind == .short_case) {
+            if (c.kind == .full_case or c.kind == .short_case or c.kind == .full_journal or c.kind == .full_law) {
                 try w.writeAll(", \"corrected_reporter\": ");
                 try jsonString(w, c.correctedReporter());
             }

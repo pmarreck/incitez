@@ -11,11 +11,11 @@ const incitez = @import("incitez");
 const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 
 /// Bump this consciously as matcher features land.
-const RATCHET_EXPECTED_PASSES: usize = 113;
-const RATCHET_PCRE2_EXPECTED_PASSES: usize = 113;
+const RATCHET_EXPECTED_PASSES: usize = 119;
+const RATCHET_PCRE2_EXPECTED_PASSES: usize = 119;
 /// Eligible-case count must ALSO match exactly — without this, newly
 /// eligible cases that all fail leave the pass count unchanged and slip by.
-const RATCHET_EXPECTED_ATTEMPTED: usize = 113;
+const RATCHET_EXPECTED_ATTEMPTED: usize = 119;
 const EXPECTED_ENGINE_DIVERGENCES: usize = 0;
 
 const CaseResult = struct {
@@ -42,7 +42,8 @@ fn caseEligible(case: std.json.ObjectMap) bool {
         const supported = std.mem.eql(u8, t, "FullCaseCitation") or
             std.mem.eql(u8, t, "ShortCaseCitation") or
             std.mem.eql(u8, t, "SupraCitation") or
-            std.mem.eql(u8, t, "IdCitation");
+            std.mem.eql(u8, t, "IdCitation") or
+            std.mem.eql(u8, t, "FullJournalCitation");
         if (!supported) return false;
     }
     return true;
@@ -73,6 +74,7 @@ fn kindMatches(type_name: []const u8, kind: incitez.extraction.Kind) bool {
         else if (std.mem.eql(u8, type_name, "ShortCaseCitation")) .short_case
         else if (std.mem.eql(u8, type_name, "SupraCitation")) .supra
         else if (std.mem.eql(u8, type_name, "IdCitation")) .id
+        else if (std.mem.eql(u8, type_name, "FullJournalCitation")) .full_journal
         else return false;
     return kind == expected_kind;
 }
@@ -268,7 +270,7 @@ const resolve_corpus_json = @embedFile("corpus/eyecite_resolve_corpus.json");
 /// Resolution-corpus ratchets (cases replicate eyecite checkResolution:
 /// one cite per row text, combined list resolved, cluster indices compared).
 const RESOLVE_EXPECTED_ATTEMPTED: usize = 23;
-const RESOLVE_EXPECTED_PASSES: usize = 19; // 4 gaps: law/journal/§ cites not yet extracted
+const RESOLVE_EXPECTED_PASSES: usize = 20; // 3 gaps: law/§ cites not yet extracted
 
 test "resolution corpus: cluster assignments vs eyecite ResolveTest" {
     const allocator = std.testing.allocator;

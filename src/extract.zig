@@ -176,7 +176,13 @@ fn pcre2Scan(
             cand.edition,
             cand.is_variant,
         );
-        if (cand.short) c.kind = .short_case;
+        if (cand.short) {
+            c.kind = .short_case;
+        } else c.kind = switch (tables.editions[cand.edition].source) {
+            .reporters => .full_case,
+            .journals => .full_journal,
+            .laws => .full_law,
+        };
         try cites.append(allocator, c);
     }
 }
@@ -316,6 +322,10 @@ fn finishCitation(
     c: *Citation,
 ) !void {
     switch (c.kind) {
+        .full_journal => {
+            finishJournalCitation(text, c);
+            return;
+        },
         .full_case => {
             const post = parsePostCitation(text, c.span_end);
             c.year_text = post.year_text;
@@ -378,6 +388,33 @@ fn finishCitation(
     if (c.kind == .full_case and c.plaintiff == null and c.defendant == null) {
         try preCiteAntecedent(allocator, text, c, spans_buf[0..n_spans]);
     }
+}
+
+/// eyecite add_journal_metadata / POST_JOURNAL_CITATION_REGEX:
+/// `PIN? \ ? (\(YEAR\))? \ ? PARENTHETICAL?` — no court, no case names.
+fn finishJournalCitation(text: []const u8, c: *Citation) void {
+    const nl = std.mem.indexOfScalarPos(u8, text, c.span_end, '\n') orelse text.len;
+    const win = text[0..@min(nl, c.span_end + MAX_MATCH_CHARS)];
+    var p: usize = c.span_end;
+    if (parsePinCite(win, p)) |pin| {
+        c.pin_cite = pin.cleaned;
+        p = pin.end;
+    }
+    if (p < win.len and win[p] == ' ') p += 1;
+    // optional (YEAR) with optional -dd range
+    if (p + 6 <= win.len and win[p] == '(' and allDigits(win[p + 1 .. p + 5])) {
+        var e = p + 5;
+        if (e + 3 <= win.len and win[e] == '-' and isDigit(win[e + 1]) and isDigit(win[e + 2])) e += 3;
+        if (e < win.len and win[e] == ')') {
+            c.year_text = win[p + 1 .. p + 5];
+            const y = std.fmt.parseInt(u16, c.year_text.?, 10) catch unreachable;
+            c.year = if (y >= 1600 and y <= default_max_valid_year) y else null;
+            p = e + 1;
+            if (p < win.len and win[p] == ' ') p += 1;
+        }
+    }
+    c.parenthetical = parseParenthetical(win, p -| 1);
+    c.full_span_end = @max(c.full_span_end, c.span_end);
 }
 
 /// eyecite extract_pin_cite for id/supra tokens: pin + parenthetical in a
@@ -974,7 +1011,13 @@ fn bestMatchAt(text: []const u8, i: usize) ?Citation {
                             entry.edition,
                             entry.is_variant,
                         );
-                        if (prog.short) best.?.kind = .short_case;
+                        if (prog.short) {
+                            best.?.kind = .short_case;
+                        } else best.?.kind = switch (edition.source) {
+                            .reporters => .full_case,
+                            .journals => .full_journal,
+                            .laws => .full_law,
+                        };
                     }
                 }
             }
@@ -1660,4 +1703,39 @@ test "two citations in one string" {
     try testing.expectEqual(@as(usize, 2), cites.len);
     try testing.expectEqualStrings("U.S.", cites[0].reporter);
     try testing.expectEqualStrings("F.2d", cites[1].reporter);
+}
+
+test "journal citation: bare, pin, year, parenthetical" {
+    const cites = try extract(testing.allocator, "1 Minn. L. Rev. 1, 2-3 (2007) (discussing ...) (ignore this)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    const c = cites[0];
+    try testing.expectEqual(Kind.full_journal, c.kind);
+    try testing.expectEqual(@as(u32, 0), c.span_start);
+    try testing.expectEqual(@as(u32, 17), c.span_end);
+    try testing.expectEqualStrings("1", c.volume.?);
+    try testing.expectEqualStrings("Minn. L. Rev.", c.reporter);
+    try testing.expectEqualStrings("1", c.page.?);
+    try testing.expectEqualStrings("2-3", c.pin_cite.?);
+    try testing.expectEqual(@as(?u16, 2007), c.year);
+    try testing.expectEqualStrings("discussing ...", c.parenthetical.?);
+    try testing.expectEqualStrings("Minn. L. Rev.", c.correctedReporter());
+}
+
+test "journal citation: year range paren" {
+    const cites = try extract(testing.allocator, "77 Marq. L. Rev. 475 (1993-94)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(Kind.full_journal, cites[0].kind);
+    try testing.expectEqual(@as(?u16, 1993), cites[0].year);
+    try testing.expectEqual(@as(u32, 20), cites[0].span_end);
+}
+
+test "journal citation: no case names, no court" {
+    const cites = try extract(testing.allocator, "see Smith v. Jones, 1 Minn. L. Rev. 1 (2007)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expectEqual(@as(usize, 1), cites.len);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].plaintiff);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].defendant);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].court);
 }

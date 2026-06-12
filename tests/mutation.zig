@@ -21,8 +21,8 @@ const corpus_json = @embedFile("corpus/eyecite_corpus.json");
 const SEED: u64 = 0x1ec17e5_2026;
 
 /// Two-sided expected tallies — bump consciously when behavior changes.
-const EXPECTED_TEXTS: usize = 162;
-const EXPECTED_REPORTER_KILLS: usize = 162; // 100% kill rate on reporter corruption
+const EXPECTED_TEXTS: usize = 168;
+const EXPECTED_REPORTER_KILLS: usize = 168; // 100% kill rate on reporter corruption
 
 fn engineAgree(allocator: std.mem.Allocator, text: []const u8) !bool {
     const a = try incitez.extraction.extractWithEngine(allocator, text, .vm);

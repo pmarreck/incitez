@@ -42,6 +42,7 @@ pub fn build(b: *std.Build) void {
     const gen_run = b.addRunArtifact(gen_exe);
     gen_run.addFileArg(b.path("data/reporters_db/reporters.json"));
     gen_run.addFileArg(b.path("data/reporters_db/regexes.json"));
+    gen_run.addFileArg(b.path("data/reporters_db/journals.json"));
     const tables_src = gen_run.addOutputFileArg("reporters_tables.zig");
     const tables_mod = b.createModule(.{ .root_source_file = tables_src });
     const tables_import = std.Build.Module.Import{

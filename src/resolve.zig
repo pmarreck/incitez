@@ -27,7 +27,7 @@ pub fn resolve(allocator: std.mem.Allocator, cites: []const Citation) ![]?u32 {
     for (cites, 0..) |c, i| {
         var res: ?u32 = null;
         switch (c.kind) {
-            .full_case => {
+            .full_case, .full_journal, .full_law => {
                 res = @intCast(i);
                 for (resolved_fulls.items) |fi| {
                     if (sameResourceKey(cites[fi], c)) {
