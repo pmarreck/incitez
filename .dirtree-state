@@ -7,6 +7,7 @@ annotate=[
 	build.zig = Hexagonal build: static lib (C ABI) + C CLI dogfooding FFI + test/test-compile steps (use_llvm forced)
 	cli/main.c = C CLI shell over the FFI: --about/--help; all I/O lives here
 	docs/architecture.md = VM raison d'etre + M.O.: reporter-anchored pattern VM vs literal PCRE2 oracle; first-byte gate, sorted-table anchor, local-verify; trie prior art
+	docs/exceeds_eyecite.md = Canonical catalog of where incitez exceeds eyecite (en-dash pins, structural-newline boundaries, leading Bluebook signals) — the 'surpass' half of meet-AND-surpass
 	docs/incitez_design.md = THE SPEC: design brief from legal_ai (licensing, MFIC test strategy, perf targets, milestones)
 	docs/principled_divergences.md = Where incitez diverges-to-surpass or reasons-to-match eyecite: seam, AG-names, en/em-dash pins
 	docs/wasm_abi.md = Consumer contract for the WASM artifact (the browser-world incitez.h): exports, memory ownership, JSON schema, error signaling, example vectors
