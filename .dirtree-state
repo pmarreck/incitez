@@ -7,6 +7,7 @@ annotate=[
 	bm = Benchmark runner: synthetic doc from corpus, hyperfine one-shot + steady-state, appends BENCHMARKS.md
 	build.zig = Hexagonal build: static lib (C ABI) + C CLI dogfooding FFI + test/test-compile steps (use_llvm forced)
 	cli/main.c = C CLI shell over the FFI: --about/--help; all I/O lives here
+	demo = Terminal incitez-vs-eyecite head-to-head for Peter's legaltech pitch: ① parity (324=324 live, 215/215 proof) ② measured warm speed (~31x) ③ structure-aware party-attribution surpass. MFIC-honest (raw PDF=parity+speed). --simple fallback
 	docs/architecture.md = VM raison d'etre + M.O.: reporter-anchored pattern VM vs literal PCRE2 oracle; first-byte gate, sorted-table anchor, local-verify; trie prior art
 	docs/exceeds_eyecite.md = Canonical catalog of where incitez exceeds eyecite (en-dash pins, structural-newline boundaries, leading Bluebook signals) — the 'surpass' half of meet-AND-surpass
 	docs/incitez_design.md = THE SPEC: design brief from legal_ai (licensing, MFIC test strategy, perf targets, milestones)
@@ -32,6 +33,7 @@ annotate=[
 	tests/expected_divergences.json = Fenced-divergence ledger: 26 entries (law/journal/section/reference gaps) with reasons
 	tests/mutation.zig = Mutation shotgun: seeded corruption operators + dual-engine agreement on mutants
 	tests/realworld/cunningham_v_cornell_2025.txt = Real 2025 SCOTUS opinion fixture (public domain); 23/23 eyecite agreement validated
+	tests/realworld/toa_structured.txt = Structured Table-of-Authorities fixture (heading + cases, real line breaks) for the demo's surpass beat — incitez stops at the \n boundary, eyecite bleeds the heading
 	tests/scaling = Machine-independent scaling-ratio gate: runs each pipeline phase at N..8N, fails any gated phase growing ≥2.8×/doubling (quadratic tripwire). Run by ./bm + flake checks.scaling
 	tests/wasm/smoke.mjs = Node ABI smoke test: instantiates incitez.wasm with zero imports, drives full ABI (selftest + extract round-trips); MFIC gate run by checks.wasm
 	tools/bench.zig = Engine benchmark exe (vm|pcre2, refuses Debug builds)
