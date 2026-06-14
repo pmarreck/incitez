@@ -29,6 +29,7 @@ annotate=[
 	tests/expected_divergences.json = Fenced-divergence ledger: 26 entries (law/journal/section/reference gaps) with reasons
 	tests/mutation.zig = Mutation shotgun: seeded corruption operators + dual-engine agreement on mutants
 	tests/realworld/cunningham_v_cornell_2025.txt = Real 2025 SCOTUS opinion fixture (public domain); 23/23 eyecite agreement validated
+	tests/scaling = Machine-independent scaling-ratio gate: runs each pipeline phase at N..8N, fails any gated phase growing ≥2.8×/doubling (quadratic tripwire). Run by ./bm + flake checks.scaling
 	tests/wasm/smoke.mjs = Node ABI smoke test: instantiates incitez.wasm with zero imports, drives full ABI (selftest + extract round-trips); MFIC gate run by checks.wasm
 	tools/bench.zig = Engine benchmark exe (vm|pcre2, refuses Debug builds)
 	tools/bench_eyecite.py = eyecite-side benchmark (oracle env): steady-state + cold-start timing of get_citations() for the vs-eyecite comparison

@@ -114,3 +114,36 @@ reporters, pages, years, antecedents); the only difference was the two
 en-dash pins, which incitez now recovers. eyecite's own corpus uses
 hyphen-minus throughout, so the differential gate stays **215/215, 0 fenced**
 — a strict improvement on real text with no cost to the meet bar.
+
+## 4. Structural-newline boundaries in the case-name walk — incitez surpasses (boundary-aware)
+
+**eyecite's behavior:** eyecite's case-name walk-back treats every `\n` as
+ordinary whitespace (`\s`). On real PDF-extracted text it therefore walks
+*through* a structural newline — e.g. the line break after an all-caps section
+heading — and swallows the heading into the party name. Verified against the
+live oracle: `TABLE OF AUTHORITIES Cases Albritton v. Gandy, 531 So. 2d 381`
+yields `plaintiff = "TABLE OF AUTHORITIES Cases Albritton"` in **both** eyecite
+and (flat-text) incitez. The universal `clean_text(['all_whitespace'])`
+preprocessing everyone runs makes this *worse*, not better: collapsing `\s+`→
+space destroys the very newline that marked the boundary.
+
+**incitez's behavior (the surpass):** when the input carries a structural
+newline, the case-name walk-back treats a lone `\n` as a **hard stop** — a case
+name may not cross a structural boundary. So the heading is excluded:
+`DISCUSSION\nSmith Co., 1 U.S. 1` → `defendant = "Smith Co."` (not
+`"DISCUSSION\nSmith Co."`).
+
+**Why this is principled, not lossy guessing:** incitez does **not** re-derive
+structure from flat text (that would be eyecite's ceiling). The signal comes
+from upstream: **docscan** owns structure-aware extraction — it joins
+intra-paragraph line-wraps to spaces (recovering ~47% recall lost to mid-token
+breaks) and emits a lone `\n` *only* at a real structural boundary (heading /
+paragraph / list break). incitez merely *consumes* that preserved signal. See
+`CITATION_PIPELINE_RESPONSIBILITIES.md` (Peter + Einstein, 2026-06-14).
+
+**Additive superset — the meet bar is untouched:** on **flat, marker-free text**
+(no `\n`) the walk-back is byte-identical to eyecite, so the differential gate
+stays **215/215, 0 fenced** (the eyecite corpus is single-line). The divergence
+only appears on *structured* input, where incitez is strictly more correct than
+anything that flattens-then-collapses. Pinned by the characterization test
+`"case name: structural newline is a hard walk-back stop"` in `src/extract.zig`.

@@ -2055,6 +2055,19 @@ test "case name: lowercase word before plaintiff excluded" {
     try expectNames("bob Lissner v. Test 1 F.2d 1 (1982)", 0, "Lissner", "Test");
 }
 
+test "case name: structural newline is a hard walk-back stop (boundary-aware surpass)" {
+    // docscan emits a lone \n only at a real structural boundary (heading /
+    // paragraph break; it joins intra-paragraph wraps to spaces). The case-name
+    // walk-back must STOP at that \n rather than swallow the preceding heading
+    // into the party — the all-caps-heading bleed that eyecite ALSO gets wrong
+    // (eyecite treats \n as \s and walks past). Additive: the marker-free
+    // differential corpus has no \n, so 215/215 is untouched. Principled
+    // divergence; see docs/principled_divergences.md.
+    // no-"v" antecedent: the heading must not bleed past the boundary
+    try expectNames("DISCUSSION\nSmith Co., 1 U.S. 1 (1980)", 0, null, "Smith Co.");
+    // "v" case: heading excluded, both parties intact
+    try expectNames("TABLE OF AUTHORITIES\nLissner v. Test, 1 U.S. 1", 0, "Lissner", "Test");
+}
 test "case name: capitalized word joins plaintiff" {
     try expectNames("Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982)", 0, "Bob Lissner", "Test");
     try expectNames("Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982)", 1, "Bob Lissner", "Test");

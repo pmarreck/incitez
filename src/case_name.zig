@@ -231,6 +231,18 @@ pub fn findCaseName(
         // skip bare commas
         if (std.mem.eql(u8, word, ",")) continue;
 
+        // docscan structural boundary (a lone \n): a case name cannot cross it,
+        // so hard-STOP the walk-back here — whatever we've collected after the
+        // boundary is the name. This is the boundary-aware surpass: eyecite (and
+        // our own flat-text path) treats \n as \s and walks PAST it, swallowing a
+        // preceding heading into the plaintiff. Additive — the marker-free
+        // differential corpus has no \n, so the 215/215 parity is untouched; on
+        // marked input we exceed eyecite. See docs/principled_divergences.md.
+        if (elem.kind == .paragraph) {
+            start_byte = afterElement(text, elem.end);
+            has_candidate = true;
+            break;
+        }
         case_name_length += 1;
         if (v_seen and elem.kind != .space) plaintiff_length += 1;
 
