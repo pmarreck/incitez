@@ -21,10 +21,18 @@ pub const CiteSpan = struct { start: u32, end: u32 };
 
 const BACKWARD_SEEK = 28; // eyecite: median case name length in tokens
 
+// Leading introductory signals + procedural/explanatory stop words removed from
+// the FRONT of a case-name candidate (stripStopWords). Bluebook comparison /
+// contradiction signals (Compare, Accord, Contra, Consider, generally) are
+// added beyond eyecite's set — eyecite leaves them in the plaintiff. They are
+// stripped LEADING-ONLY (see subStopWords' name_started gate): a capitalized
+// match embedded in a real name ("I See Deadpeople") is kept, since by then the
+// name has started. See docs/exceeds_eyecite.md.
 const STOP_WORDS = [_][]const u8{
-    "v",      "in re",   "re",       "quoting", "e.g.",    "parte",
-    "denied", "citing",  "aff'd",    "affirmed", "remanded", "see also",
-    "see",    "granted", "dismissed", "Cf",
+    "v",       "in re",    "re",        "quoting",  "e.g.",      "parte",
+    "denied",  "citing",   "aff'd",     "affirmed", "remanded",  "see also",
+    "see",     "granted",  "dismissed", "Cf",       "compare",   "accord",
+    "contra",  "consider", "generally",
 };
 
 const ElementKind = enum { word, space, citation, placeholder, stop_word, supra, paragraph };
@@ -530,6 +538,10 @@ pub fn stripStopWords(alloc: std.mem.Allocator, input: []const u8) ![]u8 {
     const pass2 = try subStopWords(alloc, pre, true);
     defer alloc.free(pass2);
     const final = std.mem.trim(u8, std.mem.trim(u8, pass2, ", "), " \t\r\n");
+    // Guard: if the case-insensitive pass emptied a name that pass1 kept, the
+    // sole token WAS the party, not a signal (e.g. a litigant literally named
+    // "Accord", right before "v."). Keep it rather than vanish the plaintiff.
+    if (final.len == 0 and pre.len > 0) return alloc.dupe(u8, pre);
     return alloc.dupe(u8, final);
 }
 
@@ -541,6 +553,10 @@ fn subStopWords(alloc: std.mem.Allocator, s: []const u8, case_insensitive: bool)
     var i: usize = 0;
     var prev_was_stop = false;
     var first = true;
+    // Leading-only: once a real (non-stop) name word is emitted, the name has
+    // begun and we stop stripping — so a signal word embedded in a name
+    // ("I See Deadpeople") survives, while a sentence-initial one is removed.
+    var name_started = false;
     while (i < s.len) {
         if (s[i] == ' ') {
             try out.append(alloc, ' ');
@@ -551,7 +567,7 @@ fn subStopWords(alloc: std.mem.Allocator, s: []const u8, case_insensitive: bool)
         while (j < s.len and s[j] != ' ') j += 1;
         var consumed = j;
         var is_stop = false;
-        if (!prev_was_stop) {
+        if (!prev_was_stop and !name_started) {
             const c1 = core(s[i..j]);
             // two-word stops first
             if (matchWord(c1, "in", case_insensitive) or matchWord(c1, "see", case_insensitive)) {
@@ -589,6 +605,7 @@ fn subStopWords(alloc: std.mem.Allocator, s: []const u8, case_insensitive: bool)
         } else {
             try out.appendSlice(alloc, s[i..consumed]);
             prev_was_stop = false;
+            name_started = true; // a real name word — stop stripping signals past here
             i = consumed;
         }
         first = false;

@@ -2068,6 +2068,24 @@ test "case name: structural newline is a hard walk-back stop (boundary-aware sur
     // "v" case: heading excluded, both parties intact
     try expectNames("TABLE OF AUTHORITIES\nLissner v. Test, 1 U.S. 1", 0, "Lissner", "Test");
 }
+
+test "case name: leading Bluebook signals stripped, embedded ones kept (surpass)" {
+    // eyecite filters See/Cf. but NOT Compare/Accord/Contra/Consider — it leaves
+    // them in the plaintiff. incitez strips the full introductory-signal set,
+    // LEADING-ONLY: a sentence-initial signal is removed, but the same word
+    // embedded in a real name survives (capitalization + position as signal).
+    // Principled surpass; see docs/exceeds_eyecite.md.
+    try expectNames("Compare Gideon v. Wainwright, 372 U.S. 335 (1963)", 0, "Gideon", "Wainwright");
+    try expectNames("Accord Foo v. Bar, 1 U.S. 1", 0, "Foo", "Bar");
+    try expectNames("Contra Foo v. Bar, 1 U.S. 1", 0, "Foo", "Bar");
+    try expectNames("Consider Foo v. Bar, 1 U.S. 1", 0, "Foo", "Bar");
+    // embedded signal word must survive (eyecite drops it AND the leading "I")
+    try expectNames("I See Deadpeople v. State of California, 1 U.S. 1", 0, "I See Deadpeople", "State of California");
+    try expectNames("See I See Deadpeople v. State of California, 1 U.S. 1", 0, "I See Deadpeople", "State of California");
+    // a litigant literally named a signal word, right before "v.", is NOT a
+    // signal — keep it (the empty-guard)
+    try expectNames("Accord v. Honda, 1 U.S. 1", 0, "Accord", "Honda");
+}
 test "case name: capitalized word joins plaintiff" {
     try expectNames("Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982)", 0, "Bob Lissner", "Test");
     try expectNames("Bob Lissner v. Test 1 U.S. 12, 347-348, 1 S. Ct. 2, 358 (4th Cir. 1982)", 1, "Bob Lissner", "Test");
