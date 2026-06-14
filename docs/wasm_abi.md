@@ -134,6 +134,45 @@ Two allocations cross the boundary per call, and **you own and free both**:
   not codepoint or UTF-16 indices. If you slice the original JS string by these
   offsets, slice the *bytes* (or convert), not the UTF-16 string.
 
+### Preprocessing real-world (PDF/OCR) input — the recommended pipeline
+
+Raw PDF/OCR text keeps **layout line-breaks mid-sentence and mid-citation**.
+Those `\n`s cost ~47% of citations (split tokens stop matching) and break party
+attribution. eyecite has the same problem — its documented answer is
+`clean_text(['all_whitespace', ...])` *before* `get_citations`. Two ways to feed
+incitez correctly:
+
+**A. Structure-aware (recommended): docscan → incitez.** docscan extracts
+PDF→text *using layout knowledge*: it **joins intra-paragraph line-wraps to
+single spaces** (recovers the lost recall at the source) and emits a **lone `\n`
+ONLY at a real structural boundary** (heading / paragraph / list break). incitez
+treats that lone `\n` as a **hard case-name boundary**: the walk-back will not
+cross it, so a preceding section heading never bleeds into the party. This
+**exceeds eyecite**, which flattens `\n`→space and swallows the heading (see
+`docs/principled_divergences.md` §4). docscan also returns an **offset map**
+(`{emitted_off, original_off}` breakpoints) so spans map back to the original
+document — see "the span chain" below.
+
+**B. Flat text (direct callers, no docscan): run the eyecite recipe yourself.**
+If you only have flat text, normalize it before calling — the same recipe
+CourtListener and Harvard's Caselaw Access Project run:
+- **`\s+` → single space** (eyecite's `all_whitespace`) — collapses newlines/tabs.
+- **strip runs of `__`** (eyecite's `underscores`) — a common PDF-extraction artifact.
+- **strip HTML to plain text** if your source is markup (incitez is text-in only).
+
+This degrades gracefully to **exact eyecite parity** (you lose the structural-
+boundary surpass, since collapsing `\s+` destroys the `\n` signal — that's the
+cost of not going through docscan). Spans will be offsets into your *normalized*
+text; keep your own offset map if you need to map back to the original.
+
+### The span chain (PDF highlight, end to end)
+
+original PDF bytes → **docscan** emits structure-aware text **+ offset map** →
+**incitez** returns citation spans into the *emitted* text → **your app**
+composes the two: for a citation span `[s,e)` in incitez output, map each
+endpoint through docscan's breakpoint array (binary-search the largest
+`emitted_off ≤ s`, then `original = original_off + (s − emitted_off)`) to get the
+span in the **original** document. Each component owns exactly one hop.
 ---
 
 ## 6. Output — the `--json` schema (byte-identical to the CLI)
