@@ -12,6 +12,7 @@ const builtin = @import("builtin");
 const extraction = @import("extract.zig");
 const resolution = @import("resolve.zig");
 const json_out = @import("json_out.zig");
+const cleaning = @import("clean.zig");
 
 // WasmAllocator reuses freed regions (page_allocator would leak per call).
 const gpa = std.heap.wasm_allocator;
@@ -78,6 +79,38 @@ fn emptyResult() u32 {
     return packResult("[]\n");
 }
 
+/// Normalize FLAT text via the eyecite recipe (collapse \s+→space, strip runs
+/// of __) and return cleaned text + an offset map for source-mapping. Result:
+///   [u32 text_len][text_len UTF-8 bytes]
+///   [u32 n_breaks][ n_breaks × { u32 emitted_off, u32 original_off } (LE) ]
+/// Same shape as docscan's structured output, so consumers compose maps
+/// uniformly. For flat-text direct callers (no docscan) — degrades to eyecite
+/// parity. Returns 0 on allocation failure; caller frees with incitez_free.
+export fn incitez_clean(ptr: u32, len: u32) u32 {
+    const input: []const u8 = if (len == 0) "" else @as([*]const u8, @ptrFromInt(ptr))[0..len];
+    var arena = std.heap.ArenaAllocator.init(gpa);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const res = cleaning.clean(a, input) catch return 0;
+    return packClean(res.text, res.map);
+}
+
+fn packClean(text: []const u8, map: []const cleaning.Breakpoint) u32 {
+    const total = 4 + text.len + 4 + map.len * 8;
+    const data = rawAlloc(total) orelse return 0;
+    const buf = data[0..total];
+    std.mem.writeInt(u32, buf[0..4], @intCast(text.len), .little);
+    @memcpy(buf[4 .. 4 + text.len], text);
+    var off: usize = 4 + text.len;
+    std.mem.writeInt(u32, buf[off..][0..4], @intCast(map.len), .little);
+    off += 4;
+    for (map) |bp| {
+        std.mem.writeInt(u32, buf[off..][0..4], bp.emitted_off, .little);
+        std.mem.writeInt(u32, buf[off + 4 ..][0..4], bp.original_off, .little);
+        off += 8;
+    }
+    return @intFromPtr(data);
+}
 /// Self-test over a small embedded corpus. Returns `(passed << 16) | total`
 /// — incitez_web calls this on page load for the "engine self-verified N/N"
 /// badge (decode: passed = ret >> 16, total = ret & 0xffff).

@@ -62,6 +62,7 @@ explicit exports below.
 | `incitez_alloc` | `(len: u32) -> u32` | allocate `len` writable bytes; returns a pointer (offset), or `0` on OOM |
 | `incitez_free` | `(ptr: u32) -> void` | free a buffer returned by `incitez_alloc` **or** `incitez_extract`; `0` is a no-op |
 | `incitez_extract` | `(ptr: u32, len: u32) -> u32` | extract citations from `len` UTF-8 bytes at `ptr`; returns a result pointer, or `0` on OOM |
+| `incitez_clean` | `(ptr: u32, len: u32) -> u32` | normalize flat text (eyecite recipe) + offset map; result pointer, or `0` on OOM. Optional, for flat-text callers — see §5 |
 | `incitez_selftest` | `() -> u32` | run the embedded corpus; returns `(passed << 16) | total` |
 | `incitez_version_ptr` | `() -> u32` | pointer to a NUL-terminated ASCII version string (read until `\0`) |
 
@@ -160,10 +161,27 @@ CourtListener and Harvard's Caselaw Access Project run:
 - **strip runs of `__`** (eyecite's `underscores`) — a common PDF-extraction artifact.
 - **strip HTML to plain text** if your source is markup (incitez is text-in only).
 
+The WASM build does the first two for you: **`incitez_clean(ptr, len)`** applies
+the `\s+`→space + strip-`__` recipe and returns the cleaned text **plus an offset
+map** so you can still map citation spans back to your original bytes. Result
+layout (same shape as docscan's structured output, so you compose maps the same
+way):
+
+```
+resPtr → [ u32 text_len (LE) ][ text_len cleaned UTF-8 bytes ]
+         [ u32 n_breaks (LE) ][ n_breaks × { u32 emitted_off, u32 original_off } (LE) ]
+```
+
+The breakpoint array is sorted ascending by `emitted_off`, starts at `{0,0}`, and
+is piecewise 1:1 (map a cleaned offset E: binary-search the largest `emitted_off
+≤ E`, then `original_off + (E − emitted_off)`). Free `resPtr` with `incitez_free`.
+HTML you still strip yourself (incitez is text-in).
+
 This degrades gracefully to **exact eyecite parity** (you lose the structural-
 boundary surpass, since collapsing `\s+` destroys the `\n` signal — that's the
-cost of not going through docscan). Spans will be offsets into your *normalized*
-text; keep your own offset map if you need to map back to the original.
+cost of not going through docscan). Citation spans returned by `incitez_extract`
+on the cleaned text are offsets into that *cleaned* text; use the `incitez_clean`
+map to get back to the original.
 
 ### The span chain (PDF highlight, end to end)
 

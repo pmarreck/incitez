@@ -9,6 +9,7 @@ pub const version = "0.1.0";
 pub const reporters = @import("reporters.zig");
 pub const extraction = @import("extract.zig");
 pub const resolution = @import("resolve.zig");
+pub const cleaning = @import("clean.zig");
 pub const ffi = @import("ffi.zig");
 
 // ── C FFI exports ───────────────────────────────────────────────────
@@ -29,6 +30,7 @@ test {
     _ = reporters;
     _ = extraction;
     _ = resolution;
+    _ = cleaning;
     _ = ffi;
 }
 

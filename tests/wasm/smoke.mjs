@@ -108,6 +108,40 @@ function extract(text) {
 		JSON.stringify(c.pin_cite));
 }
 
+// 7) incitez_clean: eyecite recipe (\s+→space, strip __) + offset map.
+// Result layout: [u32 text_len][text][u32 n_breaks][n_breaks × {u32 emitted,u32 original}].
+function clean(text) {
+	const inB = enc.encode(text);
+	const inPtr = ex.incitez_alloc(inB.length);
+	u8().set(inB, inPtr);
+	const resPtr = ex.incitez_clean(inPtr, inB.length);
+	if (resPtr === 0) throw new Error("incitez_clean returned 0");
+	const d = dv();
+	const tLen = d.getUint32(resPtr, true);
+	const cleaned = dec.decode(u8().subarray(resPtr + 4, resPtr + 4 + tLen));
+	let off = resPtr + 4 + tLen;
+	const nBreaks = d.getUint32(off, true);
+	off += 4;
+	const map = [];
+	for (let i = 0; i < nBreaks; i++) {
+		map.push([d.getUint32(off, true), d.getUint32(off + 4, true)]);
+		off += 8;
+	}
+	ex.incitez_free(inPtr);
+	ex.incitez_free(resPtr);
+	return { cleaned, map };
+}
+{
+	const r = clean("a  b__c"); // collapse run + strip __
+	check("clean: collapse+strip", r.cleaned === "a bc", JSON.stringify(r.cleaned));
+	check("clean: map first {0,0}", r.map.length > 0 && r.map[0][0] === 0 && r.map[0][1] === 0);
+	// every cleaned byte must map back to its real original byte
+	const orig = "a  b__c";
+	function mapTo(e) { let bp = r.map[0]; for (const m of r.map) if (m[0] <= e) bp = m; return bp[1] + (e - bp[0]); }
+	let ok = true;
+	for (let e = 0; e < r.cleaned.length; e++) if (r.cleaned[e] !== orig[mapTo(e)]) ok = false;
+	check("clean: offset map round-trips to original bytes", ok);
+}
 if (failures === 0) {
 	console.log(`\nWASM smoke: ALL PASSED (incitez ${version})`);
 	process.exit(0);
