@@ -65,6 +65,7 @@ explicit exports below.
 | `incitez_clean` | `(ptr: u32, len: u32) -> u32` | normalize flat text (eyecite recipe) + offset map; result pointer, or `0` on OOM. Optional, for flat-text callers — see §5 |
 | `incitez_selftest` | `() -> u32` | run the embedded corpus; returns `(passed << 16) | total` |
 | `incitez_version_ptr` | `() -> u32` | pointer to a NUL-terminated ASCII version string (read until `\0`) |
+| `incitez_license_ptr` | `() -> u32` | pointer to the NUL-terminated copyright/license notice (read until `\0`); also visible via `strings`. Surface it in your UI |
 
 All `u32`. There are no i64/externref/multi-value signatures, so no BigInt
 juggling on the JS side.

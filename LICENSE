@@ -1,0 +1,31 @@
+incitez — Proprietary License
+
+Copyright © 2026 Mecha LLC. All rights reserved.
+
+This software (the "incitez" legal-citation extraction engine — its source code,
+compiled libraries, command-line tools, and the WebAssembly module) is the
+proprietary property of Mecha LLC. No license or right is granted to use, copy,
+modify, distribute, sublicense, publicly perform, integrate, reverse-engineer,
+or create derivative works from this software, in whole or in part, except under
+a separate written agreement signed by Mecha LLC.
+
+Possession of, or access to, a compiled artifact — including a WebAssembly module
+served to a web browser — does NOT grant any right to download for reuse, retain,
+rehost, redistribute, or incorporate it into any other product or service.
+Anything technically downloadable remains legally protected.
+
+THIRD-PARTY COMPONENTS
+
+incitez incorporates data and grammar derived from Free Law Project projects —
+reporters-db, courts-db, and eyecite — each licensed under the BSD 2-Clause
+License. Those upstream copyright notices and license texts are reproduced in
+the accompanying THIRD_PARTY_LICENSES file and are retained with redistributions
+of the derived portions, as the BSD 2-Clause License requires. The BSD 2-Clause
+terms govern ONLY those upstream-derived portions; all other rights in incitez
+are reserved by Mecha LLC.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+Contact: https://mecha.llc

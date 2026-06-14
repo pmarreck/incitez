@@ -13,6 +13,7 @@ const extraction = @import("extract.zig");
 const resolution = @import("resolve.zig");
 const json_out = @import("json_out.zig");
 const cleaning = @import("clean.zig");
+const license = @import("license.zig");
 
 // WasmAllocator reuses freed regions (page_allocator would leak per call).
 const gpa = std.heap.wasm_allocator;
@@ -142,6 +143,13 @@ export fn incitez_selftest() u32 {
 const version_z: [:0]const u8 = "0.1.0";
 export fn incitez_version_ptr() u32 {
     return @intFromPtr(version_z.ptr);
+}
+
+/// Offset of the NUL-terminated copyright/license notice (read until `\0`).
+/// Proprietary Mecha LLC terms + BSD-2-Clause attribution for vendored data;
+/// also visible via `strings incitez.wasm` so ownership travels with the binary.
+export fn incitez_license_ptr() u32 {
+    return @intFromPtr(license.notice.ptr);
 }
 
 comptime {

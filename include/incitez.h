@@ -11,6 +11,10 @@ extern "C" {
 /* Returns the library version as a static null-terminated string. */
 const char* incitez_version(void);
 
+/* Returns the embedded copyright/license notice as a static null-terminated
+ * string (proprietary Mecha LLC + BSD-2-Clause attribution for vendored data). */
+const char* incitez_license(void);
+
 /* One extracted citation. All strings are NUL-terminated UTF-8 owned by the
  * result (valid until incitez_result_free); nullable fields are NULL when
  * absent. Spans are byte offsets into the input text. */

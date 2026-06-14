@@ -10,6 +10,7 @@ pub const reporters = @import("reporters.zig");
 pub const extraction = @import("extract.zig");
 pub const resolution = @import("resolve.zig");
 pub const cleaning = @import("clean.zig");
+pub const license = @import("license.zig");
 pub const ffi = @import("ffi.zig");
 
 // ── C FFI exports ───────────────────────────────────────────────────
@@ -17,6 +18,12 @@ pub const ffi = @import("ffi.zig");
 /// Returns the library version as a static null-terminated string (C ABI).
 export fn incitez_version() [*:0]const u8 {
     return version;
+}
+
+/// Returns the embedded copyright/license notice (C ABI, static, NUL-terminated).
+/// Proprietary Mecha LLC terms + the BSD-2-Clause attribution for vendored data.
+export fn incitez_license() [*:0]const u8 {
+    return license.notice;
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
@@ -31,6 +38,7 @@ test {
     _ = extraction;
     _ = resolution;
     _ = cleaning;
+    _ = license;
     _ = ffi;
 }
 
