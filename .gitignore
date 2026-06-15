@@ -47,3 +47,10 @@ result-win/
 AGENTS.md
 .eyecite-env
 .test_cache/
+
+# Local-only convenience symlinks — leak absolute paths / dangle on clone; never track.
+# (AGENTS.md already covered above; deps/*-src/ above has a dir-only trailing slash that
+#  misses these symlinks, so re-list without it.)
+ZIG_RECENT_API_CHANGES.md
+jj_cheatsheet.md
+deps/*-src
