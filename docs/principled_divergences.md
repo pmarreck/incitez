@@ -147,3 +147,33 @@ stays **215/215, 0 fenced** (the eyecite corpus is single-line). The divergence
 only appears on *structured* input, where incitez is strictly more correct than
 anything that flattens-then-collapses. Pinned by the characterization test
 `"case name: structural newline is a hard walk-back stop"` in `src/extract.zig`.
+
+## 5. Uppercase "V." separator in all-caps ToA OCR — a *deferred parity gap* (incitez currently cruftier, never wrong)
+
+**The distinction this section records (Peter, 2026-06-15: "defer + document; it
+is an important distinction"):** §§1–4 are places incitez *meets or surpasses*
+eyecite. This one is the opposite, documented honestly — a known, narrow gap where
+incitez is currently *slightly worse*, deliberately left unfixed.
+
+**The case:** all-caps Table-of-Authorities styling (often via OCR) renders
+`X v. Y` as `X CO. V. Y` — an uppercase `V.`. eyecite's party separator is the
+regex `\s+v\.?\s+` (**lowercase** `v` only) and incitez's `splitOnV` matches the
+same, so **both engines refuse to split on uppercase `V.`** → `plaintiff = null`
+on both. That parity *is* the correct conservative choice: `V.` is ambiguous
+(`Henry V`, `Volume V`, `Appendix V`, a middle initial `Foo B. Bar`).
+
+**Where they differ (the gap):** with no separator recognized, the citation falls
+back to an antecedent-only party. eyecite stops its antecedent at the `V.` token
+(`defendant = "Archer"`); incitez keeps the whole walked-back run
+(`defendant = "Winn Lovett Grocery CO. V. Archer"`). incitez is **cruftier, never
+wrong** — neither engine recovers the true plaintiff and the citation itself
+(`126 Fla. 308`) is found identically. Verified against the live oracle on the real
+Brann appellate brief (the one ToA line of 348 cites that hits this).
+
+**Why deferred, not fixed:** matching eyecite means encoding "an uppercase `V.`
+between capitalized tokens is *versus*" — exactly the grammar-heuristic
+disambiguation (versus vs. regnal numeral vs. volume vs. initial) we deliberately do
+**not** build pre-MVP; the cure (false splits on `Henry V` / `Volume V`) is worse
+than the rare, cosmetic disease. Pinned by the characterization test
+`"case name: uppercase 'V.' is not a separator …"` in `src/extract.zig`; tracked for
+the post-MVP grammar pass.

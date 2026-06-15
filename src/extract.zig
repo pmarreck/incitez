@@ -2484,3 +2484,19 @@ test "pin cite: en-dash and em-dash ranges (surpass — eyecite accepts only hyp
     try testing.expectEqual(@as(usize, 1), c.len);
     try testing.expectEqualStrings("347-348", c[0].pin_cite.?);
 }
+
+// KNOWN DEFERRED DIVERGENCE (Peter, 2026-06-15: "defer + document; it is an
+// important distinction"). All-caps Table-of-Authorities OCR renders "X v. Y" as
+// "X CO. V. Y" (uppercase V). eyecite's party separator regex matches only lowercase
+// `\s+v\.?\s+`; incitez's splitOnV matches the same, so BOTH engines refuse to treat
+// uppercase "V." as a separator -> plaintiff=null on both (verified parity vs the live
+// eyecite oracle). The remaining gap is antecedent BREADTH, not correctness: with no
+// separator, eyecite stops its antecedent at "V." (defendant="Archer") while incitez
+// keeps the whole walked-back run. incitez is cruftier here, never wrong. Closing it
+// means encoding "uppercase V. = versus", which collides with "Henry V", "Volume V",
+// "Appendix V", and middle initials ("Foo B. Bar") -- grammar-heuristic work deferred
+// to post-MVP. This test PINS the current behavior so any future change is deliberate.
+// See docs/principled_divergences.md section 5.
+test "case name: uppercase 'V.' is not a separator -- parity on plaintiff, deferred antecedent-breadth divergence" {
+    try expectNames("Winn Lovett Grocery CO. V. Archer 126 Fla. 308", 0, null, "Winn Lovett Grocery CO. V. Archer");
+}

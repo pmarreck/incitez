@@ -39,6 +39,13 @@ case-name walk-back treats it as a **hard stop** — the heading is excluded
 the preserved structure rather than re-deriving it; eyecite structurally cannot
 do this without losing source offsets.
 
+**Verified end-to-end (2026-06-15, real Brann appellate brief):** docscan's
+`splitToAHeaders` now emits a lone `\n` after ToA section headers, so the extract
+reads `… TABLE OF AUTHORITIES\nCases\nAlbritton v. Gandy, 531 So. 2d 381 …`. On that
+exact pipeline output incitez yields plaintiff **`"Albritton"`**, while the live
+eyecite oracle yields **`"Cases\nAlbritton"`** — it keeps the heading *and* the
+literal newline. (1 of 348 cites in the brief; full docscan→incitez pipeline.)
+
 *Details: principled_divergences.md §4. Contract: CITATION_PIPELINE_RESPONSIBILITIES.md.
 Test: "structural newline is a hard walk-back stop".*
 
