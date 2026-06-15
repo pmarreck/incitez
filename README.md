@@ -10,6 +10,10 @@ section, and reference citations, with party names, pin cites, courts, years,
 parentheticals, and short→full resolution. Pure in-memory Zig core (no I/O)
 behind a C FFI, with a C CLI and a browser WebAssembly build.
 
+> **▶ Try it live: [incitez-web.pages.dev](https://incitez-web.pages.dev/?demolinks)**
+> — load a sample brief (or paste your own) and watch citations extract **entirely in
+> your browser** via WebAssembly. Nothing leaves your machine.
+
 ## How it compares to eyecite
 
 The whole design is honest about the bar: **equivalent where eyecite is the
