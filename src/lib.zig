@@ -21,7 +21,7 @@ export fn incitez_version() [*:0]const u8 {
 }
 
 /// Returns the embedded copyright/license notice (C ABI, static, NUL-terminated).
-/// Proprietary Mecha LLC terms + the BSD-2-Clause attribution for vendored data.
+/// Business Source License 1.1 (Peter Marreck d/b/a Mecha LLC) + BSD-2-Clause attribution for vendored data.
 export fn incitez_license() [*:0]const u8 {
     return license.notice;
 }

@@ -2,7 +2,7 @@
 ver=1.2
 annotate=[
 	BENCHMARKS.md = Hardware-keyed perf log: VM regression gate (two-sided ±10%) + vs-eyecite speedup tracking
-	LICENSE = Proprietary license (© Mecha LLC, all rights reserved) + BSD-2-Clause acknowledgment for vendored Free Law Project data (see THIRD_PARTY_LICENSES)
+	LICENSE = Business Source License 1.1 (© 2026 Peter Marreck d/b/a Mecha LLC; converts to MIT 2030-06-16) + BSD-2-Clause acknowledgment for vendored Free Law Project data (see THIRD_PARTY_LICENSES)
 	MISTAKES.md = Process mistakes log (pipe exit-code masking; jj+nix stale-tree race)
 	bm = Benchmark runner: synthetic doc from corpus, hyperfine one-shot + steady-state, appends BENCHMARKS.md
 	build.zig = Hexagonal build: static lib (C ABI) + C CLI dogfooding FFI + test/test-compile steps (use_llvm forced)
@@ -23,7 +23,7 @@ annotate=[
 	src/ffi.zig = C FFI exports: incitez_extract/result_count/result_get/result_free — flat structs, arena ownership
 	src/json_out.zig = Single source of truth for the --json schema; shared by CLI (via FFI) and WASM so output is byte-identical
 	src/lib.zig = Pure Zig core (no I/O) + C FFI exports; currently version export only
-	src/license.zig = Single source of truth for the embedded copyright/license notice (proprietary Mecha LLC + BSD-2-Clause attribution); imported by lib.zig FFI + wasm.zig
+	src/license.zig = Single source of truth for the embedded copyright/license notice (BUSL-1.1, Peter Marreck d/b/a Mecha LLC, + BSD-2-Clause attribution); imported by lib.zig FFI + wasm.zig
 	src/pcre2_engine.zig = PCRE2 engine path: eyecite-literal regexes via C API, lazy JIT compile, finditer-semantics scan
 	src/resolve.zig = Resolution pass: clusters citations to resources (resolve.py port)
 	src/wasm.zig = WASM ABI for browser consumer (incitez_web): VM-only, freestanding wasm32; alloc/extract/free + selftest exports; JSON out via json_out.zig

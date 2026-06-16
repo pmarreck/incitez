@@ -108,7 +108,11 @@ or run the eyecite recipe (`incitez_clean`: collapse `\s+`, strip `__`). See
 
 ## License
 
-Proprietary © 2026 Mecha LLC, all rights reserved — see [`LICENSE`](LICENSE).
+**[Business Source License 1.1](LICENSE)** — © 2026 Peter Marreck (d/b/a Mecha LLC).
+Source-available: non-production use plus limited production use (per the Additional
+Use Grant — direct CLI/internal use by orgs under 100 staff and $1M revenue) are
+permitted; everything else needs a commercial license. Converts to the **MIT License**
+on 2030-06-16.
 Incorporates BSD-2-Clause data/grammar from Free Law Project (reporters-db,
 courts-db, eyecite); those notices are retained in
 [`THIRD_PARTY_LICENSES`](THIRD_PARTY_LICENSES).

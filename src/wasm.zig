@@ -146,7 +146,7 @@ export fn incitez_version_ptr() u32 {
 }
 
 /// Offset of the NUL-terminated copyright/license notice (read until `\0`).
-/// Proprietary Mecha LLC terms + BSD-2-Clause attribution for vendored data;
+/// Business Source License 1.1 (Peter Marreck d/b/a Mecha LLC) + BSD-2-Clause attribution for vendored data;
 /// also visible via `strings incitez.wasm` so ownership travels with the binary.
 export fn incitez_license_ptr() u32 {
     return @intFromPtr(license.notice.ptr);

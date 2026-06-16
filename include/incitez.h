@@ -12,7 +12,7 @@ extern "C" {
 const char* incitez_version(void);
 
 /* Returns the embedded copyright/license notice as a static null-terminated
- * string (proprietary Mecha LLC + BSD-2-Clause attribution for vendored data). */
+ * string (Business Source License 1.1, Peter Marreck d/b/a Mecha LLC, + BSD-2-Clause attribution for vendored data). */
 const char* incitez_license(void);
 
 /* One extracted citation. All strings are NUL-terminated UTF-8 owned by the
