@@ -212,6 +212,8 @@ byte-compare):
 | `volume` | string \| null | e.g. `"410"`; null for token-like cites (id/supra/reference) |
 | `reporter` | string \| null | as written, e.g. `"U. S."`; null for token-like cites |
 | `page` | string \| null | e.g. `"113"` |
+| `title` | string \| null | statute title for U.S.C./C.F.R. law cites, e.g. `"28"`; null otherwise |
+| `section` | string \| null | statute section, base form (subsection stays in `pin_cite`), e.g. `"1332"`; null otherwise |
 | `corrected_reporter` | string \| null | canonical form, e.g. `"U.S."`; null for token-like cites |
 | `pin_cite` | string \| null | pinpoint, e.g. `"at 116"` or `"241–242"` (en/em-dash preserved) |
 | `court` | string \| null | resolved courts-db id, e.g. `"scotus"` |
@@ -277,7 +279,7 @@ Foo v. Bar, 1 U.S. 1 (1982).
 Output:
 ```json
 [
- {"kind": "FullCaseCitation", "span": [12, 20], "full_span": [0, 20], "volume": "1", "reporter": "U.S.", "page": "1", "corrected_reporter": "U.S.", "pin_cite": null, "court": "scotus", "year": 1982, "parenthetical": null, "extra": null, "plaintiff": "Foo", "defendant": "Bar", "antecedent_guess": null, "resolution": 0}
+ {"kind": "FullCaseCitation", "span": [12, 20], "full_span": [0, 20], "volume": "1", "reporter": "U.S.", "page": "1", "title": null, "section": null, "corrected_reporter": "U.S.", "pin_cite": null, "court": "scotus", "year": 1982, "parenthetical": null, "extra": null, "plaintiff": "Foo", "defendant": "Bar", "antecedent_guess": null, "resolution": 0}
 ]
 ```
 
@@ -303,7 +305,7 @@ Foo v. Bar, 1 U.S. 1 (1982). Id. at 5.
 Output:
 ```json
 [
- {"kind": "FullCaseCitation", "span": [12, 20], "full_span": [0, 20], "volume": "1", "reporter": "U.S.", "page": "1", "corrected_reporter": "U.S.", "pin_cite": null, "court": "scotus", "year": 1982, "parenthetical": null, "extra": null, "plaintiff": "Foo", "defendant": "Bar", "antecedent_guess": null, "resolution": 0},
+ {"kind": "FullCaseCitation", "span": [12, 20], "full_span": [0, 20], "volume": "1", "reporter": "U.S.", "page": "1", "title": null, "section": null, "corrected_reporter": "U.S.", "pin_cite": null, "court": "scotus", "year": 1982, "parenthetical": null, "extra": null, "plaintiff": "Foo", "defendant": "Bar", "antecedent_guess": null, "resolution": 0},
  {"kind": "IdCitation", "span": [29, 37], "full_span": [29, 37], "volume": null, "reporter": null, "page": null, "corrected_reporter": null, "pin_cite": "at 5", "court": null, "year": null, "parenthetical": null, "extra": null, "plaintiff": null, "defendant": null, "antecedent_guess": null, "resolution": 0}
 ]
 ```

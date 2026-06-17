@@ -27,6 +27,8 @@ typedef struct {
     const char* volume;
     const char* reporter;
     const char* page;
+    const char* title;       /* statute title for U.S.C./C.F.R. law cites; else NULL */
+    const char* section;     /* statute section (base; subsection in pin_cite); else NULL */
     const char* corrected_reporter;
     const char* pin_cite;
     const char* court; /* resolved courts-db id, e.g. "scotus" */

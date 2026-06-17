@@ -68,6 +68,10 @@ pub const Citation = struct {
     /// Law-citation publisher from the trailing paren ("West", "Lexis
     /// Supp."). Slice.
     publisher: ?[]const u8 = null,
+    /// Statute title + section for U.S.C./C.F.R. FullLawCitations (e.g. "28"/"1332"
+    /// for "28 U.S.C. § 1332"); null for non-law cites. Subsection stays in pin_cite.
+    title: ?[]const u8 = null,
+    section: ?[]const u8 = null,
     /// Full extent including case name/antecedent (eyecite full_span);
     /// defaults to the core span when nothing extends it.
     full_span_start: u32 = 0,
@@ -1559,6 +1563,8 @@ fn bestMatchAt(text: []const u8, i: usize) ?Citation {
                             entry.edition,
                             entry.is_variant,
                         );
+                        best.?.title = hit.title;
+                        best.?.section = hit.section;
                         if (prog.short) {
                             best.?.kind = .short_case;
                         } else best.?.kind = switch (edition.source) {
@@ -1579,6 +1585,8 @@ const ProgramHit = struct {
     end: u32,
     volume: ?[]const u8,
     page: ?[]const u8,
+    title: ?[]const u8,
+    section: ?[]const u8,
 };
 
 const Captures = struct {
@@ -1613,6 +1621,12 @@ fn tryProgram(text: []const u8, anchor: usize, key_len: usize, prog: tables.Prog
             .end = @intCast(post_end),
             .volume = caps.slice(text, .volume),
             .page = caps.slice(text, .page),
+            // C.F.R. names its leading number group `chapter`, but it IS the
+            // statute Title (Cornell LII: /cfr/text/8/...). The `title-chapter`
+            // hyphenated patterns always capture `title`, so this fallback never
+            // misfires there — it only rescues groups that lack a `title` entirely.
+            .title = caps.slice(text, .title) orelse caps.slice(text, .chapter),
+            .section = caps.slice(text, .section),
         };
     }
     return null;
@@ -2518,4 +2532,38 @@ test "relaxed volume-reporter boundary does NOT create false citations" {
         defer freeCitations(testing.allocator, cites);
         try testing.expectEqual(@as(usize, 0), cites.len);
     }
+}
+
+// U.S.C./C.F.R. law cites surface title + section for statute links. volume/page stay null
+// (eyecite parity, 215/215). Subsection stays in pin_cite. Requested by incitez_web.
+test "law citation surfaces title and section" {
+    {
+        const cites = try extract(testing.allocator, "see 28 U.S.C. § 1332 (2018)");
+        defer freeCitations(testing.allocator, cites);
+        try testing.expect(cites.len >= 1);
+        try testing.expectEqualStrings("28", cites[0].title.?);
+        try testing.expectEqualStrings("1332", cites[0].section.?);
+        try testing.expectEqual(@as(?[]const u8, null), cites[0].volume);
+    }
+    {
+        const cites = try extract(testing.allocator, "8 C.F.R. § 1003.1");
+        defer freeCitations(testing.allocator, cites);
+        try testing.expect(cites.len >= 1);
+        try testing.expectEqualStrings("8", cites[0].title.?);
+        try testing.expectEqualStrings("1003.1", cites[0].section.?);
+    }
+    {
+        const cites = try extract(testing.allocator, "5 U.S.C. § 552(a)(4)(B)");
+        defer freeCitations(testing.allocator, cites);
+        try testing.expect(cites.len >= 1);
+        try testing.expectEqualStrings("5", cites[0].title.?);
+        try testing.expectEqualStrings("552", cites[0].section.?);
+    }
+}
+test "case citation has null title/section" {
+    const cites = try extract(testing.allocator, "Brown v. Board, 347 U.S. 483 (1954)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expect(cites.len >= 1);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].title);
+    try testing.expectEqual(@as(?[]const u8, null), cites[0].section);
 }

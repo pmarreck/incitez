@@ -40,6 +40,8 @@ pub fn writeJson(
         try jsonField(w, "volume", c.volume);
         try jsonField(w, "reporter", if (is_token) null else c.reporter);
         try jsonField(w, "page", c.page);
+        try jsonField(w, "title", c.title);
+        try jsonField(w, "section", c.section);
         try jsonField(w, "corrected_reporter", if (is_token) null else c.correctedReporter());
         try jsonField(w, "pin_cite", c.pin_cite);
         try jsonField(w, "court", c.court);
