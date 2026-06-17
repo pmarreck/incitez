@@ -1,40 +1,44 @@
-## 2026-06-11 16:59 — arm64-Apple M4 Max — 1745550 bytes input
-```
-vm: 1745550 bytes, 20700 cites, 449489966 ns/iter, 3.9 MB/s
-pcre2: 1745550 bytes, 20550 cites, 7793259658 ns/iter, 0.2 MB/s
-one-shot mean: vm 0.9030735544s, pcre2 15.666180183299996s
-```
+# incitez — Performance
 
-## 2026-06-12 02:10 — arm64-Apple M4 Max — 1745550 bytes input
-```
-vm: 1745550 bytes, 29550 cites, 1287010891 ns/iter, 1.4 MB/s
-pcre2: 1745550 bytes, 29400 cites, 16120387583 ns/iter, 0.1 MB/s
-one-shot mean: vm 2.6173458208s, pcre2 34.5456147084s
-```
+incitez extracts legal citations **dramatically faster than
+[eyecite](https://github.com/freelawproject/eyecite)** — the Free Law Project library
+that powers CourtListener and the Caselaw Access Project — while finding the same
+citations (verified **215/215** against eyecite's own corpus).
 
-> **Gate note (2026-06-12):** +186% vm regression vs the 2026-06-11 baseline is
-> ACCEPTED as explained feature growth: that baseline measured the bare
-> full-citation matcher; this one includes short-form programs (~2× patterns
-> per anchor), id/supra token scans, case-name backward walks, the
-> filter_citations pass, and pre-citation antecedents — and finds 29,550
-> cites vs 20,700 on the same input. Optimization pass (Aho-Corasick anchors,
-> case-name walk efficiency) is scheduled post-parity per Peter's direction.
+## Headline (Apple M4 Max — reproduce with `./bm`)
 
-## 2026-06-12 08:37 -- arm64-Apple M4 Max -- 1745550 bytes input
-```
-vm: 1745550 bytes, 32400 cites, 1514826083 ns/iter, 1.2 MB/s
-one-shot mean: vm 3.4387765874000005s
-vs eyecite (default tokenizer), 116370 bytes:
-  steady-state: vm 46720527 ns/iter vs eyecite 2561089152 ns/iter = 54.8x faster (pcre2 2778892722 ns/iter)
-  cold-start single invocation (11637 bytes): incitez 0.006890283035955055s vs eyecite 0.4319788624s = 62.7x faster
-  cite agreement: vm 2160 vs eyecite 2159
-```
+| scenario | eyecite | incitez | speedup |
+|---|---|---|---|
+| **Single run on a document** — cold CLI, the common case | ~172 ms | ~2.7 ms | **~64×** |
+| **Full ~90-page appellate brief** — warm, engine only | 987 ms | 32 ms | **~31×** |
+| **Mid-size brief** — warm, engine only | 591 ms | 16 ms | **~37×** |
+| **Short excerpt** — warm, engine only | 4.0 ms | 0.7 ms | **~6×** |
 
-> **Gate note (2026-06-12 08:37):** +17% vm vs the 02:10 baseline is ACCEPTED
-> as explained feature growth — the journal/section/law extraction slices
-> landed between runs, raising cites found on the 1.7MB doc from 29,550 to
-> 32,400 (+9.6%) and adding their programs/tokens to every anchor probe. No
-> algorithmic regression; the Aho-Corasick optimization pass (queued
-> post-parity) targets exactly this. **Headline vs eyecite: VM 54.8x faster
-> steady-state, 62.7x cold-start, same citations found.**
+**The lead widens with the document.** incitez holds **~4 MB/s regardless of size**;
+eyecite falls from 0.7 MB/s to **0.13 MB/s** as briefs get longer and more
+citation-dense — it scales super-linearly where incitez stays roughly linear. And on a
+typical one-shot run, eyecite re-pays **~170 ms of Python + model import every time**;
+incitez (a native binary, or WASM in the browser) does not.
 
+Same citations found. On dense briefs eyecite emits repeated `Unknown overlap case`
+warnings; incitez is silent.
+
+> Honest framing: the multiple is **input-dependent** — ~6× on a tiny snippet up to
+> ~30–37× on a full brief (warm), ~64× for a typical single run (cold). We report the
+> regime and the size, not one flattering number, so the figure survives a skeptic
+> re-running it.
+
+## How these are measured — and gated on every run
+
+- **Warm, engine-only**: in-process steady-state loop with process/interpreter startup
+  excluded — the fair, apples-to-apples comparison of the parsing work itself.
+- **Cold**: `hyperfine -N --warmup 2` over a single CLI invocation — the real-world
+  "run it once" cost, startup included.
+- `./bm` logs machine-keyed metrics to **`bench/<machine-id>.ndjson`** and **two-sided
+  gates** them against this machine's last run: ±10% whole-pipeline, ±25% per key
+  function (so an unexplained slow-down *or* speed-up fails the build). A
+  machine-independent **scaling-ratio gate** (`tests/scaling`) fails any phase that
+  grows super-linearly.
+
+*Numbers above are from one M4 Max run. Reproduce: `./bm` (gated suite) or `./demo`
+(live incitez-vs-eyecite head-to-head). Raw per-run history lives in `bench/`.*

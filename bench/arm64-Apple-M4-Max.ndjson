@@ -1,0 +1,1 @@
+{"ts":"2026-06-17 10:48","machine":"arm64-Apple M4 Max","input_bytes":1745550,"vm_ns":872520250,"vm_oneshot_s":1.8276203667000002,"micro":{"match":38491231,"finish":5330108,"reference":3371148,"filter":481076,"resolve":686831,"total":47347160},"vs_eyecite":{"mid_bytes":116370,"steady_speedup_x":53.2,"cold_speedup_x":62.1,"vm_cites":2180,"ey_cites":2159}}

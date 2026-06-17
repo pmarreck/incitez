@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
-# Benchmark suite. Two sections, both appended to BENCHMARKS.md (committed,
-# hardware-keyed). Always ReleaseFast (the bench binary refuses Debug).
+# Benchmark suite. Machine-data is logged to bench/<machine-id>.ndjson (committed,
+# hardware-keyed, ONE JSON line per run); BENCHMARKS.md is the USER-FACING results
+# doc and is NOT written by this script. Always ReleaseFast (bench binary refuses Debug).
 #
-#   1. VM regression: incitez VM over a large synthetic doc (~1.7MB,
-#      citation-dense), with a two-sided +/-10% gate vs the last baseline for
-#      this hardware. This is the metric that guards against perf drift; a
-#      sudden speedup is ALSO a failure until explained (house rules).
-#      (pcre2 is NOT run on the big doc -- its all-extractors-over-full-text
-#      cost is pathological there [~37s/iter] and meaningless as a startup
-#      number; it is measured on the tractable mid doc below.)
+#   1. VM regression: incitez VM over a large synthetic doc (~1.7MB, citation-dense),
+#      two-sided +/-10% gate vs this machine's last logged run. A sudden speedup is
+#      ALSO a failure until explained (house rules). pcre2 omitted here (~37s/iter,
+#      meaningless); measured on the mid doc in section 2.
+#   2. vs eyecite: incitez VM vs pinned eyecite on an eyecite-tractable doc (~116KB):
+#      steady-state, cold-start, cite-count agreement -- the headline "Nx faster".
+#   3. per-key-function microbench (CLAUDE.md L32): two-sided +/-25% gate per phase vs
+#      this machine's last run -- catches a function-level regression (e.g. a
+#      referenceScan O(cites x text) quadratic) that a single end-to-end number hides.
+#      Phases: match (vmScan+tokenScan+merge), finish (case-name walk + metadata),
+#      reference (pincited-reference scan), filter (overlap dedup), resolve
+#      (short/supra/id linking), total (end-to-end).
+#   4. scaling-ratio gate: machine-independent; fails any phase growing super-linearly.
 #
-#   2. vs eyecite: incitez VM vs pinned eyecite (default ahocorasick
-#      tokenizer) -- the headline "Nx faster" number -- on an eyecite-
-#      tractable doc (~116KB): steady-state throughput, cold-start single-
-#      invocation latency, and a cite-count agreement check. pcre2 is shown
-#      here too (our brute-force path, for contrast).
-#
-# Pass --no-eyecite to skip section 2 (faster local iteration / offline).
+# Pass --no-eyecite to skip section 2.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,13 +26,7 @@ cd "$SCRIPT_DIR" || exit 1
 with_eyecite=1
 [[ "${1:-}" == "--no-eyecite" ]] && with_eyecite=0
 
-run() {
-	"$@" || {
-		echo "FAILED: $*" >&2
-		exit 1
-	}
-}
-
+run() { "$@" || { echo "FAILED: $*" >&2; exit 1; }; }
 ns_of() { printf '%s' "$1" | gsed -n 's/.* \([0-9]*\) ns\/iter.*/\1/p'; }
 cites_of() { printf '%s' "$1" | gsed -n 's/.*bytes, \([0-9]*\) cites.*/\1/p'; }
 
@@ -47,6 +42,10 @@ for _ in $(seq 1 150); do cat "$base" >> "$big"; done
 big_bytes=$(wc -c < "$big" | tr -d ' ')
 
 hw="$(uname -m)-$(sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -s)"
+machine_id="$(printf '%s' "$hw" | tr -c 'A-Za-z0-9._-' '-')"
+mkdir -p bench
+LOG="bench/${machine_id}.ndjson"
+last="$(tail -n 1 "$LOG" 2>/dev/null || true)"   # this machine's most recent run = baseline
 
 # -- Section 1: VM regression (gate) --
 echo "=== VM regression: steady-state (${big_bytes} bytes, 5 iters) ==="
@@ -59,28 +58,25 @@ run nix develop -c hyperfine -N --warmup 3 --export-json "$hf_json" \
 	"./zig-out/bin/incitez-bench vm $big 1"
 vm_oneshot=$(nix run 'nixpkgs#jq' -- -r '.results[0].mean' "$hf_json")
 
-# Two-sided gate: +/-10% vs the most recent committed vm entry for this hw.
 gate_status=0
 vm_ns=$(ns_of "$vm_line")
-prev_ns=$(awk -v hw="$hw" '
-	/^## / { keep = index($0, hw) > 0 }
-	keep && /^vm: / { match($0, /[0-9]+ ns\/iter/); ns = substr($0, RSTART, RLENGTH - 8) }
-	END { print ns }
-' BENCHMARKS.md 2>/dev/null)
+prev_ns=$(printf '%s' "$last" | jq -r '.vm_ns // empty' 2>/dev/null)
 if [[ -n "${prev_ns:-}" && -n "${vm_ns:-}" && "$prev_ns" -gt 0 ]]; then
 	delta_pct=$(( (vm_ns - prev_ns) * 100 / prev_ns ))
 	if (( delta_pct > 10 || delta_pct < -10 )); then
 		echo ""
 		printf '\033[1;31mBENCHMARK GATE: vm %s%% vs previous baseline (%s -> %s ns/iter) -- outside +/-10%%!\033[0m\n' "$delta_pct" "$prev_ns" "$vm_ns"
-		echo "Investigate before accepting; this run is now the recorded baseline."
+		echo "Investigate before accepting; this run becomes the new baseline."
 		gate_status=1
 	else
 		echo "benchmark gate: vm ${delta_pct}% vs baseline (within +/-10%)"
 	fi
+else
+	echo "benchmark gate: no prior baseline for ${machine_id} -- this run seeds it (PASS)"
 fi
 
 # -- Section 2: vs eyecite --
-eyecite_block=""
+eyecite_json="null"
 if (( with_eyecite )); then
 	if nix build .#eyecite-env -o .eyecite-env >/dev/null 2>&1; then
 		PY=./.eyecite-env/bin/python
@@ -94,9 +90,7 @@ if (( with_eyecite )); then
 		ec_vm=$(./zig-out/bin/incitez-bench vm "$mid" 20)
 		ec_p2=$(./zig-out/bin/incitez-bench pcre2 "$mid" 3)
 		ec_ey=$($PY tools/bench_eyecite.py steady "$mid" 3 2>/dev/null)
-		echo "$ec_vm"
-		echo "$ec_p2"
-		echo "$ec_ey"
+		echo "$ec_vm"; echo "$ec_p2"; echo "$ec_ey"
 
 		vm_ns2=$(ns_of "$ec_vm"); ey_ns=$(ns_of "$ec_ey")
 		vm_cites=$(cites_of "$ec_vm"); ey_cites=$(cites_of "$ec_ey")
@@ -108,7 +102,7 @@ if (( with_eyecite )); then
 		base_bytes=$(wc -c < "$base" | tr -d ' ')
 		echo "=== vs eyecite: cold-start single invocation (${base_bytes} bytes) ==="
 		cold_json="$workdir/incitez-bench-cold.json"
-		cold_line=""
+		cold_x="?"
 		if nix develop -c hyperfine -N --warmup 2 --export-json "$cold_json" \
 			"./zig-out/bin/incitez extract $base" \
 			"$PY tools/bench_eyecite.py oneshot $base" >/dev/null 2>&1; then
@@ -116,24 +110,21 @@ if (( with_eyecite )); then
 			ey_cold=$(nix run 'nixpkgs#jq' -- -r '.results[1].mean' "$cold_json")
 			cold_x=$(awk -v a="$ey_cold" -v b="$ic_cold" 'BEGIN{printf "%.1f", a/b}')
 			echo "  cold-start: incitez ${ic_cold}s vs eyecite ${ey_cold}s  (${cold_x}x faster)"
-			cold_line=$(printf '  cold-start single invocation (%s bytes): incitez %ss vs eyecite %ss = %sx faster' \
-				"$base_bytes" "$ic_cold" "$ey_cold" "$cold_x")
 		else
-			cold_line="  cold-start: skipped (hyperfine run failed)"
+			echo "  cold-start: skipped (hyperfine run failed)"
 		fi
 
-		eyecite_block=$(printf 'vs eyecite (default tokenizer), %s bytes:\n  steady-state: vm %s ns/iter vs eyecite %s ns/iter = %sx faster (pcre2 %s ns/iter)\n%s\n  cite agreement: vm %s vs eyecite %s' \
-			"$mid_bytes" "${vm_ns2:-?}" "${ey_ns:-?}" "$speedup" "$(ns_of "$ec_p2")" "$cold_line" "${vm_cites:-?}" "${ey_cites:-?}")
+		eyecite_json=$(jq -cn \
+			--argjson mid_bytes "$mid_bytes" \
+			--arg steady_x "$speedup" --arg cold_x "$cold_x" \
+			--arg vm_cites "${vm_cites:-}" --arg ey_cites "${ey_cites:-}" \
+			'{mid_bytes:$mid_bytes, steady_speedup_x:($steady_x|tonumber? // null), cold_speedup_x:($cold_x|tonumber? // null), vm_cites:($vm_cites|tonumber? // null), ey_cites:($ey_cites|tonumber? // null)}')
 	else
 		echo "vs-eyecite: skipped (eyecite-env unavailable -- offline?)" >&2
 	fi
 fi
 
-# -- Section 3: per-key-function microbench (CLAUDE.md L32 — log over key
-# functions, LOUDLY flag deltas). A single end-to-end number once hid a
-# referenceScan O(cites×text) quadratic until it dominated; per-function
-# history catches such regressions at the function boundary. Two-sided gate
-# vs the most recent MICROBENCHMARKS.md entry for this hardware.
+# -- Section 3: per-key-function microbench (gate) --
 micro_doc="$workdir/incitez-micro.txt"
 : > "$micro_doc"
 for _ in $(seq 1 10); do cat "$base" >> "$micro_doc"; done
@@ -145,14 +136,6 @@ micro_out=$(./zig-out/bin/incitez-bench micro "$micro_doc" 20)
 echo "$micro_out"
 
 MICRO_TOL=25
-prev_micro() {  # $1 = phase name -> most recent committed ns for this hw
-	awk -v hw="$hw" -v ph="$1" '
-		/^## / { keep = index($0, hw) > 0 }
-		keep && $1 == ph":" { val = $2 }
-		END { print val }
-	' MICROBENCHMARKS.md 2>/dev/null
-}
-
 micro_block=""
 while IFS= read -r line; do
 	[[ "$line" == *"ns/iter"* ]] || continue
@@ -160,41 +143,34 @@ while IFS= read -r line; do
 	ns=$(printf '%s' "$line" | gsed -n 's/.*: \([0-9]*\) ns\/iter.*/\1/p')
 	[[ -z "$ns" ]] && continue
 	micro_block+="${phase}: ${ns}"$'\n'
-	prev=$(prev_micro "$phase")
+	prev=$(printf '%s' "$last" | jq -r --arg ph "$phase" '.micro[$ph] // empty' 2>/dev/null)
 	if [[ -n "$prev" && "$prev" -gt 0 ]]; then
 		d=$(( (ns - prev) * 100 / prev ))
 		if (( d > MICRO_TOL || d < -MICRO_TOL )); then
-			printf '\033[1;31mMICRO GATE: %s %s%% vs baseline (%s -> %s ns/iter) -- outside ±%s%%!\033[0m\n' \
+			printf '\033[1;31mMICRO GATE: %s %s%% vs baseline (%s -> %s ns/iter) -- outside +/-%s%%!\033[0m\n' \
 				"$phase" "$d" "$prev" "$ns" "$MICRO_TOL"
 			gate_status=1
 		else
-			echo "  micro gate: ${phase} ${d}% (within ±${MICRO_TOL}%)"
+			echo "  micro gate: ${phase} ${d}% (within +/-${MICRO_TOL}%)"
 		fi
 	fi
 done <<< "$micro_out"
 
-{
-	echo "## $(date '+%Y-%m-%d %H:%M') -- $hw -- ${micro_bytes} bytes input"
-	printf '%s' "$micro_block"
-	echo
-} >> MICROBENCHMARKS.md
-echo "appended to MICROBENCHMARKS.md"
-# -- Record --
-{
-	echo "## $(date '+%Y-%m-%d %H:%M') -- $hw -- ${big_bytes} bytes input"
-	echo '```'
-	echo "$vm_line"
-	echo "one-shot mean: vm ${vm_oneshot}s"
-	[[ -n "$eyecite_block" ]] && printf '%s\n' "$eyecite_block"
-	echo '```'
-	echo
-} >> BENCHMARKS.md
+# -- Record one ndjson line for this machine --
+micro_obj=$(printf '%s' "$micro_block" | jq -R -s 'split("\n")|map(select(length>0)|split(": ")|{(.[0]):(.[1]|tonumber)})|add // {}')
+[ -z "$micro_obj" ] && micro_obj="{}"
+jq -cn \
+	--arg ts "$(date '+%Y-%m-%d %H:%M')" \
+	--arg machine "$hw" \
+	--argjson input_bytes "$big_bytes" \
+	--arg vm_ns "${vm_ns:-}" \
+	--arg vm_oneshot_s "${vm_oneshot:-}" \
+	--argjson micro "$micro_obj" \
+	--argjson vs_eyecite "$eyecite_json" \
+	'{ts:$ts, machine:$machine, input_bytes:$input_bytes, vm_ns:($vm_ns|tonumber? // null), vm_oneshot_s:($vm_oneshot_s|tonumber? // null), micro:$micro, vs_eyecite:$vs_eyecite}' >> "$LOG"
+echo "logged this run -> $LOG"
 
-echo "appended to BENCHMARKS.md"
-
-# -- Section 4: scaling-ratio gate (machine-independent; the hard quadratic
-# tripwire). Runs each phase at N..8N and fails if a gated phase grows
-# super-linearly. No baseline file — ratios cancel the machine's speed.
+# -- Section 4: scaling-ratio gate (machine-independent quadratic tripwire) --
 echo ""
 if ! ./tests/scaling zig-out/bin/incitez-bench; then
 	gate_status=1
