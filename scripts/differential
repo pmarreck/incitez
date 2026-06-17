@@ -3,33 +3,19 @@
 # combined corpus text set, with the expected-divergence ledger
 # (tests/expected_divergences.json) providing fenced exceptions.
 # Exit nonzero on unfenced divergence or stale/dead fences.
+#
+# Delegates to the sandboxed flake check (`checks.<system>.differential`) — the
+# SAME derivation Garnix runs — instead of building in the dev shell. The old
+# `nix develop -c zig build` path is broken where Zig's bundled libSystem stubs
+# don't cover the host OS (e.g. macOS 26.x: "failed to spawn build runner …
+# FileNotFound"). A dirty git worktree is still tested: nix copies uncommitted
+# changes to TRACKED files (with a "Git tree is dirty" warning); only untracked
+# files are excluded. `-L` streams the in-derivation "NNN/NNN agree, … unfenced"
+# result line.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.." || exit 1
 
-run() {
-	"$@" || {
-		echo "FAILED: $*" >&2
-		exit 1
-	}
-}
-
-run nix build .#eyecite-env -o .eyecite-env
-PY=./.eyecite-env/bin/python
-
-workdir="${TMPDIR:-/tmp}"
-texts="$workdir/incitez-diff-texts.json"
-dump="$workdir/incitez-diff-dump.json"
-
-run $PY tools/diff_oracle.py build-texts \
-	tests/corpus/eyecite_corpus.json \
-	tests/corpus/eyecite_resolve_corpus.json \
-	"$texts"
-
-# build from the WORKING tree (nix build would use the committed git tree
-# and silently test stale code during local iteration)
-run nix develop -c zig build
-run sh -c "zig-out/bin/incitez-diffdump '$texts' > '$dump'"
-
-$PY tools/diff_oracle.py compare "$texts" "$dump" tests/expected_divergences.json
+system="$(nix eval --raw --impure --expr 'builtins.currentSystem')"
+exec nix build ".#checks.${system}.differential" -L
