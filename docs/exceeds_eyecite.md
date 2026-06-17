@@ -93,6 +93,38 @@ differential holds **215/215** and the change costs ~1%.
 *Tests: "glued volume-reporter is recognized" + "relaxed volume-reporter boundary does NOT
 create false citations" in `src/extract.zig`. Reported by incitez_web from a real OCR'd brief.*
 
+## 5. Section-markerless federal statutes (`42 CFR 488.5`, `31 U.S.C. 9701`)
+
+Federal agencies and the Federal Register routinely drop the `§`/`sec.` marker,
+writing `42 CFR 488.5`, `31 U.S.C. 9701`, `10 CFR 171.16(c)`. eyecite requires the
+marker by grammar, so to it these are **not citations**. Verified against the live
+oracle:
+
+| input | eyecite | incitez |
+|---|---|---|
+| `42 CFR 488.5(a)(4)(i)` | 0 cites | FullLawCitation — title 42, § 488.5 |
+| `31 U.S.C. 9701` | 0 cites | FullLawCitation — title 31, § 9701 |
+| `10 CFR 171.16(c)` | 0 cites | FullLawCitation — title 10, § 171.16 |
+| `31 U.S.C. § 9701` | 1 cite | 1 cite — unchanged (parity preserved) |
+
+**incitez:** emits an *additional* no-marker program for the federal statute /
+regulation reporters (U.S.C., C.F.R. and their variations `USC`/`CFR`/…) with the
+`§`/`sec.` made optional. It stays **citation-aware and false-positive-safe**: a
+*known* federal reporter (`U.S.C.`/`CFR`) must anchor the match — so a case
+reporter (`5 U.S. 137`) is never mistaken for a statute — and the section must be
+**digit-leading** (`$law_section`), so a regulation-part list
+(`10 CFR Parts 15, 170, and 171`) and prose (`Title 42 CFR was amended`) never
+become citations. The marker-bearing form is untouched, so the differential holds
+**215/215, 0 unfenced** (the marker-free corpus never triggers it). This is what
+lets statute deep-links (title/section → Cornell LII) work on federal/agency text,
+where the markerless style dominates: on incitez_web's two Federal Register demos
+it recovers **+21 and +36** statute cites (raw 35→56, 29→65) that were previously
+invisible to both engines.
+
+*Tests: "no-marker federal statute surpass: positives extract with title/section"
++ "… negatives do NOT false-match" (set-based classifier tests) in
+`src/extract.zig`; implemented as a bare-optional codegen transform in
+`tools/gen_tables.zig`. Motivated by incitez_web's Federal Register demo files.*
 ## Also more correct, by reasoned choice (not strictly "vs eyecite errors")
 
 - **Adjacent same-reporter citations** — incitez finds all of them; eyecite's

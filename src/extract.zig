@@ -2567,3 +2567,52 @@ test "case citation has null title/section" {
     try testing.expectEqual(@as(?[]const u8, null), cites[0].title);
     try testing.expectEqual(@as(?[]const u8, null), cites[0].section);
 }
+
+// SURPASS: federal statute/regulation cites with the section marker (§/sec.) DROPPED —
+// "42 CFR 488.5", "31 U.S.C. 9701" — common in agency/Federal-Register prose. eyecite
+// returns 0 for these (verified vs the pinned oracle; it requires the marker by grammar);
+// incitez recovers them via an additive no-marker program on the federal statute editions.
+// Tested as a CLASSIFIER over sets: positives MUST extract, negatives MUST NOT false-match.
+test "no-marker federal statute surpass: positives extract with title/section" {
+    const Case = struct { in: []const u8, title: []const u8, section: []const u8 };
+    const cases = [_]Case{
+        .{ .in = "see 31 U.S.C. 9701 here", .title = "31", .section = "9701" },
+        .{ .in = "under 42 CFR 488.5 the", .title = "42", .section = "488.5" },
+        .{ .in = "in 10 CFR 171.16(c) the", .title = "10", .section = "171.16" },
+        .{ .in = "per 5 U.S.C. 552 and", .title = "5", .section = "552" },
+    };
+    for (cases) |tc| {
+        const cites = try extract(testing.allocator, tc.in);
+        defer freeCitations(testing.allocator, cites);
+        var found = false;
+        for (cites) |c| {
+            if (c.kind == .full_law and c.title != null and c.section != null and
+                std.mem.eql(u8, c.title.?, tc.title) and std.mem.eql(u8, c.section.?, tc.section))
+                found = true;
+        }
+        if (!found) {
+            std.debug.print("no-marker positive FAILED: \"{s}\"\n", .{tc.in});
+            try testing.expect(false);
+        }
+    }
+}
+
+test "no-marker federal statute surpass: negatives do NOT false-match" {
+    // a Parts/section LIST, a prose number, and a CASE cite ("U.S.", not "U.S.C.")
+    // must never invent a statute section.
+    const negatives = [_][]const u8{
+        "10 CFR Parts 15, 170, and 171",
+        "Title 42 CFR was amended in 2020",
+        "the statute, 5 U.S. 137, is cited",
+    };
+    for (negatives) |neg| {
+        const cites = try extract(testing.allocator, neg);
+        defer freeCitations(testing.allocator, cites);
+        for (cites) |c| {
+            if (c.kind == .full_law) {
+                std.debug.print("no-marker negative FALSE-MATCHED: \"{s}\" -> title={?s} section={?s}\n", .{ neg, c.title, c.section });
+                try testing.expect(false);
+            }
+        }
+    }
+}

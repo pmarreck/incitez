@@ -471,6 +471,14 @@ fn safeSubstitute(
     return out.items;
 }
 
+/// Allocate a copy of `s` with every occurrence of `needle` replaced by `repl`.
+/// (A no-op copy when `needle` is absent.) Used to derive regex variants.
+fn dupReplace(arena: std.mem.Allocator, s: []const u8, needle: []const u8, repl: []const u8) ![]u8 {
+    const n = std.mem.replacementSize(u8, s, needle, repl);
+    const out = try arena.alloc(u8, n);
+    _ = std.mem.replace(u8, s, needle, repl, out);
+    return out;
+}
 fn recursiveSubstitute(
     arena: std.mem.Allocator,
     template: []const u8,
@@ -1006,6 +1014,13 @@ pub fn main(init: std.process.Init) !void {
             if (templates.len == 0) {
                 try expanded_list.append(arena, try recursiveSubstitute(arena, "$full_cite", &vars));
             } else {
+                // SURPASS: federal statute/regulation reporters whose section marker
+                // (§/sec.) is conventionally DROPPED in agency prose ("42 CFR 488.5",
+                // "31 U.S.C. 9701"). For these we ALSO emit a no-marker program (marker
+                // made optional) — eyecite requires the marker and misses these. The
+                // digit-leading $law_section guards against "10 CFR Parts 15" prose.
+                const nosection = std.mem.eql(u8, lentry.key_ptr.*, "U.S.C.") or
+                    std.mem.eql(u8, lentry.key_ptr.*, "C.F.R.");
                 for (templates) |t| {
                     // r.replace("\xc2\xa7 ", "\xc2\xa7\xc2\xa7? ?")
                     const needle = "\xc2\xa7 ";
@@ -1014,6 +1029,18 @@ pub fn main(init: std.process.Init) !void {
                     const transformed = try arena.alloc(u8, n);
                     _ = std.mem.replace(u8, t.string, needle, repl, transformed);
                     try expanded_list.append(arena, try recursiveSubstitute(arena, transformed, &vars));
+
+                    if (nosection) {
+                        // make the marker optional: "$section_marker\s*" (U.S.C. form)
+                        // and the literal " § " (C.F.R. form) → optional groups. Only the
+                        // applicable one matches per template; the other is a no-op copy.
+                        const o1 = try dupReplace(arena, t.string, "$section_marker\\s*", "(?:$section_marker\\s*)?");
+                        // bare optional quantifiers (like the existing "§§? ?"), NOT a
+                        // "(?:§ )?" group — the VM's group-quantifier unrolling mishandles
+                        // a literal-space-bearing group, but bare "§? ?" matches both forms.
+                        const o2 = try dupReplace(arena, o1, " \xc2\xa7 ", " \xc2\xa7? ?");
+                        try expanded_list.append(arena, try recursiveSubstitute(arena, o2, &vars));
+                    }
                 }
             }
             for (expanded_list.items) |expanded| {
