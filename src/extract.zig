@@ -2500,3 +2500,22 @@ test "pin cite: en-dash and em-dash ranges (surpass — eyecite accepts only hyp
 test "case name: uppercase 'V.' is not a separator -- parity on plaintiff, deferred antecedent-breadth divergence" {
     try expectNames("Winn Lovett Grocery CO. V. Archer 126 Fla. 308", 0, null, "Winn Lovett Grocery CO. V. Archer");
 }
+
+// Glued volume<->reporter (OCR drops the space: "116U. S." for "116 U. S."). eyecite
+// misses these; incitez recovers them -> a surpass. Reported by incitez_web from the
+// Mapp v. Ohio demo (Boyd v. United States, 116U. S. 616). Citation-aware: only fires
+// when a KNOWN reporter follows the digits, so non-reporters never become citations.
+test "glued volume-reporter is recognized (OCR artifact; surpasses eyecite)" {
+    const cites = try extract(testing.allocator, "Boyd v. United States, 116U. S. 616, 630 (1886)");
+    defer freeCitations(testing.allocator, cites);
+    try testing.expect(cites.len >= 1);
+    try testing.expectEqualStrings("116", cites[0].volume.?);
+    try testing.expectEqualStrings("616", cites[0].page.?);
+}
+test "relaxed volume-reporter boundary does NOT create false citations" {
+    for ([_][]const u8{ "the 401k plan", "a 3D model here", "buy 5G phones" }) |t| {
+        const cites = try extract(testing.allocator, t);
+        defer freeCitations(testing.allocator, cites);
+        try testing.expectEqual(@as(usize, 0), cites.len);
+    }
+}

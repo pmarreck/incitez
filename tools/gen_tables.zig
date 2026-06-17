@@ -15,7 +15,7 @@ const std = @import("std");
 // eyecite tokenizers.py overrides (verbatim):
 const PAGE_OVERRIDE =
     "(?P<page>\\d+|c?(?:xc|xl|l?x{1,3})(?:ix|iv|v?i{0,3})|(?:c?l?)(?:ix|iv|v?i{1,3})|(?:lv|cv|cl|clv)|_+)";
-const FULL_CITE_OVERRIDE = "$volume $reporter,? $page";
+const FULL_CITE_OVERRIDE = "$volume ?$reporter,? $page";
 
 const GROUP_NAMES = [_][]const u8{
     "volume",            "page",                "year",    "date_filed",
