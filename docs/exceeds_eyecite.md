@@ -76,6 +76,23 @@ signals stripped, embedded ones kept".*
 
 ---
 
+## 4. Glued volume↔reporter (OCR-dropped space: `116U. S.`)
+
+**eyecite:** its full-citation regex requires whitespace between the volume and the
+reporter (`$volume $reporter`), so when OCR drops that space — `116U. S.` for `116 U. S.`,
+a common scanned-text artifact — eyecite finds **nothing**. Verified: 0 citations on
+`Boyd v. United States, 116U. S. 616 (1886)`.
+
+**incitez:** makes that one space optional (`$volume ?$reporter`), recovering glued forms:
+`116U. S. 616` → `116 U.S. 616`. Verified on the Mapp v. Ohio demo (three glued forms,
+`116`/`168`/`364 U. S.`, all recovered). It stays **citation-aware** — a *known* reporter
+must still anchor the match, so `401k` / `3D` / `5G` never become citations — and
+**span-correct** (no text rewrite; the span points at the original glued bytes), so the
+differential holds **215/215** and the change costs ~1%.
+
+*Tests: "glued volume-reporter is recognized" + "relaxed volume-reporter boundary does NOT
+create false citations" in `src/extract.zig`. Reported by incitez_web from a real OCR'd brief.*
+
 ## Also more correct, by reasoned choice (not strictly "vs eyecite errors")
 
 - **Adjacent same-reporter citations** — incitez finds all of them; eyecite's
