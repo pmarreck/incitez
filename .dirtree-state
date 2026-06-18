@@ -2,6 +2,7 @@
 ver=1.2
 annotate=[
 	BENCHMARKS.md = Hardware-keyed perf log: VM regression gate (two-sided ±10%) + vs-eyecite speedup tracking
+	FUTURE_DIRECTIONS.md = Longer-horizon improvement ideas (post-OCR token correction #27, resolve quadratic #17) — gated/someday, distinct from PLAN.md active TODO
 	LICENSE = Business Source License 1.1 (© 2026 Peter Marreck d/b/a Mecha LLC; converts to MIT 2030-06-16) + BSD-2-Clause acknowledgment for vendored Free Law Project data (see THIRD_PARTY_LICENSES)
 	MISTAKES.md = Process mistakes log (pipe exit-code masking; jj+nix stale-tree race)
 	bm = Benchmark runner: synthetic doc from corpus, hyperfine one-shot + steady-state, appends BENCHMARKS.md

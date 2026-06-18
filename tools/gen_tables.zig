@@ -199,7 +199,19 @@ const Parser = struct {
             boxed.* = body;
             return .{ .group = .{ .name = n, .body = boxed } };
         }
-        // unnamed/non-capturing: plain grouping either way
+        // unnamed/non-capturing group. A following quantifier must bind to the
+        // WHOLE group — but applyQuantifier's bare-literal rule binds `?` to only
+        // the LAST CHARACTER (right for `colou?r`, wrong for `(?:ab)?`). parseSequence
+        // may have merged the body into a single `.lit` (e.g. `(?:§ )?` → lit "§ "),
+        // which would then quantify only the trailing space and leave `§` REQUIRED —
+        // the bug that made markerless `(?:§ )?` law programs fail to skip. Wrap a
+        // collapsed-to-literal body in a seq so the group stays atomic for the
+        // quantifier (a non-`.lit` body is already atomic via applyQuantifier's else).
+        if (body == .lit) {
+            const boxed = try p.arena.alloc(Node, 1);
+            boxed[0] = body;
+            return .{ .seq = boxed };
+        }
         return body;
     }
 
@@ -1035,10 +1047,12 @@ pub fn main(init: std.process.Init) !void {
                         // and the literal " § " (C.F.R. form) → optional groups. Only the
                         // applicable one matches per template; the other is a no-op copy.
                         const o1 = try dupReplace(arena, t.string, "$section_marker\\s*", "(?:$section_marker\\s*)?");
-                        // bare optional quantifiers (like the existing "§§? ?"), NOT a
-                        // "(?:§ )?" group — the VM's group-quantifier unrolling mishandles
-                        // a literal-space-bearing group, but bare "§? ?" matches both forms.
-                        const o2 = try dupReplace(arena, o1, " \xc2\xa7 ", " \xc2\xa7? ?");
+                        // make the section marker optional: " § " → " (?:§ )?".
+                        // (Earlier this used bare "§? ?" to dodge a compiler bug where a
+                        // quantified group whose body collapsed to one literal bound `?`
+                        // to only the last char; that's fixed in parseGroup now, so the
+                        // natural group form is used directly.)
+                        const o2 = try dupReplace(arena, o1, " \xc2\xa7 ", " (?:\xc2\xa7 )?");
                         try expanded_list.append(arena, try recursiveSubstitute(arena, o2, &vars));
                     }
                 }
