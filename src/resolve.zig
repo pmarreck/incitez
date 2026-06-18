@@ -95,6 +95,20 @@ fn optEq(a: ?[]const u8, b: ?[]const u8) bool {
     return std.mem.eql(u8, a.?, b.?);
 }
 
+/// Resolve a short-form case cite to its antecedent full's resource: match by
+/// corrected reporter + volume, then disambiguate ties by antecedent party name.
+///
+/// complexity: O(fulls) per short cite ⇒ O(shorts × fulls) across the document —
+/// the KNOWN residual quadratic on citation-dense / repetition-heavy input
+/// (tracked as task #17; report-only in the scaling gate — `resolve` grows
+/// ~3.8–4.3×/doubling there — and ~3% of runtime, so real documents are fine).
+/// Unlike the full-cite cluster pass at the top of `resolve` (O(1) via
+/// `resource_map`), shorts still linear-scan every full because the match isn't a
+/// single hashable key: it's (reporter+volume) AND an antecedent-substring
+/// refinement. `resolveSupra` shares the same per-cite scan via `filterByAntecedent`.
+/// FUTURE FIX: bucket fulls by (corrected_reporter, volume) into a map so the
+/// common case is ~O(1), keeping the antecedent tie-break linear only within a
+/// bucket. See FUTURE_DIRECTIONS.md.
 fn resolveShort(
     c: Citation,
     fulls: []const u32,
