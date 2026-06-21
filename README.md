@@ -1,5 +1,8 @@
 # incitez
 
+[![Garnix CI](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Fpmarreck%2Fincitez%3Fbranch%3Dyolo)](https://garnix.io/repo/pmarreck/incitez)
+[![License: BUSL-1.1](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
+[![Differential vs eyecite](https://img.shields.io/badge/differential%20vs%20eyecite-215%2F215-brightgreen)](docs/exceeds_eyecite.md)
 **incitez** ("insights on citations, Zig") is a legal-citation extraction engine
 in Zig: a drop-in-grade alternative to [eyecite](https://github.com/freelawproject/eyecite)
 (Free Law Project, BSD-2-Clause) — the tool that powers CourtListener and
