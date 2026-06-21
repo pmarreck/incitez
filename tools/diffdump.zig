@@ -68,6 +68,7 @@ fn typeName(kind: incitez.extraction.Kind) []const u8 {
         .reference => "ReferenceCitation",
         .unknown => "UnknownCitation",
         .full_law => "FullLawCitation",
+        .short_law => "ShortLawCitation",
         .full_journal => "FullJournalCitation",
     };
 }

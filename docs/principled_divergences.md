@@ -177,3 +177,43 @@ disambiguation (versus vs. regnal numeral vs. volume vs. initial) we deliberatel
 than the rare, cosmetic disease. Pinned by the characterization test
 `"case name: uppercase 'V.' is not a separator …"` in `src/extract.zig`; tracked for
 the post-MVP grammar pass.
+
+## 6. Antecedent short-form law citations — incitez surpasses (we diverge, by design)
+
+**eyecite:** a reporter-less `§ N` (e.g. `Id. § 1985` following `42 U.S.C. § 1983`)
+is emitted as an `UnknownCitation` with the number dropped — eyecite has no
+short-form law citation. Verified against the live oracle and confirmed upstream as
+an unaddressed limitation (not a deliberate guard): [eyecite #299](https://github.com/freelawproject/eyecite/issues/299),
+where the maintainer wrote *"We're not currently working on statute parsing … we'd
+welcome a PR."*
+
+**incitez:** resolves it to a `ShortLawCitation` inheriting the antecedent statute's
+title + reporter (`title 42 · U.S.C. · § 1985`).
+
+**Why this is principled, not reckless (Chesterton's Fence).** Before removing the
+fence we asked what it protects. Two cases, opposite answers:
+
+1. **Isolated / case-antecedent `§ N`** — the fence is *load-bearing*. A bare section
+   number is namespaced by title+code; with no statute in scope it is genuinely
+   under-determined (which code? which title?). Emitting a `FullLawCitation` would
+   require *fabricating* a title — strictly worse than honestly saying "unknown."
+   eyecite's own tests bake this in as correct. **incitez keeps parity here**
+   (`UnknownCitation`).
+2. **Antecedent `§ N`** — the fence is just unbuilt. When a real `FullLawCitation`
+   is in scope, the title + reporter are recoverable from context, not invented, so
+   the short form is legitimate and linkable.
+
+**The scope rule that separates them.** Statute context persists through `id.`
+tokens (and the `§` tokens themselves) but is **cleared by any intervening case /
+journal / reference / supra citation**. So:
+- `42 U.S.C. § 1983. Id. § 1985.` → `§ 1985` = ShortLawCitation (title 42). ✓
+- `§ 1983` alone → `UnknownCitation` (no context). ✓ (parity)
+- `Brown v. Board, 347 U.S. 483. § 1985` → case clears context → `UnknownCitation`. ✓ (parity)
+
+**MFIC framing.** The divergence is additive: eyecite is the oracle for the
+ambiguous cases (incitez must keep returning `UnknownCitation` there — the parity
+floor), and incitez-only assertions cover the antecedent cases where we
+deliberately exceed it. The differential gate stays **215/215, 0 fenced** because
+the marker-free corpus contains no antecedent-§ to trigger the new path. Pinned by
+the set-based tests in `src/extract.zig`; catalogued in `exceeds_eyecite.md §6`.
+Implementation: `lawShortFormResolve` (a post-filter pass) + `parseBareSection`.

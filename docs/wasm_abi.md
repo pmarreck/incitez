@@ -206,14 +206,14 @@ byte-compare):
 
 | Field | Type | Notes |
 |---|---|---|
-| `kind` | string | `"FullCaseCitation"`, `"ShortCaseCitation"`, `"SupraCitation"`, `"IdCitation"`, `"ReferenceCitation"`, `"FullJournalCitation"`, `"FullLawCitation"`, ... |
+| `kind` | string | `"FullCaseCitation"`, `"ShortCaseCitation"`, `"SupraCitation"`, `"IdCitation"`, `"ReferenceCitation"`, `"FullJournalCitation"`, `"FullLawCitation"`, `"ShortLawCitation"`, `"UnknownCitation"` |
 | `span` | `[u32, u32]` | `[start, end)` byte offsets of the matched citation token |
 | `full_span` | `[u32, u32]` | `[start, end)` including party names / antecedent context |
 | `volume` | string \| null | e.g. `"410"`; null for token-like cites (id/supra/reference) |
 | `reporter` | string \| null | as written, e.g. `"U. S."`; null for token-like cites |
 | `page` | string \| null | e.g. `"113"` |
-| `title` | string \| null | statute title for U.S.C./C.F.R. law cites, e.g. `"28"`; null otherwise |
-| `section` | string \| null | statute section, base form (subsection stays in `pin_cite`), e.g. `"1332"`; null otherwise |
+| `title` | string \| null | statute title for U.S.C./C.F.R. law cites — `FullLawCitation` (from the text) or `ShortLawCitation` (inherited from the antecedent), e.g. `"28"`; null otherwise |
+| `section` | string \| null | statute section, base form (subsection stays in `pin_cite`), e.g. `"1332"`; null otherwise. For `ShortLawCitation` this is the bare `§ N`'s number |
 | `corrected_reporter` | string \| null | canonical form, e.g. `"U.S."`; null for token-like cites |
 | `pin_cite` | string \| null | pinpoint, e.g. `"at 116"` or `"241–242"` (en/em-dash preserved) |
 | `court` | string \| null | resolved courts-db id, e.g. `"scotus"` |

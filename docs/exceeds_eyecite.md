@@ -125,6 +125,39 @@ invisible to both engines.
 + "… negatives do NOT false-match" (set-based classifier tests) in
 `src/extract.zig`; implemented as a bare-optional codegen transform in
 `tools/gen_tables.zig`. Motivated by incitez_web's Federal Register demo files.*
+
+## 6. Antecedent short-form statutes (`Id. § 1985` after `42 U.S.C. § 1983`)
+
+Legal writing cites a statute in full once, then refers to further sections by a
+bare `§ N` ("...under 42 U.S.C. § 1983. Id. § 1985."). eyecite has **no**
+short-form law citation: a reporter-less `§ N` becomes an `UnknownCitation` and its
+number is dropped (verified against the live oracle; tracked upstream as
+[eyecite #299](https://github.com/freelawproject/eyecite/issues/299), which the
+maintainer confirmed is an unaddressed limitation, not a deliberate choice).
+
+**incitez:** resolves the bare `§ N` to a new `ShortLawCitation` that **inherits the
+title + reporter** of the most recent `FullLawCitation` in scope, capturing the
+section (and any subsection as the pin cite). So `Id. § 1985` after `42 U.S.C. §
+1983` yields `title 42 · U.S.C. · § 1985` — enough to deep-link it (Cornell LII)
+exactly like a full statute cite.
+
+This is the one place where exceeding eyecite required **respecting** a real
+ambiguity rather than charging through it (Chesterton's Fence): an *isolated* `§ N`
+genuinely cannot name its code, so incitez deliberately keeps eyecite's
+`UnknownCitation` there. The context that makes a bare `§` linkable is an
+**antecedent** law cite — and it must be a *law* one. The rule: statute context
+persists through `id.` tokens (the canonical `Id. § N` bridge), but **any
+intervening case / journal / reference / supra citation clears it**, so a `§` after
+a *case* cite, or with no law antecedent at all, stays `UnknownCitation`. That keeps
+the eyecite **parity floor** for the ambiguous cases (differential still **215/215,
+0 fenced** — the marker-free corpus has no antecedent-§ to trigger it) while
+surpassing on the resolvable ones.
+
+*Tests: "law short-form: bare § after a full law cite inherits title + reporter" +
+"law short-form parity: isolated bare § stays unknown" (set-based: antecedent
+upgrades, isolated/case-antecedent stay unknown) in `src/extract.zig`. Design from
+the Chesterton's-Fence research in `principled_divergences.md §6`.*
+
 ## Also more correct, by reasoned choice (not strictly "vs eyecite errors")
 
 - **Adjacent same-reporter citations** — incitez finds all of them; eyecite's

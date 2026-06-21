@@ -21,6 +21,7 @@ pub const Kind = enum {
     reference,
     unknown,
     full_law,
+    short_law,
     full_journal,
 };
 
@@ -119,6 +120,7 @@ pub fn extractWithEngine(
     for (cites.items, 0..) |*c, i| try finishCitation(allocator, text, cites.items, i, c);
     try referenceScan(allocator, text, &cites);
     try filterCitations(allocator, text, &cites);
+    lawShortFormResolve(text, &cites); // #26: bare § → ShortLawCitation via antecedent
     return cites.toOwnedSlice(allocator);
 }
 
@@ -716,6 +718,78 @@ fn tokenCitation(kind: Kind, start: usize, end: usize, text: []const u8) Citatio
     };
 }
 
+/// SURPASS (#26): resolve a bare "§ N" to a preceding statute. A reporter-less
+/// section cite (e.g. "Id. § 1985") has no title of its own, so eyecite — which
+/// can't justify *which* code — leaves it an UnknownCitation. incitez upgrades it
+/// to a ShortLawCitation that INHERITS the title + reporter of the most recent
+/// FullLawCitation, when that context is in scope. Context persists through `id`
+/// tokens (the canonical "Id. § N" bridge) and the `§` tokens themselves, but is
+/// CLEARED by any intervening case / journal / reference / supra citation — so an
+/// isolated, or case-antecedent, `§` stays UnknownCitation (the eyecite parity
+/// floor). Inheriting the antecedent's `edition` makes correctedReporter() return
+/// the right abbrev for free. Runs last (post-filter), mutating in place; every
+/// inherited string is a slice into `text`/the tables, so no allocation.
+fn lawShortFormResolve(text: []const u8, cites: *std.ArrayListUnmanaged(Citation)) void {
+    const Ctx = struct { edition: u32, title: []const u8, reporter: []const u8 };
+    var ctx: ?Ctx = null;
+    for (cites.items) |*c| {
+        switch (c.kind) {
+            .full_law, .short_law => {
+                if (c.title) |t| ctx = .{ .edition = c.edition, .title = t, .reporter = c.reporter };
+            },
+            // intervening non-law reference makes a following bare § ambiguous
+            .full_case, .short_case, .full_journal, .reference, .supra => ctx = null,
+            .id => {}, // back-reference bridge — keep the statute context
+            .unknown => {
+                const cx = ctx orelse continue;
+                const sec = parseBareSection(text, c.span_start, c.span_end) orelse continue;
+                c.kind = .short_law;
+                c.edition = cx.edition; // correctedReporter() → inherited abbrev
+                c.reporter = cx.reporter;
+                c.title = cx.title;
+                c.section = sec.section;
+                c.pin_cite = sec.sub; // subsection chain (a)(4) → pin cite, like full_law
+                c.span_end = sec.end; // extend span to cover "§ N(...)"
+                c.full_span_start = c.span_start;
+                c.full_span_end = sec.end; // keep full_span ⊇ span for consumers
+            },
+        }
+    }
+}
+
+const SecParse = struct { section: []const u8, sub: ?[]const u8, end: u32 };
+
+/// Parse the section number out of a bare-§ token region: skip the §/§§ run and
+/// any space, then read a digit-leading section (`\d+(?:[.\-:]\d+)*`, e.g. "1985",
+/// "1003.1") and an optional GLUED subsection chain (`(\(\w+\))+` → pin cite). The
+/// digit-leading requirement is the false-positive guard (a "§ Foo" prose phrase
+/// never parses); the no-space-before-subsection rule keeps a following " (2018)"
+/// year paren out of the subsection. Returns null when no section number follows.
+fn parseBareSection(text: []const u8, span_start: u32, span_end: u32) ?SecParse {
+    const sign = "\xc2\xa7";
+    var p: usize = span_start;
+    while (p < span_end and !std.mem.startsWith(u8, text[p..], sign)) p += 1;
+    if (p >= span_end) return null; // no § in the token
+    while (std.mem.startsWith(u8, text[p..], sign)) p += 2; // consume § or §§
+    while (p < text.len and (text[p] == ' ' or text[p] == '\t')) p += 1; // optional space
+    if (p >= text.len or !std.ascii.isDigit(text[p])) return null; // digit-leading guard
+    const sec_start = p;
+    while (p < text.len and std.ascii.isDigit(text[p])) p += 1;
+    while (p + 1 < text.len and (text[p] == '.' or text[p] == '-' or text[p] == ':') and
+        std.ascii.isDigit(text[p + 1]))
+    {
+        p += 1;
+        while (p < text.len and std.ascii.isDigit(text[p])) p += 1;
+    }
+    const section = text[sec_start..p];
+    const sub_start = p;
+    while (p < text.len and text[p] == '(') { // GLUED subsection chain only (no space)
+        const close = std.mem.indexOfScalarPos(u8, text, p, ')') orelse break;
+        p = close + 1;
+    }
+    const sub: ?[]const u8 = if (p > sub_start) text[sub_start..p] else null;
+    return .{ .section = section, .sub = sub, .end = @intCast(p) };
+}
 /// Shared post-candidate metadata: pin cite, court/date paren, court
 /// resolution, scotus guess, case names + pre-citation year. Both engines
 /// converge here.
@@ -2611,6 +2685,46 @@ test "no-marker federal statute surpass: negatives do NOT false-match" {
         for (cites) |c| {
             if (c.kind == .full_law) {
                 std.debug.print("no-marker negative FALSE-MATCHED: \"{s}\" -> title={?s} section={?s}\n", .{ neg, c.title, c.section });
+                try testing.expect(false);
+            }
+        }
+    }
+}
+
+// SURPASS (#26): a bare "§ N" / "§§ N" following a FullLawCitation (the context
+// persisting through intervening id. tokens) inherits that statute's title +
+// corrected reporter as a ShortLawCitation — eyecite leaves it UnknownCitation and
+// drops the number. Tested as a CLASSIFIER over sets: antecedent cases upgrade;
+// isolated/ambiguous cases stay UnknownCitation (eyecite parity floor).
+test "law short-form: bare § after a full law cite inherits title + reporter" {
+    const cites = try extract(testing.allocator, "See 42 U.S.C. § 1983. Id. § 1985.");
+    defer freeCitations(testing.allocator, cites);
+    var found = false;
+    for (cites) |c| {
+        if (c.kind == .short_law) {
+            try testing.expectEqualStrings("42", c.title.?);
+            try testing.expectEqualStrings("1985", c.section.?);
+            try testing.expectEqualStrings("U.S.C.", c.correctedReporter());
+            found = true;
+        }
+    }
+    if (!found) {
+        std.debug.print("no short_law emitted for '§ 1985' after '42 U.S.C. § 1983'\n", .{});
+        try testing.expect(false);
+    }
+}
+
+test "law short-form parity: isolated bare § stays unknown (no antecedent)" {
+    const negatives = [_][]const u8{
+        "violated § 1983 of the Act", // no antecedent at all
+        "Brown v. Board, 347 U.S. 483 (1954). § 1985", // antecedent is a CASE, not a law
+    };
+    for (negatives) |neg| {
+        const cites = try extract(testing.allocator, neg);
+        defer freeCitations(testing.allocator, cites);
+        for (cites) |c| {
+            if (c.kind == .short_law) {
+                std.debug.print("bare § wrongly upgraded to short_law in: \"{s}\"\n", .{neg});
                 try testing.expect(false);
             }
         }

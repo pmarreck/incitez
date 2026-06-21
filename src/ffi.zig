@@ -46,6 +46,7 @@ fn kindName(kind: extraction.Kind) [*:0]const u8 {
         .reference => "ReferenceCitation",
         .unknown => "UnknownCitation",
         .full_law => "FullLawCitation",
+        .short_law => "ShortLawCitation",
         .full_journal => "FullJournalCitation",
     };
 }
