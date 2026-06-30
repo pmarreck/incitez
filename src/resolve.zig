@@ -13,6 +13,16 @@ const Citation = extraction.Citation;
 /// past the full cite's page are considered invalid.
 const MAX_OPINION_PAGE_COUNT = 150;
 
+/// A (corrected_reporter, volume) bucket of resolved full_case cites, for O(1)
+/// short-form resolution (#17). `single` is the shared resolution while `multiple`
+/// is false (the exact-duplication common case → no scan); once two members
+/// resolve to distinct resources, `multiple` flips and the scan path disambiguates.
+const ShortBucket = struct {
+    single: ?u32 = null,
+    multiple: bool = false,
+    seeded: bool = false, // has a first resolution been recorded into `single`?
+    members: std.ArrayListUnmanaged(u32) = .empty,
+};
 /// For each citation, the index of the FULL citation anchoring its cluster
 /// (a full cite's own anchor is the first equal-key full), or null when
 /// unresolved. Caller frees the slice.
@@ -33,7 +43,17 @@ pub fn resolve(allocator: std.mem.Allocator, cites: []const Citation) ![]?u32 {
         while (kit.next()) |k| allocator.free(k.*);
         resource_map.deinit(allocator);
     }
-
+    // (#17) (corrected_reporter, volume) → bucket of resolved full_case cites, for
+    // O(1) short-form resolution. Keys + member lists are allocator-owned.
+    var short_buckets: std.StringHashMapUnmanaged(ShortBucket) = .empty;
+    defer {
+        var sit = short_buckets.iterator();
+        while (sit.next()) |e| {
+            allocator.free(e.key_ptr.*);
+            e.value_ptr.members.deinit(allocator);
+        }
+        short_buckets.deinit(allocator);
+    }
     var last_resolution: ?u32 = null;
     for (cites, 0..) |c, i| {
         var res: ?u32 = null;
@@ -53,8 +73,27 @@ pub fn resolve(allocator: std.mem.Allocator, cites: []const Citation) ![]?u32 {
                     }
                 }
                 try resolved_fulls.append(allocator, @intCast(i));
+                // (#17) index this full into its (reporter, volume) short bucket
+                if (c.kind == .full_case) {
+                    if (c.volume) |vol| {
+                        const bkey = try std.fmt.allocPrint(allocator, "{s}\x00{s}", .{ c.correctedReporter(), vol });
+                        const gop = try short_buckets.getOrPut(allocator, bkey);
+                        if (gop.found_existing) allocator.free(bkey) else gop.value_ptr.* = .{};
+                        const b = gop.value_ptr;
+                        try b.members.append(allocator, @intCast(i));
+                        if (res) |r| {
+                            if (!b.seeded) {
+                                b.single = r;
+                                b.seeded = true;
+                            } else if (b.single != r) {
+                                b.multiple = true;
+                                b.single = null;
+                            }
+                        }
+                    }
+                }
             },
-            .short_case => res = resolveShort(c, resolved_fulls.items, cites, assignment),
+            .short_case => res = resolveShort(c, &short_buckets, resolved_fulls.items, cites, assignment, allocator),
             .supra => res = resolveSupra(c, resolved_fulls.items, cites, assignment),
             .id => res = resolveId(c, last_resolution, cites),
             else => {},
@@ -98,18 +137,36 @@ fn optEq(a: ?[]const u8, b: ?[]const u8) bool {
 /// Resolve a short-form case cite to its antecedent full's resource: match by
 /// corrected reporter + volume, then disambiguate ties by antecedent party name.
 ///
-/// complexity: O(fulls) per short cite ⇒ O(shorts × fulls) across the document —
-/// the KNOWN residual quadratic on citation-dense / repetition-heavy input
-/// (tracked as task #17; report-only in the scaling gate — `resolve` grows
-/// ~3.8–4.3×/doubling there — and ~3% of runtime, so real documents are fine).
-/// Unlike the full-cite cluster pass at the top of `resolve` (O(1) via
-/// `resource_map`), shorts still linear-scan every full because the match isn't a
-/// single hashable key: it's (reporter+volume) AND an antecedent-substring
-/// refinement. `resolveSupra` shares the same per-cite scan via `filterByAntecedent`.
-/// FUTURE FIX: bucket fulls by (corrected_reporter, volume) into a map so the
-/// common case is ~O(1), keeping the antecedent tie-break linear only within a
-/// bucket. See FUTURE_DIRECTIONS.md.
+/// Fast path (#17 fix): full_case cites are bucketed by (corrected_reporter,
+/// volume) as they resolve. A short looks up its bucket in O(1); if every member
+/// shares ONE resolution — the exact-duplication case that dominated the old
+/// O(shorts × fulls) quadratic — that resolution is the answer, no scan. Only a
+/// genuinely ambiguous bucket (same reporter+volume but ≥2 distinct resources /
+/// pages) falls back to the linear antecedent-disambiguating scan, now over the
+/// bucket (the matching candidates) instead of every full. A null-volume short
+/// (degenerate) takes the all-fulls scan, preserving the prior behavior exactly.
 fn resolveShort(
+    c: Citation,
+    short_buckets: *const std.StringHashMapUnmanaged(ShortBucket),
+    fulls: []const u32,
+    cites: []const Citation,
+    assignment: []const ?u32,
+    allocator: std.mem.Allocator,
+) ?u32 {
+    const vol = c.volume orelse return resolveShortScan(c, fulls, cites, assignment);
+    const key = std.fmt.allocPrint(allocator, "{s}\x00{s}", .{ c.correctedReporter(), vol }) catch
+        return resolveShortScan(c, fulls, cites, assignment);
+    defer allocator.free(key);
+    const b = short_buckets.get(key) orelse return null; // no full with this reporter+volume
+    if (!b.multiple) return b.single; // exact-dup / single-resource bucket → O(1)
+    return resolveShortScan(c, b.members.items, cites, assignment); // ambiguous → scan the bucket
+}
+
+/// The linear scan resolveShort falls back to (unchanged from the original): collect
+/// reporter+volume matches (≤64), return their shared resolution if unambiguous, else
+/// disambiguate by antecedent party name. `fulls` is the candidate set — a bucket, or
+/// all resolved fulls for the null-volume case.
+fn resolveShortScan(
     c: Citation,
     fulls: []const u32,
     cites: []const Citation,
@@ -300,5 +357,16 @@ test "resolution: duplicate fulls share a resource" {
     try checkResolution(&.{
         .{ 0, "Foo v. Bar, 1 U.S. 1." },
         .{ 0, "Foo v. Bar, 1 U.S. 1." },
+    });
+}
+
+// #17: a short after many EXACT-DUPLICATE fulls must resolve to the one shared
+// resource — this is the single-resource bucket fast path (no antecedent needed).
+test "resolution: short after duplicate fulls resolves to the shared resource (#17 fast path)" {
+    try checkResolution(&.{
+        .{ 0, "Foo v. Bar, 1 U.S. 1." },
+        .{ 0, "Foo v. Bar, 1 U.S. 1." },
+        .{ 0, "Foo v. Bar, 1 U.S. 1." },
+        .{ 0, "1 U.S., at 9." }, // matches all three dups → their one shared resource
     });
 }

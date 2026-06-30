@@ -34,10 +34,16 @@ shape (a constrained, reporter-anchored edit) instead of blindly rewriting text.
 - **Trigger:** docscan ships consensus-OCR with a confidence/voting output.
   (Tracked as task #27.)
 
-## Resolve short-form lookup — O(shorts × fulls) residual
+## Resolve supra lookup — O(supras × fulls) residual
 
-A minor known quadratic: short/supra cites linear-scan every full cite to find
-their antecedent resource. Quadratic on citation-dense / repetition-heavy input;
-report-only in the scaling gate (~3% runtime, real docs fine). The fix —
-bucketing fulls by (corrected_reporter, volume) — and the full rationale live in a
-doc-comment on `resolveShort` in `src/resolve.zig`. (Tracked as task #17.)
+The short-form (`ShortCaseCitation`) exact-duplication quadratic was **fixed**
+(task #17, 2026-06-30): `full_case` cites are bucketed by (corrected_reporter,
+volume) with a single-resource short-circuit, so the dominant repeated-citation
+case resolves in O(1) — see the `resolveShort` doc-comment in `src/resolve.zig`.
+
+The remaining linear scan is `resolveSupra` → `filterByAntecedent`, which matches a
+supra cite's antecedent name as a substring of every full cite's party names. It
+can't reuse the (reporter, volume) bucket — a supra has no volume — so it stays
+O(supras × fulls); report-only in the scaling gate, and supra cites are far rarer
+than shorts in real text. A future fix would index full cites by party-name tokens
+(an inverted index) to prune candidates before the substring check.
