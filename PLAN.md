@@ -2,6 +2,19 @@
 
 Spec: `docs/incitez_design.md`. Kickoff: `inbox/2026-06-11-incitez-kickoff.md` (processed).
 
+## ⏸ Wind-down snapshot (2026-07-06) — fleet migrating to Thelio; this Mac → darwin-build appliance
+**State: GREEN.** Working copy clean, no orphans, `yolo @ 4c92afa2` pushed (CI 12/12). Task list empty — all session work shipped and verified on BOTH ends (producer differential 215/215 + incitez_web end-to-end: cite counts byte-identical across 21 live demos).
+
+Shipped this arc (yolo, newest→oldest): #17 O(1) short-form resolution `4c92afa2` · #26 ShortLawCitation antecedent surpass `85c4178c` · README badges `d737e2f4` · #32 VM regex group-quantifier fix `702dee58` · #17/#27 docs + FUTURE_DIRECTIONS.md `973b495c` · #31 no-§ federal statute surpass `d949030b` · clean v2 newline-aware `aefdefe6` · differential Option A `9a8fdfdc`.
+
+**Next steps — all parked/external, nothing actionable pending:**
+- Supra resolution residual (`resolveSupra`→`filterByAntecedent`, O(supras×fulls) name-scan) — accepted as future by Peter; fix proposal (party-name inverted index) in `FUTURE_DIRECTIONS.md`.
+- #27 post-OCR citation-token correction — parked; gated on docscan's consensus-OCR (unshipped); `FUTURE_DIRECTIONS.md`.
+- eyecite PR #308 (en-dash/em-dash upstream) — CLA signed, MERGEABLE, all code checks green; sole red check is the fork-PR benchmark-comment permission quirk (`Resource not accessible by integration` — not fixable from the fork, maintainer-side config). In FLP maintainers' hands.
+- docscan ASCII85/ASCIIHex + LZWDecode updates — verified input-side (text contract unchanged → incitez needs nothing); relayed to incitez_web, both live (Heller +34 cites).
+
+Resume on Thelio with full context (conversation history + memories already synced).
+
 ## Direction (Peter, 2026-06-11)
 The VM is the product; make it excellent. PCRE2 stays as a second oracle in the
 dual-engine harness (and a possible later optimization target), but VM-first is
